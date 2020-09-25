@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import sys
 import mysql.connector
+from mysql.connector import errorcode as MySqlErrorCodes
 import requests
 from bs4 import BeautifulSoup, NavigableString
 
 """
 	This script queries the software vulnerability database for any CVE record that is missing its respective CWE value.
-	This value is then scraped from the CVE Details website and added to the 'cwe' table.
+	This value is then scraped from the CVE Details website and added to the 'V_CWE' column in the 'vulnerabilities' table.
 
 	Requirements:
 
@@ -31,42 +32,34 @@ try:
 	print('Connecting to the database...')
 	connection = mysql.connector.connect(**database_config)
 	query_cursor = connection.cursor(buffered=True)
-	insert_cursor = connection.cursor(buffered=True)
+	update_cursor = connection.cursor(buffered=True)
 except mysql.connector.Error as error:
 	error_string = repr(error)
 	print(f'Failed to connect to the database with the error: {error_string}')
 	sys.exit(1)
 
-"""
-ALTER TABLE cwe
-	ADD CONSTRAINT IF NOT EXISTS FK_CVE_VULNERABILITIES
-	FOREIGN KEY (CVE)
-		REFERENCES vulnerabilities (CVE)
-		ON DELETE RESTRICT ON UPDATE RESTRICT;
-"""
-
 try:
-	print('Creating the CWE table if it doesn''t exist yet...')
+	print('Adding the V_CWE column to the vulnerabilities table...')
 	query_cursor.execute(	'''
-								CREATE TABLE IF NOT EXISTS cwe
-								(
-									CVE VARCHAR(45) PRIMARY KEY,
-									CWE INTEGER
-								);
+								ALTER TABLE vulnerabilities
+								ADD COLUMN V_CWE INTEGER AFTER CVE;
 							''')
 	connection.commit()
 except mysql.connector.Error as error:
-	error_string = repr(error)
-	print(f'Failed to create the CWE table with the error: {error_string}')
-	sys.exit(1)
+
+	if error.errno == MySqlErrorCodes.ER_DUP_FIELDNAME:
+		print('The V_CWE column already exists.')
+	else:
+		error_string = repr(error)
+		print(f'Failed to add the V_CWE column with the error: {error_string}')
+		sys.exit(1)
 
 try:
 	print('Finding any CVEs without an associated CWE...')
 	query_cursor.execute(	'''
-								SELECT v.CVE
-								FROM vulnerabilities v
-								LEFT JOIN cwe c ON c.CVE = v.CVE
-								WHERE c.CVE IS NULL AND v.CVE LIKE 'CVE%';
+								SELECT CVE
+								FROM vulnerabilities
+								WHERE CVE IS NOT NULL AND V_CWE IS NULL;
 							''')
 except mysql.connector.Error as error:
 	error_string = repr(error)
@@ -114,9 +107,17 @@ for result_set in query_cursor:
 			<tr>
 				[...]
 			</tr>
+
+			[If it exists]
 			<tr>
 				<th>CWE ID</th>
 				<td><a href="//www.cvedetails.com/cwe-details/200/cwe.html" title="CWE-200 - CWE definition">200</a></td>
+			</tr>
+			
+			[If it doesn't]
+			<tr>
+				<th>CWE ID</th>
+				<td>CWE id is not defined for this vulnerability</td>
 			</tr>
 		</tbody>
 	</table>
@@ -139,21 +140,25 @@ for result_set in query_cursor:
 
 					cwe = score_value.get_text(strip=True)
 
+	if cwe is None:
+		cwe = -1
+
 	try:
-		insert_cursor.execute(	'''
-									INSERT IGNORE INTO cwe (CVE, CWE)
-									VALUES (%s, %s)
+		update_cursor.execute(	'''
+									UPDATE vulnerabilities
+									SET V_CWE = %s
+									WHERE CVE = %s;
 								''',
-								(cve, cwe))
+								(cwe, cve))
 
 		connection.commit()
 	except mysql.connector.Error as error:
 		error_string = repr(error)
-		print(f'Failed to insert the values ({cve}, {cwe}) in the database with the error: {error_string}')
+		print(f'Failed to update {cve} with the CWE value {cwe} in the database with the error: {error_string}')
 
 try:
 	query_cursor.close()
-	insert_cursor.close()
+	update_cursor.close()
 	connection.close()
 except mysql.connector.Error as error:
 	error_string = repr(error)
