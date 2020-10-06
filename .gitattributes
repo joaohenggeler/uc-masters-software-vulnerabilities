@@ -2,7 +2,10 @@
 
 *.py text
 
+*.config text
+
 *.bat text eol=crlf
 *.sh text eol=lf
 
 *.jpg binary
+*.png binary
