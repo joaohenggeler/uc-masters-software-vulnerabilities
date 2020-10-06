@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import estagio
 import sys
 import mysql.connector
 from mysql.connector import errorcode as MySqlErrorCodes
@@ -16,17 +17,7 @@ from bs4 import BeautifulSoup, NavigableString
 	pip install beautifulsoup4
 """
 
-database_config = {
-	'host':			'127.0.0.1',
-	'port':			'3306',
-
-	'user':			'root',
-	'password':		'',
-
-	'charset':		'utf8',
-
-	'database':		'software'
-}
+database_config = estagio.load_database_config()
 
 try:
 	print('Connecting to the database...')

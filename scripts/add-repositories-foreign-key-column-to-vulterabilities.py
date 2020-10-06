@@ -1,0 +1,120 @@
+#!/usr/bin/env python
+import estagio
+import sys
+import mysql.connector
+from mysql.connector import errorcode as MySqlErrorCodes
+
+"""
+	This script adds a new column to the 'vulnerability' table that represents the foreign key for the 'repository_samples'
+	table (the R_ID column). This value is assigned based on the V_ID prefix in the 'vulnerability' table. For example, a
+	vulnerability with the V_ID 'vuln123' (prefix 'vuln') maps to the Mozilla row in the 'repository_samples' table.
+
+	Requirements:
+
+	pip install mysql-connector-python
+"""
+
+database_config = estagio.load_database_config()
+
+try:
+	print('Connecting to the database...')
+	connection = mysql.connector.connect(**database_config)
+	cursor = connection.cursor()
+except mysql.connector.Error as error:
+	error_string = repr(error)
+	print(f'Failed to connect to the database with the error: {error_string}')
+	sys.exit(1)
+
+try:	
+	cursor.execute(	'''
+						SELECT DISTINCT REGEXP_SUBSTR(V_ID, '[a-z]+') FROM vulnerabilities;
+					''')
+
+	print('Unique vulnerability prefixes:')
+	for i, result_set in enumerate(cursor):
+		prefix = result_set[0]
+		print(f'{i+1}: "{prefix}"')
+	print()
+
+except mysql.connector.Error as error:
+	error_string = repr(error)
+	print(f'Failed to query the unique vulnerability prefixes with the error: {error_string}')
+
+repository_info = {
+	'derby': 	{'project': 'Derby', 		'r_id': None},
+	'glibc': 	{'project': 'Glibc', 		'r_id': None},
+	'httpd': 	{'project': 'Apache', 		'r_id': None},
+	'ker': 		{'project': 'Kernel Linux', 'r_id': None},
+	'tomcat': 	{'project': 'Tomcat', 		'r_id': None},
+	'vuln': 	{'project': 'Mozilla', 		'r_id': None},
+	'xen': 		{'project': 'Xen', 			'r_id': None}
+}
+
+try:
+	print('Mapping the R_ID values in the repositories_sample table to the prefixes...')
+	cursor.execute(	'''
+						SELECT R_ID, PROJECT FROM repositories_sample;
+					''')
+
+	for result_set in cursor:
+		r_id = result_set[0]
+		project = result_set[1]
+
+		for info in repository_info.values():
+			if info['project'] == project:
+				info['r_id'] = r_id
+
+except mysql.connector.Error as error:
+	error_string = repr(error)
+	print(f'Failed to query the R_ID values from the repositories_sample table with the error: {error_string}')
+
+try:
+	print('Adding the R_ID foreign key column to the vulnerabilities table...')
+	cursor.execute(	'''
+						ALTER TABLE vulnerabilities
+						ADD COLUMN R_ID TINYINT NOT NULL AFTER V_ID;
+					''')
+
+	cursor.execute(	'''
+						ALTER TABLE vulnerabilities
+						ADD CONSTRAINT FK_R_ID_REPOSITORY
+						FOREIGN KEY (R_ID) REFERENCES repositories_sample (R_ID)
+						ON DELETE RESTRICT ON UPDATE RESTRICT;
+					''')
+
+	connection.commit()
+except mysql.connector.Error as error:
+
+	if error.errno == MySqlErrorCodes.ER_DUP_FIELDNAME:
+		print('The R_ID foreign key column already exists.')
+	else:
+		error_string = repr(error)
+		print(f'Failed to add the R_ID foreign key column in the vulnerabilities table with the error: {error_string}')
+		sys.exit(1)
+
+print('Updating the R_ID foreign key column in the vulnerabilities table...')
+for prefix, info in repository_info.items():
+
+	try:
+		r_id = info['r_id']
+
+		cursor.execute(	'''
+							UPDATE vulnerabilities
+							SET R_ID = %s
+							WHERE REGEXP_SUBSTR(V_ID, '[a-z]+') = %s;
+						''',
+						(r_id, prefix))
+
+		connection.commit()
+	except mysql.connector.Error as error:
+		error_string = repr(error)
+		print(f'Failed to update the R_ID foreign key column in the vulnerabilities table with the error: {error_string}')
+
+try:
+	cursor.close()
+	connection.close()
+except mysql.connector.Error as error:
+	error_string = repr(error)
+	print(f'Failed to close the connection to the database with the error: {error_string}')
+
+print('Finished running.')

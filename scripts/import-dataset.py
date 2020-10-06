@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import estagio
 import argparse
 import os
 
@@ -16,11 +17,11 @@ import os
 complete_script = 'load-complete-db.sql'
 no_timeline_script = 'load-without-timeline-db.sql'
 
-host = '127.0.0.1'
-port = '3306'
-user = 'root'
-password = ''
-charset = 'utf8'
+database_config = estagio.load_database_config()
+host = database_config['host']
+port = database_config['port']
+user = database_config['user']
+password = database_config['password']
 
 # ----------------------------------------
 
@@ -33,7 +34,7 @@ if args.complete:
 else:
 	import_script = no_timeline_script
 
-command = f'mysql --host={host} --port={port} --user={user} --password={password} --default-character-set={charset} --comments < {import_script}'
+command = f'mysql --host={host} --port={port} --user={user} --password={password} --default-character-set=utf8 --comments < {import_script}'
 
 print(command)
 os.system(command)
