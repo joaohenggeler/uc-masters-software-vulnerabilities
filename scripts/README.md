@@ -54,14 +54,19 @@ The script `run-sats.py` currently does not connect to the database, but it will
 
 The scripts `explore-cve-details-scraper.py` and `explore-mfsa-scraper.py` do not depend on the software vulnerability database and may be used in any order.
 
-## CVE Details vs MFSA
+## CVE Details and MFSA
 
 This section lists any information that can be retrieved from the [CVE Details](https://www.cvedetails.com/) and [MFSA](https://www.mozilla.org/en-US/security/advisories/) websites.
 
-A few examples to consider:
+### MFSA Page Layout
+
+First Page Layout (Description -> Workaround -> References): from [MFSA 2005-01](https://www.mozilla.org/en-US/security/advisories/mfsa2005-01/) until [MFSA 2016-84](https://www.mozilla.org/en-US/security/advisories/mfsa2016-84/).
+
+Second Page Layout (CVE List): from [MFSA 2016-85](https://www.mozilla.org/en-US/security/advisories/mfsa2016-85/) until [MFSA 2020-44](https://www.mozilla.org/en-US/security/advisories/mfsa2020-44/) (present).
+
+A few CVE Details examples to consider:
 * [CVE-2019-17351](https://www.cvedetails.com/cve/CVE-2019-17351/) (Linux Kernel)
 * [CVE-2019-11754](https://www.cvedetails.com/cve/CVE-2019-11754/) (Mozilla Firefox) which references [MFSA 2019-31](https://www.mozilla.org/en-US/security/advisories/mfsa2019-31/)
-* [MFSA 2005-01](https://www.mozilla.org/en-US/security/advisories/mfsa2005-01/) (Mozilla Firefox and the Mozilla Suite)
 
 ### Common Information
 1. CVE
