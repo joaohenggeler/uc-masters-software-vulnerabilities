@@ -30,9 +30,14 @@ The following Python libraries are required to run all of the previous scripts. 
 
 ```
 pip install mysql-connector-python
+
 pip install requests
 pip install beautifulsoup4
 pip install lxml
+
+pip install pandas
+pip install xlrd
+pip install numpy
 ```
 
 You must also create the following database configuration file in the directory where the scripts are executed. This file must be named **database.config** and should contain the correct connection parameters and user credentials.
