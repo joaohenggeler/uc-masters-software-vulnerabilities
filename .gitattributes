@@ -1,6 +1,7 @@
 * text=auto
 
 *.py text
+*.sql text
 
 *.config text
 
