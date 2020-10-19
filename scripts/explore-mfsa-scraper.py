@@ -3,10 +3,12 @@ import sys
 import requests
 import bs4
 import re
+import csv 
 
 """
-	This script explores the information available in the Mozilla Foundation Security Advisories (MFSA) website by scraping some of its pages.
-	No connections to the software vulnerabilities database are made.
+	This script explores the information available in the Mozilla Foundation Security Advisories (MFSA) website by scraping all of
+	its pages, and storing the information related to each CVE to a CSV file. No connections to the software vulnerabilities database
+	are made.
 
 	Requirements:
 
@@ -20,19 +22,17 @@ HTTP_HEADERS = {
 	'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'
 }
 
-CVE_REGEX = re.compile('CVE-\d*-\d*', re.IGNORECASE)
-
 try:
-	main_page_url = 'https://www.mozilla.org/en-US/security/advisories/'
-	print(f'Downloading the main MFSA page from "{main_page_url}"...')
-	response = requests.get(main_page_url, headers=HTTP_HEADERS)
+	main_cve_details_url = 'https://www.mozilla.org/en-US/security/advisories/'
+	print(f'Downloading the main MFSA page from "{main_cve_details_url}"...')
+	response = requests.get(main_cve_details_url, headers=HTTP_HEADERS)
 	response.raise_for_status()
 except Exception as error:
 	error_string = repr(error)
 	print(f'Failed to download the main MFSA page with the error: {error_string}')
 	sys.exit(1)
 
-main_soup = bs4.BeautifulSoup(response.text, 'html.parser')
+print()
 
 """
 <ul>
@@ -47,143 +47,177 @@ main_soup = bs4.BeautifulSoup(response.text, 'html.parser')
 </ul>
 """
 
-mfsa_a_list = main_soup.find_all('a', href=re.compile('/en-US/security/advisories/mfsa*'))
-total_num_mfsa = len(mfsa_a_list)
-print(f'Found {total_num_mfsa} security advisories. Only one for each year will be shown below.')
-print()
+CVE_REGEX = re.compile(r'(CVE-\d*-\d*)', re.IGNORECASE)
+BUGZILLA_URL_REGEX = re.compile(r'https?://bugzilla.*', re.IGNORECASE)
+MFSA_URL_REGEX = re.compile(r'/en-US/security/advisories/mfsa*', re.IGNORECASE)
 
-years_checked = []
+main_soup = bs4.BeautifulSoup(response.text, 'html.parser')
 
-for i, mfsa_a in enumerate(mfsa_a_list):
+mfsa_a_list = main_soup.find_all('a', href=MFSA_URL_REGEX)
 
-	mfsa_href = mfsa_a['href']
-	mfsa_url = f'https://www.mozilla.org/{mfsa_href}'
-	mfsa_name = mfsa_href.rsplit('/', 2)[-2]
-	assert mfsa_name
-	mfsa_year = mfsa_name[4:8]
+with open('mfsa-and-cve-details-results.csv', 'w', newline='') as csv_file:
 
-	# For testing purposes.
-	if mfsa_year in years_checked:
-		continue
-	else:
-		years_checked.append(mfsa_year)
+	csv_writer = csv.DictWriter(csv_file, fieldnames=['CVE', 'MFSA', 'Exists In CVE Details', 'MFSA URL', 'CVE Details URL', 'Bugzilla URL'])
+	csv_writer.writeheader()
 
-	print(f'#{i}: "{mfsa_name}" from "{mfsa_url}"')
-	print()
+	for i, mfsa_a in enumerate(mfsa_a_list):
 
-	try:
-		response = requests.get(mfsa_url, headers=HTTP_HEADERS)
-		response.raise_for_status()
-	except Exception as error:
-		error_string = repr(error)
-		print(f'Failed to download the {mfsa_name} page with the error: {error_string}')
-		continue
+		mfsa_href = mfsa_a['href']
+		mfsa_url = f'https://www.mozilla.org{mfsa_href}'
 
-	mfsa_soup = bs4.BeautifulSoup(response.text, 'html.parser')
-	
-	"""
-	<dl class="summary">
-		<dt>Announced</dt>
-		<dd>September 22, 2020</dd>
+		#mfsa_name = mfsa_href.rsplit('/', 2)[-2]
+		mfsa_name = mfsa_a.find('span').get_text(strip=True)
 
-		<dt>Impact</dt>
-		<dd><span class="level moderate">moderate</span></dd>
+		print(f'MFSA {i+1} of {len(mfsa_a_list)}: "{mfsa_name}" from "{mfsa_url}"...')
 
-		<dt>Products</dt>
-		<dd>Thunderbird</dd>
+		try:
+			response = requests.get(mfsa_url, headers=HTTP_HEADERS)
+			response.raise_for_status()
+		except Exception as error:
+			error_string = repr(error)
+			print(f'Failed to download the {mfsa_name} page with the error: {error_string}')
+			continue
+
+		mfsa_soup = bs4.BeautifulSoup(response.text, 'html.parser')
 		
-		<dt>Fixed in</dt>
-		<dd><ul><li>Thunderbird 78.3</li></ul></dd>
-	</dl>
-	"""
-
-	print('\t-> Summary:')
-	summary_dl = mfsa_soup.find('dl', class_='summary')
-	if summary_dl is not None:
-
-		summary_name_list = summary_dl.find_all('dt')
-		summary_value_list = summary_dl.find_all('dd')
-		assert len(summary_name_list) == len(summary_value_list)
-
-		for name_dt, value_dd in zip(summary_name_list, summary_value_list):
+		"""
+		[MFSA 2016-85 until MFSA 2020-44 (present)]
+		<section class="cve">
+			<h4 id="CVE-2020-15677" class="level-heading">
+				<a href="#CVE-2020-15677"><span class="anchor">#</span>CVE-2020-15677: Download origin spoofing via redirect</a>
+			</h4>
 			
-			name = name_dt.get_text(strip=True)
-			value = value_dd.get_text(strip=True)
-			print(f'\t\t---> "{name}" : "{value}"')
-
-	else:
-		print(f'\t\tMissing summary for {mfsa_name}.')
-
-	print()
-
-	"""
-	<section class="cve">
-		<h4 id="CVE-2020-15677" class="level-heading">
-			<a href="#CVE-2020-15677"><span class="anchor">#</span>CVE-2020-15677: Download origin spoofing via redirect</a>
-		</h4>
-		
-		<dl class="summary">
-			<dt>Reporter</dt>
-			<dd>Richard Thomas and Tom Chothia of University of Birmingham</dd>
+			<dl class="summary">
+				<dt>Reporter</dt>
+				<dd>Richard Thomas and Tom Chothia of University of Birmingham</dd>
+				
+				<dt>Impact</dt>
+				<dd><span class="level moderate">moderate</span></dd>
+			</dl>
 			
-			<dt>Impact</dt>
-			<dd><span class="level moderate">moderate</span></dd>
-		</dl>
-		
-		<h5>Description</h5>
-		<p>By exploiting an Open Redirect vulnerability on a website, an attacker could have spoofed the site displayed in the download file dialog to show the original site (the one suffering from the open redirect) rather than the site the file was actually downloaded from.</p>
+			<h5>Description</h5>
+			<p>By exploiting an Open Redirect vulnerability on a website, an attacker could have spoofed the site displayed in the download file dialog to show the original site (the one suffering from the open redirect) rather than the site the file was actually downloaded from.</p>
 
-		<h5>References</h5>
+			<h5>References</h5>
+			<ul>
+				<li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1641487">Bug 1641487</a></li>
+			</ul>
+		</section>
+		"""
+
+		"""
+		[MFSA 2005-01 until MFSA 2016-84]
+		<h3>References</h3>
+		
 		<ul>
-			<li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1641487">Bug 1641487</a></li>
+			<li>
+				<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1190038">HTML injection on homescreen app (with bypassing DOM sanitizer)</a>
+				(<a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-8510" class="ex-ref">CVE-2015-8510</a>)
+			</li>
 		</ul>
-	</section>
-	"""
 
-	"""
-	[2015 and older]
-	<h3>References</h3>
-	<ul>
-		<li>
-			<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1190038">HTML injection on homescreen app (with bypassing DOM sanitizer)</a>
-			(<a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-8510" class="ex-ref">CVE-2015-8510</a>)
-		</li>
-	</ul>
-	"""
+		<ul>
+			<li>
+				<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=773207">Heap-use-after-free in nsObjectLoadingContent::LoadObject</a>
+			</li>
+			<li>
+				<a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-1973" class="ex-ref">CVE-2012-1973</a>
+			</li>
+		</ul>
+		"""
 
-	print('\t-> CVE List:')
+		cve_list = []
 
-	cve_section_list = mfsa_soup.find_all('section', class_='cve')
-	for cve_section in cve_section_list:
+		# [MFSA 2016-85 until MFSA 2020-44 (present)]
+		cve_section_list = mfsa_soup.find_all('section', class_='cve')
+		for cve_section in cve_section_list:
 
-		cve_header = cve_section.find('h4', id=CVE_REGEX)
-		if cve_header is not None:
+			cve_header = cve_section.find('h4', id=CVE_REGEX)
+			if cve_header is not None:
 
-			cve = cve_header['id']
-			cve_description = cve_header.get_text(strip=True)
-			cve_description = cve_description.split(' ', 1)[1]
+				cve = cve_header['id']
 
-			print(f'\t\t---> "{cve}" : "{cve_description}"')
+				bugzilla_a = cve_section.find('a', href=BUGZILLA_URL_REGEX)
+				bugzilla_url = bugzilla_a['href'] if bugzilla_a is not None else None
 
-	h3_list = mfsa_soup.find_all('h3')
-	for h3 in h3_list:
+				cve_list.append((cve, bugzilla_url))
 
-		h3_text = h3.get_text(strip=True)
-		if h3_text == 'References':
+		# [MFSA 2005-01 until MFSA 2016-84]
+		header_list = mfsa_soup.find_all('h3')
+		for header in header_list:
 
-			references_ul = h3.next_sibling.next_sibling
-			references_list = references_ul.find_all('a', href=True)
-			for reference in references_list:
+			header_text = header.get_text(strip=True)
+			if header_text == 'References':
 
-				reference_url = reference['href']
-				reference_text = reference.get_text(strip=True)
+				for header_sibling in header.next_siblings:
 
-				if CVE_REGEX.match(reference_text):
+					if header_sibling.name == 'ul':
 
-					print(f'\t\t---> "{reference_text}" from "{reference_url}"')
+						references_list = header_sibling.find_all('a')
+						previous_bugzilla_url = None
 
-	print()
-	print()
-	print()
+						for reference in references_list:
 
+							reference_url = reference.get('href')
+							reference_text = reference.get_text(strip=True)
+
+							if BUGZILLA_URL_REGEX.match(reference_url):
+
+								previous_bugzilla_url = reference_url
+							
+							else:
+
+								cve_search = CVE_REGEX.search(reference_text)
+								if cve_search is not None:
+
+									# In some rare cases, we'd get the CVE plus some trailing characters.
+									# This ensures that we only get the CVE pattern we specified earlier
+									# in the regular expression.
+									cve = cve_search.group(1)
+									cve_list.append((cve, previous_bugzilla_url))
+
+								previous_bugzilla_url = None
+
+				# There's only one References section.
+				break
+
+		if not cve_list:
+			print('-> No CVEs.')
+
+		for j, (cve, bugzilla_url) in enumerate(cve_list):
+
+			cve_details_url = f'https://www.cvedetails.com/cve/{cve}'
+			exists_in_cve_details = None
+
+			try:
+				print(f'-> CVE {j+1} of {len(cve_list)}: "{cve}" from "{cve_details_url}"...')
+				response = requests.get(cve_details_url, headers=HTTP_HEADERS)
+				response.raise_for_status()
+
+				cve_details_soup = bs4.BeautifulSoup(response.text, 'html.parser')
+				error_message_div = cve_details_soup.find('div', class_='errormsg')
+				exists_in_cve_details = error_message_div is None
+
+			except Exception as error:
+				error_string = repr(error)
+				print(f'Failed to download the CVE Details page for {cve} with the error: {error_string}')
+
+			if not exists_in_cve_details:
+				cve_details_url = None
+
+			exists_in_cve_details = 'Yes' if exists_in_cve_details else 'No'
+
+			# Some Bugzilla URLs have newlines in the middle, so we'll remove them.
+			if bugzilla_url is not None:
+				# This URL sometimes doesn't exist for a given CVE.
+				# For example, MFSA 2013-116 includes two CVEs but only one Bugzilla reference.
+				bugzilla_url = bugzilla_url.replace('\r', '')
+				bugzilla_url = bugzilla_url.replace('\n', '')
+
+			csv_writer.writerow({'CVE': cve, 'MFSA': mfsa_name, 'Exists In CVE Details': exists_in_cve_details,
+								'MFSA URL': mfsa_url, 'CVE Details URL': cve_details_url, 'Bugzilla URL': bugzilla_url})
+
+		print()
+
+print()
 print('Finished running.')
