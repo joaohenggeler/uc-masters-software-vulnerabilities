@@ -3,11 +3,11 @@ import sys
 import requests
 import bs4
 import re
-import csv 
+import csv
 
 """
 	This script explores the information available in the Mozilla Foundation Security Advisories (MFSA) website by scraping all of
-	its pages, and storing the information related to each CVE to a CSV file. No connections to the software vulnerabilities database
+	its pages, and storing the information about each CVE in a CSV file. No connections to the software vulnerabilities database
 	are made.
 
 	Requirements:
@@ -55,7 +55,7 @@ main_soup = bs4.BeautifulSoup(response.text, 'html.parser')
 
 mfsa_a_list = main_soup.find_all('a', href=MFSA_URL_REGEX)
 
-with open('mfsa-and-cve-details-results.csv', 'w', newline='') as csv_file:
+with open('mfsa-results.csv', 'w', newline='') as csv_file:
 
 	csv_writer = csv.DictWriter(csv_file, fieldnames=['CVE', 'MFSA', 'Exists In CVE Details', 'MFSA URL', 'CVE Details URL', 'Bugzilla URL'])
 	csv_writer.writeheader()
