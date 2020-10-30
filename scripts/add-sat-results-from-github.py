@@ -84,10 +84,12 @@ try:
 						CREATE TABLE IF NOT EXISTS rule
 						(
 							RULE_ID INTEGER AUTO_INCREMENT PRIMARY KEY,
-							RULE_NAME VARCHAR(100) NOT NULL UNIQUE,
+							RULE_NAME VARCHAR(100) NOT NULL,
 							RULE_CATEGORY VARCHAR(50) NOT NULL,
 
 							SAT_ID INTEGER NOT NULL,
+
+							UNIQUE KEY (RULE_NAME, SAT_ID),
 							
 							FOREIGN KEY (SAT_ID) REFERENCES sat(SAT_ID) ON DELETE RESTRICT ON UPDATE RESTRICT
 						);
@@ -156,7 +158,7 @@ def insert_rule_and_alert_into_database(cursor, index,
 										sat_name, rule_name, rule_category, rule_cwe_list,
 										alert_severity_level, alert_line, alert_message,
 										alert_file_path, alert_file_occurrence, alert_file_commit):
-	
+
 	try:
 		if DEBUG_MODE:
 			print(f'-> Inserting the rule "{rule_name}"...')
@@ -178,22 +180,27 @@ def insert_rule_and_alert_into_database(cursor, index,
 		print(f'- Failed to insert the rule "{rule_name}" with the error: {error_string}')
 
 	try:
-		rule_cwe_list = [(rule_name, cwe) for cwe in cwe_list]
+		rule_cwe_list = [(rule_name, sat_name, cwe) for cwe in cwe_list]
 
-		if DEBUG_MODE and len(cwe_list) > 0:
-			print(f'-> Inserting the CWEs: ' + ','.join(cwe_list) + '...')
+		if DEBUG_MODE and cwe_list:
+			cwe_list_string = ', '.join(cwe_list)
+			print(f'-> Inserting the CWEs: {cwe_list_string}...')
 
-			cursor.executemany(	'''
-									INSERT IGNORE INTO rule_cwe_info (RULE_ID, V_CWE)
-									VALUES
+		cursor.executemany(	'''
+								INSERT IGNORE INTO rule_cwe_info (RULE_ID, V_CWE)
+								VALUES
+								(
 									(
-										(SELECT RULE_ID FROM rule WHERE RULE_NAME = %s LIMIT 1),
-										%s
-									);
-								''',
-								rule_cwe_list)
+										SELECT RULE_ID FROM rule
+										WHERE RULE_NAME = %s AND SAT_ID = (SELECT SAT_ID FROM sat WHERE SAT_NAME = %s LIMIT 1)
+										LIMIT 1
+									),
+									%s
+								);
+							''',
+							rule_cwe_list)
 
-			connection.commit()
+		connection.commit()
 
 	except mysql.connector.Error as error:
 		error_string = repr(error)
@@ -210,7 +217,11 @@ def insert_rule_and_alert_into_database(cursor, index,
 								%s,
 								%s,
 								%s,
-								(SELECT RULE_ID FROM rule WHERE RULE_NAME = %s LIMIT 1),
+								(
+									SELECT RULE_ID FROM rule
+									WHERE RULE_NAME = %s AND SAT_ID = (SELECT SAT_ID FROM sat WHERE SAT_NAME = %s LIMIT 1)
+									LIMIT 1
+								),
 								(
 									SELECT f.ID_File FROM
 									(
@@ -242,7 +253,7 @@ def insert_rule_and_alert_into_database(cursor, index,
 								)
 							);
 						''',
-						(alert_severity_level, alert_line, alert_message, rule_name,
+						(alert_severity_level, alert_line, alert_message, rule_name, sat_name,
 						alert_file_path, alert_file_occurrence,
 						alert_file_path, alert_file_occurrence,
 						alert_file_path, alert_file_occurrence,
@@ -285,7 +296,7 @@ zip_file_list = []
 ZIPPED_CSV_REGEX = re.compile(r'.*\.csv\.zip', re.IGNORECASE)
 
 debug_zip_file_counter = {sat_name: 0 for sat_name in SAT_NAME_LIST}
-DEBUG_MAX_FILES_PER_SAT = 5
+DEBUG_MAX_FILES_PER_SAT = 15
 
 # Traverse the repository and find every file recursively.
 while mozilla_file_list:
@@ -405,9 +416,9 @@ for i, file in enumerate(zip_file_list):
 		# Replace any N/A values with None.
 		results = results.replace({np.nan: None})
 
-		# For testing purposes: only insert every 3000th alert.
+		# For testing purposes: only insert some alerts.
 		if DEBUG_MODE:
-			results = results[::3000]
+			results = results[::5]
 
 		print(f'- Adding {len(results)} {sat_name} ({file_occurrence}) results from the CSV file...')
 
@@ -442,9 +453,9 @@ for i, file in enumerate(zip_file_list):
 		# Replace any N/A values with None.
 		results = results.replace({np.nan: None})
 
-		# For testing purposes: only insert every 1000th alert.
+		# For testing purposes: only insert some alerts.
 		if DEBUG_MODE:
-			results = results[::1000]
+			results = results[::5]
 
 		print(f'- Adding {len(results)} {sat_name} ({file_occurrence}) results from the CSV file...')
 
