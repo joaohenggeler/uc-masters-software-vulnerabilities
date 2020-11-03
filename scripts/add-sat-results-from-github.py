@@ -332,6 +332,8 @@ print()
 SAT_RESULTS_DIRCTORY = 'sat-results'
 os.makedirs(SAT_RESULTS_DIRCTORY, exist_ok=True)
 
+CWE_REGEX = re.compile(r'(CWE-\d+)', re.IGNORECASE)
+
 for i, file in enumerate(zip_file_list):
 
 	print(f'Adding the results file {i+1} of {len(zip_file_list)}...')
@@ -427,14 +429,15 @@ for i, file in enumerate(zip_file_list):
 			filename_loc = row['filename-loc']
 			category = row['severity']
 			rule_name = row['id']
-			message = row['message']
-			cwe = None
+			message = row['message']			
 
 			file_path, line = filename_loc.split(':', 1)
 			file_path = remove_base_directories_from_file_path(file_path, 'gecko-dev/')
 
-			# There are currently no CWEs in the Cppcheck CSV files (although they exist in the Excel spreadsheets).
-			cwe_list = [cwe] if cwe is not None else []
+			# There's currently no CWE column in the Cppcheck CSV files, although it exist in the Excel spreadsheets.
+			# Since this value might somehow appear in the message column (which includes everything after the fourth
+			# column), we'll search the text for any CWE patterns.
+			cwe_list = CWE_REGEX.findall(message)
 			
 			severity_level = None
 
