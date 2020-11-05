@@ -332,7 +332,7 @@ print()
 SAT_RESULTS_DIRCTORY = 'sat-results'
 os.makedirs(SAT_RESULTS_DIRCTORY, exist_ok=True)
 
-CWE_REGEX = re.compile(r'(CWE-\d+)', re.IGNORECASE)
+CWE_REGEX = re.compile(r'CWE-(\d+)', re.IGNORECASE)
 
 for i, file in enumerate(zip_file_list):
 
