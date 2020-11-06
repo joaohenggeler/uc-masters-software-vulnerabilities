@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+import os
+
+import estagio
+
+"""
+	This script imports the EXTRA-TIME-FILES tables from the software vulnerability and metrics dataset into a MySQL database
+	called 'software'. The MySQL server must be started before using this script.
+"""
+
+# ----------------------------------------
+
+SQL_SCRIPTS_BY_PROJECT = {
+
+	'derby': [	'EXTRA-TIME-FILES1000.sql', 'EXTRA-TIME-FILES1001.sql',
+				'EXTRA-TIME-FILES1002.sql', 'EXTRA-TIME-FILES1003.sql'],
+
+	'glibc': ['EXTRA-TIME-FILES1000.sql', 'EXTRA-TIME-FILES1001.sql'],
+
+	'httpd': ['EXTRA-TIME-FILES1000.sql', 'EXTRA-TIME-FILES1001.sql'],
+
+	'kernel': ['EXTRA-TIME-FILES1000.sql', 'EXTRA-TIME-FILES1001.sql'],
+
+	'mozilla': ['EXTRA-TIME-FILES1000.sql', 'EXTRA-TIME-FILES1001.sql'],
+
+	'tomcat': [	'EXTRA-TIME-FILES1000.sql', 'EXTRA-TIME-FILES1001.sql',
+				'EXTRA-TIME-FILES1002.sql', 'EXTRA-TIME-FILES1003.sql'],
+
+	'xen': ['EXTRA-TIME-FILES1000.sql', 'EXTRA-TIME-FILES1001.sql'],
+	
+}
+
+database_config = estagio.load_database_config()
+host = database_config['host']
+port = database_config['port']
+user = database_config['user']
+password = database_config['password']
+
+# ----------------------------------------
+
+for project, script_list in SQL_SCRIPTS_BY_PROJECT.items():
+
+	for script in script_list:
+
+		script_path = os.path.join('scripts', project, script)
+		command = f'mysql --host={host} --port={port} --user={user} --password={password} --default-character-set=utf8 --comments < "{script_path}"'
+
+		print(f'Executing the SQL script "{script_path}"...')
+		print(f'> {command}')
+		print()
+
+		#os.system(command)
+
+		print()
+
+print('Finished running.')
