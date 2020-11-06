@@ -60,7 +60,7 @@ for project, script_list in SQL_SCRIPTS_BY_PROJECT.items():
 		print(f'> {command}')
 		print()
 
-		#os.system(command)
+		os.system(command)
 
 		print()
 
