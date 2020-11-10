@@ -3,6 +3,8 @@
 *.py text
 *.sql text
 
+*.csv text
+
 *.config text
 
 *.bat text eol=crlf
