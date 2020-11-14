@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup, NavigableString
 
 """
 	This script queries the software vulnerability database for any CVE record that is missing its respective CWE value.
-	This value is then scraped from the CVE Details website and added to the 'V_CWE' column in the 'vulnerabilities' table.
+	This value is then scraped from the CVE Details website and added to the 'V_CWE' column in the 'VULNERABILITIES' table.
 
 	Requirements:
 
@@ -32,7 +32,7 @@ except mysql.connector.Error as error:
 try:
 	print('Adding the V_CWE column to the vulnerabilities table...')
 	query_cursor.execute(	'''
-								ALTER TABLE vulnerabilities
+								ALTER TABLE VULNERABILITIES
 								ADD COLUMN V_CWE INTEGER AFTER CVE;
 							''')
 	connection.commit()
@@ -49,7 +49,7 @@ try:
 	print('Finding any CVEs without an associated CWE...')
 	query_cursor.execute(	'''
 								SELECT CVE
-								FROM vulnerabilities
+								FROM VULNERABILITIES
 								WHERE CVE IS NOT NULL AND V_CWE IS NULL;
 							''')
 except mysql.connector.Error as error:
@@ -136,7 +136,7 @@ for result_set in query_cursor:
 
 	try:
 		update_cursor.execute(	'''
-									UPDATE vulnerabilities
+									UPDATE VULNERABILITIES
 									SET V_CWE = %s
 									WHERE CVE = %s;
 								''',

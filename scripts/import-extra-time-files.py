@@ -6,7 +6,13 @@ import estagio
 
 """
 	This script imports the EXTRA-TIME-FILES tables from the software vulnerability and metrics dataset into a MySQL database
-	called 'software'. The MySQL server must be started before using this script.
+	called 'software'. This database must have been previously created. The MySQL server must be started before using this script.
+
+	Usage:
+		import-extra-time-files.py [Optional Dataset Root Directory Path]
+
+		This path should point to the root dataset directory (e.g. "dumps everythink"). If it's not specified, it will default
+		to the current working directory.
 """
 
 script_name = sys.argv[0]
@@ -60,7 +66,7 @@ for project, script_list in SQL_SCRIPTS_BY_PROJECT.items():
 		print(f'> {command}')
 		print()
 
-		#os.system(command)
+		os.system(command)
 
 		print()
 
