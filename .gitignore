@@ -7,3 +7,6 @@ scripts/sat-results/*
 
 # The database configuration file.
 scripts/database.config
+
+# The symlink to the dataset.
+scripts/dataset
