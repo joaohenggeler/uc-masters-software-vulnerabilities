@@ -97,7 +97,7 @@ A few CVE Details examples to consider:
 
 ## Methodology Flowchart
 
-The following image shows the how the vulnerability, security alert, and software metric information can be retrieved, combined, and inserted into the database.
+The following image shows how the vulnerability, security alert, and software metric information can be retrieved, combined, and inserted into the database.
 
 ![Relationship Diagram](figures/flowchart-methodology.png)
 
