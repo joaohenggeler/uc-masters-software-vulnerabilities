@@ -1,0 +1,16 @@
+CVE,CVE Details URL,Publish Date,Last Update Date,CVSS Score,Confidentiality Impact,Integrity Impact,Availability Impact,Access Complexity,Authentication,Gained Access,Vulnerability Types,CWE,Bugzilla URLs,Bugzilla IDs,Advisory URLs,Advisory IDs,Git URLs,Git Commit Hashes,SVN URLs,SVN Revision Numbers
+CVE-2019-12407,https://www.cvedetails.com/cve/CVE-2019-12407,2019-09-23,2019-09-23,4.3,None,Partial,None,Medium,Not required,None,Cross Site Scripting,79,,,,,,,,
+CVE-2019-0226,https://www.cvedetails.com/cve/CVE-2019-0226,2019-05-09,2019-05-10,5.5,None,Partial,Partial,Low,Single system,None,Directory traversal,22,,,,,,,,
+CVE-2019-10089,https://www.cvedetails.com/cve/CVE-2019-10089,2019-09-23,2019-09-23,4.3,None,Partial,None,Medium,Not required,None,Cross Site Scripting,79,,,,,,,,
+CVE-2017-12607,https://www.cvedetails.com/cve/CVE-2017-12607,2017-11-20,2019-05-08,6.8,Partial,Partial,Partial,Medium,Not required,None,"Denial Of Service,Execute Code,Memory corruption",787,,,,,,,,
+CVE-2017-9804,https://www.cvedetails.com/cve/CVE-2017-9804,2017-09-20,2019-10-02,5.0,None,None,Partial,Low,Not required,None,,20,,,,,,,,
+CVE-2017-9792,https://www.cvedetails.com/cve/CVE-2017-9792,2017-10-03,2019-10-02,4.0,None,Partial,None,Low,Single system,None,,732,,,,,,,,
+CVE-2015-5344,https://www.cvedetails.com/cve/CVE-2015-5344,2016-02-03,2019-05-24,7.5,Partial,Partial,Partial,Low,Not required,None,Execute Code,19,,,,,,,,
+CVE-2015-5347,https://www.cvedetails.com/cve/CVE-2015-5347,2016-04-12,2016-04-13,4.3,None,Partial,None,Medium,Not required,None,Cross Site Scripting,79,,,,,,,,
+CVE-2015-5204,https://www.cvedetails.com/cve/CVE-2015-5204,2015-12-17,2015-12-18,4.3,None,Partial,None,Medium,Not required,None,,,,,,,,,,
+CVE-2012-6551,https://www.cvedetails.com/cve/CVE-2012-6551,2013-04-21,2016-11-28,5.0,None,None,Partial,Low,Not required,None,Denial Of Service,399,,,,,,,,
+CVE-2013-1849,https://www.cvedetails.com/cve/CVE-2013-1849,2013-05-02,2017-09-18,4.3,None,None,Partial,Medium,Not required,None,Denial Of Service,,,,,,,,,
+CVE-2013-1880,https://www.cvedetails.com/cve/CVE-2013-1880,2014-02-05,2016-11-28,4.3,None,Partial,None,Medium,Not required,None,Cross Site Scripting,79,,,,,,,,
+CVE-2007-3385,https://www.cvedetails.com/cve/CVE-2007-3385,2007-08-14,2018-10-16,4.3,Partial,None,None,Medium,Not required,None,Obtain Information,200,,,,,,,,
+CVE-2007-5342,https://www.cvedetails.com/cve/CVE-2007-5342,2007-12-27,2018-10-15,6.4,Partial,Partial,None,Low,Not required,None,,264,,,,,,,https://svn.apache.org/viewvc?view=rev&revision=606594,606594
+CVE-2007-6421,https://www.cvedetails.com/cve/CVE-2007-6421,2008-01-08,2018-10-30,3.5,None,Partial,None,Medium,Single system,None,Cross Site Scripting,79,,,https://httpd.apache.org/security/vulnerabilities_22.html,APACHE-2.2,,,,
