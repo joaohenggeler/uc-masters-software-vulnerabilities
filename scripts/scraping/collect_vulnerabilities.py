@@ -15,6 +15,7 @@
 """
 
 import csv
+import json
 import random
 import re
 import sys
@@ -80,11 +81,11 @@ def create_project_info(short_name, database_id, vendor_id, product_id, url_patt
 			'url_pattern': url_pattern}
 
 PROJECT_INFO = {
-	'Glibc': 				create_project_info('glibc', 	5, 	72, 		767, 	r'sourceware'),
-	'Apache	HTTP Server': 	create_project_info('apache', 	4, 	45, 		66, 	r'apache'),
-	'Xen': 					create_project_info('xen', 		3, 	6276, 		None, 	r'xen'),
-	'Mozilla': 				create_project_info('mozilla', 	1, 	452, 		None, 	r'mozilla'),
-	'Linux Kernel': 		create_project_info('kernel', 	2, 	33, 		47, 	r'linux|kernel|redhat'),
+	'Glibc': 				create_project_info('glibc', 	5, 	72, 	767, 	r'sourceware'),
+	'Apache	HTTP Server': 	create_project_info('apache', 	4, 	45, 	66, 	r'apache'),
+	'Xen': 					create_project_info('xen', 		3, 	6276, 	None, 	r'xen'),
+	'Mozilla': 				create_project_info('mozilla', 	1, 	452, 	None, 	r'mozilla'),
+	'Linux Kernel': 		create_project_info('kernel', 	2, 	33, 	47, 	r'linux|kernel|redhat'),
 }
 
 timestamp = get_current_timestamp()
@@ -118,7 +119,7 @@ for full_name, info in PROJECT_INFO.items():
 		with open(csv_filename, 'w', newline='') as csv_file:
 
 			CSV_HEADER = [
-				'CVE', 'CVE Details URL',
+				'CVE', 'CVE URL',
 				
 				'Publish Date', 'Last Update Date',
 
@@ -126,6 +127,8 @@ for full_name, info in PROJECT_INFO.items():
 				'Availability Impact', 'Access Complexity', 'Authentication',
 				'Gained Access', 'Vulnerability Types', 'CWE',
 				
+				'Affected Product Versions',
+
 				'Bugzilla URLs', 'Bugzilla IDs',
 				'Advisory URLs', 'Advisory IDs',
 				'Git URLs', 'Git Commit Hashes',
@@ -149,7 +152,7 @@ for full_name, info in PROJECT_INFO.items():
 				
 				if DEBUG_MODE:
 					previous_len = len(cve_a_list)
-					cve_a_list = random.sample(cve_a_list, 3)
+					cve_a_list = random.sample(cve_a_list, 4)
 					print(f'--> [DEBUG] Reduced the number of CVE pages from {previous_len} to {len(cve_a_list)}.')
 
 				for j, cve_a in enumerate(cve_a_list):
@@ -268,6 +271,105 @@ for full_name, info in PROJECT_INFO.items():
 
 					else:
 						print('--> No scores table found for this CVE.')
+
+					"""
+					<table class="listtable" id="vulnprodstable">
+						<tbody>
+							<tr>
+								<th class="num">#</th>
+								<th>Product Type</th>
+								<th>Vendor</th>
+								<th>Product</th>
+								<th>Version</th>
+								<th>Update</th>
+								<th>Edition</th>
+								<th>Language</th>
+								<th></th>
+							</tr>
+							<tr>
+								<td class="num">1</td>
+								<td>Application </td>
+								<td><a href="//www.cvedetails.com/vendor/452/Mozilla.html" title="Details for Mozilla">Mozilla</a></td>
+								<td><a href="//www.cvedetails.com/product/3264/Mozilla-Firefox.html?vendor_id=452" title="Product Details Mozilla Firefox">Firefox</a></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td><a href="/version/12613/Mozilla-Firefox-.html" title="Mozilla Firefox ">Version Details</a>&nbsp;<a href="/vulnerability-list/vendor_id-452/product_id-3264/version_id-12613/Mozilla-Firefox-.html" title="Vulnerabilities of Mozilla Firefox ">Vulnerabilities</a></td>
+							</tr>
+							<tr>
+								<td class="num">2 </td>
+								<td>Application </td>
+								<td><a href="//www.cvedetails.com/vendor/44/Netscape.html" title="Details for Netscape">Netscape</a></td>
+								<td><a href="//www.cvedetails.com/product/64/Netscape-Navigator.html?vendor_id=44" title="Product Details Netscape Navigator">Navigator</a></td>
+								<td>7.0.2 </td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td><a href="/version/11359/Netscape-Navigator-7.0.2.html" title="Netscape Navigator 7.0.2">Version Details</a>&nbsp;<a href="/vulnerability-list/vendor_id-44/product_id-64/version_id-11359/Netscape-Navigator-7.0.2.html" title="Vulnerabilities of Netscape Navigator 7.0.2">Vulnerabilities</a></td>
+							</tr>
+						</tbody>
+					</table>
+					"""
+
+					products_table = cve_soup.find('table', id='vulnprodstable')
+					if products_table is not None:
+
+						th_list = products_table.find_all('th')
+						th_list = [th.get_text(strip=True) for th in th_list]
+						column_indexes = {	'vendor': 	th_list.index('Vendor'),
+											'product': 	th_list.index('Product'),
+											'version': 	th_list.index('Version')}
+
+						affected_products = {}
+						tr_list = products_table.find_all('tr')
+						for tr in tr_list:
+
+							# Skip the header row.
+							if tr.find('th'):
+								continue
+
+							td_list = tr.find_all('td')
+
+							def get_column_value_and_url(name):
+								idx = column_indexes[name]
+								td = td_list[idx]
+
+								value = td.get_text(strip=True)
+								url = td.find('a', href=True)
+
+								if value in ['', '-']:
+									value = None
+
+								if url is not None:
+									url = url['href']
+
+								return value, url
+
+							_, vendor_url  = get_column_value_and_url('vendor')
+							product, product_url = get_column_value_and_url('product')
+							version, _ = get_column_value_and_url('version')
+
+							vendor_pattern = f'/{vendor_id}/'
+							product_pattern = f'/{product_id}/' if product_id is not None else ''
+							
+							# Check if the vendor and product belong to the current project.
+							if vendor_pattern in vendor_url and product_pattern in product_url:
+
+								if product not in affected_products:
+									affected_products[product] = []
+								
+								if version is not None and version not in affected_products[product]:
+									affected_products[product].append(version)
+
+						if affected_products:
+							affected_products = json.dumps(affected_products)
+						else:
+							affected_products = None
+					
+					else:
+						print('--> No products table found for this CVE.')
+
 
 					"""
 					<table class="listtable" id="vulnrefstable">
@@ -395,13 +497,15 @@ for full_name, info in PROJECT_INFO.items():
 					##################################################
 
 					csv_row = {
-						'CVE': cve, 'CVE Details URL': cve_url,
+						'CVE': cve, 'CVE URL': cve_url,
 
 						'Publish Date': publish_date, 'Last Update Date': last_update_date,
 
 						'CVSS Score': cvss_score, 'Confidentiality Impact': confidentiality_impact, 'Integrity Impact': integrity_impact,
 						'Availability Impact': availability_impact, 'Access Complexity': access_complexity, 'Authentication': authentication,
 						'Gained Access': gained_access, 'Vulnerability Types': vulnerability_types, 'CWE': cwe,
+
+						'Affected Product Versions': affected_products,
 
 						'Bugzilla URLs': bugzilla_urls, 'Bugzilla IDs': bugzilla_ids,
 						'Advisory URLs': advisory_urls, 'Advisory IDs': advisory_ids,

@@ -1,7 +1,0 @@
-CVE,CVE Details URL,Publish Date,Last Update Date,CVSS Score,Confidentiality Impact,Integrity Impact,Availability Impact,Access Complexity,Authentication,Gained Access,Vulnerability Types,CWE,Bugzilla URLs,Bugzilla IDs,Advisory URLs,Advisory IDs,Git URLs,Git Commit Hashes,SVN URLs,SVN Revision Numbers
-CVE-2018-15468,https://www.cvedetails.com/cve/CVE-2018-15468,2018-08-17,2019-10-02,4.9,None,None,Complete,Low,Not required,None,Denial Of Service,863,,,https://xenbits.xen.org/xsa/advisory-269.html,XSA-269,,,,
-CVE-2017-15590,https://www.cvedetails.com/cve/CVE-2017-15590,2017-10-18,2019-10-02,4.6,Partial,Partial,Partial,Low,Not required,None,"Denial Of Service,Gain privileges",,,,https://xenbits.xen.org/xsa/advisory-237.html,XSA-237,,,,
-CVE-2018-10981,https://www.cvedetails.com/cve/CVE-2018-10981,2018-05-10,2019-10-02,4.9,None,None,Complete,Low,Not required,None,Denial Of Service,835,,,https://xenbits.xen.org/xsa/advisory-262.html,XSA-262,,,,
-CVE-2012-3515,https://www.cvedetails.com/cve/CVE-2012-3515,2012-11-23,2017-06-30,7.2,Complete,Complete,Complete,Low,Not required,None,Gain privileges,20,,,,,,,,
-CVE-2012-4539,https://www.cvedetails.com/cve/CVE-2012-4539,2012-11-21,2017-08-28,2.1,None,None,Partial,Low,Not required,None,Denial Of Service,399,,,,,,,,
-CVE-2012-0217,https://www.cvedetails.com/cve/CVE-2012-0217,2012-06-12,2018-10-12,7.2,Complete,Complete,Complete,Low,Not required,None,"Overflow,Gain privileges",119,,,,,,,,
