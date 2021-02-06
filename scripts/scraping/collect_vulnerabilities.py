@@ -23,7 +23,7 @@ from urllib.parse import urlsplit, parse_qsl
 
 import bs4
 
-from estagio_scraping import download_page, get_current_timestamp
+from estagio_scraping import download_page, get_current_timestamp, change_datetime_string_format
 
 DEBUG_MODE = True
 if DEBUG_MODE:
@@ -109,7 +109,7 @@ for full_name, info in PROJECT_INFO.items():
 
 		if DEBUG_MODE:
 			previous_len = len(page_url_list)
-			page_url_list = page_url_list[::5]
+			page_url_list = page_url_list[::-3]
 			print(f'-> [DEBUG] Reduced the number of hub pages from {previous_len} to {len(page_url_list)}.')
 
 		database_id = info['database_id']
@@ -130,7 +130,7 @@ for full_name, info in PROJECT_INFO.items():
 				'Affected Product Versions',
 
 				'Bugzilla URLs', 'Bugzilla IDs',
-				'Advisory URLs', 'Advisory IDs',
+				'Advisory URLs', 'Advisory IDs', 'Advisory Info',
 				'Git URLs', 'Git Commit Hashes',
 				'SVN URLs', 'SVN Revision Numbers'
 			]
@@ -167,12 +167,16 @@ for full_name, info in PROJECT_INFO.items():
 
 					cve_soup = bs4.BeautifulSoup(cve_response.text, 'html.parser')
 
+					####################################################################################################
+
 					"""
 					<div class="cvedetailssummary">
 						Memory safety bugs were reported in Firefox 57 and Firefox ESR 52.5. Some of these bugs showed evidence of memory corruption and we presume that with enough effort that some of these could be exploited to run arbitrary code. This vulnerability affects Thunderbird &lt; 52.6, Firefox ESR &lt; 52.6, and Firefox &lt; 58.	<br>
 						<span class="datenote">Publish Date : 2018-06-11	Last Update Date : 2018-08-03</span>
 					</div>
 					"""
+					publish_date = None
+					last_update_date = None
 
 					dates_span = cve_soup.find('span', class_='datenote')
 					if dates_span is not None:
@@ -189,6 +193,8 @@ for full_name, info in PROJECT_INFO.items():
 
 					else:
 						print('--> No dates span found for this CVE.')
+
+					####################################################################################################
 
 					"""
 					<table id="cvssscorestable" class="details">
@@ -228,6 +234,16 @@ for full_name, info in PROJECT_INFO.items():
 					</table>
 					"""
 
+					cvss_score = None
+					confidentiality_impact = None
+					integrity_impact = None
+					availability_impact = None
+					access_complexity = None
+					authentication = None
+					gained_access = None
+					vulnerability_types = None
+					cwe = None
+
 					scores_table = cve_soup.find('table', id='cvssscorestable')
 					if scores_table is not None:
 
@@ -241,19 +257,14 @@ for full_name, info in PROJECT_INFO.items():
 							value = None
 
 							if key == 'Vulnerability Type(s)':
-
-								span_list = td.find_all('span')
-								span_text_list = [span.get_text(strip=True) for span in span_list]
-								value = ','.join(span_text_list)
-
+								value = [span.get_text(strip=True) for span in td.find_all('span')]
 							else:
-
 								span = td.find('span')
 								if span is not None:
 									value = span.get_text(strip=True)
 								else:
 									value = td.get_text(strip=True)
-
+							
 							cve_fields[key] = value
 
 						cvss_score = cve_fields.get('CVSS Score')
@@ -264,13 +275,15 @@ for full_name, info in PROJECT_INFO.items():
 						authentication = cve_fields.get('Authentication')
 						gained_access = cve_fields.get('Gained Access')
 						vulnerability_types = cve_fields.get('Vulnerability Type(s)')
+
 						cwe = cve_fields.get('CWE ID')
-						
 						if cwe is not None and not cwe.isnumeric():
 							cwe = None
 
 					else:
 						print('--> No scores table found for this CVE.')
+
+					####################################################################################################
 
 					"""
 					<table class="listtable" id="vulnprodstable">
@@ -311,6 +324,7 @@ for full_name, info in PROJECT_INFO.items():
 						</tbody>
 					</table>
 					"""
+					affected_products = None
 
 					products_table = cve_soup.find('table', id='vulnprodstable')
 					if products_table is not None:
@@ -362,14 +376,13 @@ for full_name, info in PROJECT_INFO.items():
 								if version is not None and version not in affected_products[product]:
 									affected_products[product].append(version)
 
-						if affected_products:
-							affected_products = json.dumps(affected_products)
-						else:
+						if not affected_products:
 							affected_products = None
-					
+
 					else:
 						print('--> No products table found for this CVE.')
 
+					####################################################################################################
 
 					"""
 					<table class="listtable" id="vulnrefstable">
@@ -392,21 +405,21 @@ for full_name, info in PROJECT_INFO.items():
 					</table>
 					"""
 
+					bugzilla_urls = None
+					advisory_urls = None
+					git_urls = None
+					git_commit_hashes = None
+					svn_urls = None
+					svn_revision_numbers = None
+
 					references_table = cve_soup.find('table', id='vulnrefstable')
 					if references_table is not None:
 
-						bugzilla_urls = None
-						advisory_urls = None
-						git_urls = None
-						git_commit_hashes = None
-						svn_urls = None
-						svn_revision_numbers = None
-
-						# Creates a comma separated list of URL that match a regex (or a list of regexes).
+						# Creates a list of URL that match a regex (or a list of regexes).
 						# If a handler function is passed as the second argument, then it will be called
 						# for each URL in order to create and return a secondary list. This may be used
 						# to extract specific parts of the URL.
-						def join_all_urls(url_regex, url_handler=None):
+						def list_all_urls(url_regex, url_handler=None):
 							a_list = references_table.find_all('a', href=url_regex)
 							
 							url_list = []
@@ -420,7 +433,7 @@ for full_name, info in PROJECT_INFO.items():
 								for url in url_list:
 									secondary_list.append( url_handler(url) )
 
-							return ','.join(url_list), ','.join(secondary_list)
+							return url_list, secondary_list
 
 						# Finds the value of the first parameter in a URL's query segment given a list of
 						# keys to check. If no value was found, this function returns None.
@@ -485,16 +498,212 @@ for full_name, info in PROJECT_INFO.items():
 						def handle_svn_urls(url):
 							return get_query_param(url, ['rev', 'revision', 'pathrev'])
 
-						bugzilla_urls, bugzilla_ids = join_all_urls(BUGZILLA_URL_REGEX, handle_bugzilla_urls)
-						advisory_urls, advisory_ids = join_all_urls([MFSA_URL_REGEX, XSA_URL_REGEX, APACHE_SECURITY_URL_REGEX], handle_advisory_urls)
+						bugzilla_urls, bugzilla_ids 	= list_all_urls(BUGZILLA_URL_REGEX, handle_bugzilla_urls)
+						advisory_urls, advisory_ids 	= list_all_urls([MFSA_URL_REGEX, XSA_URL_REGEX, APACHE_SECURITY_URL_REGEX], handle_advisory_urls)
 
-						git_urls, git_commit_hashes = join_all_urls([GIT_URL_REGEX, GITHUB_URL_REGEX], handle_git_urls)
-						svn_urls, svn_revision_numbers = join_all_urls(SVN_URL_REGEX, handle_svn_urls)
+						git_urls, git_commit_hashes 	= list_all_urls([GIT_URL_REGEX, GITHUB_URL_REGEX], handle_git_urls)
+						svn_urls, svn_revision_numbers 	= list_all_urls(SVN_URL_REGEX, handle_svn_urls)
 
 					else:
 						print('--> No references table found for this CVE.')
 					
-					##################################################
+					####################################################################################################
+
+					advisory_info = {}
+
+					if short_name == 'mozilla':
+
+						for mfsa_id, mfsa_url in zip(advisory_ids, advisory_urls):
+
+							mfsa_info = {}
+							print(f'--> Scraping additional information from the "{mfsa_id}" advisory page "{mfsa_url}"...')
+
+							mfsa_response = download_page(mfsa_url)
+							if mfsa_response is None:
+								print('--> Could not download the MFSA page.')
+								continue
+
+							mfsa_soup = bs4.BeautifulSoup(mfsa_response.text, 'html.parser')
+
+							"""
+							[MFSA 2005-01 until (present)]
+							<dl class="summary">
+								<dt>Announced</dt>
+								<dd>November 20, 2012</dd>
+								<dt>Reporter</dt>
+								<dd>Mariusz Mlynski</dd>
+								<dt>Impact</dt>
+								<dd><span class="level critical">Critical</span></dd>
+								<dt>Products</dt>
+								<dd>Firefox, Firefox ESR</dd>
+								<dt>Fixed in</dt>
+								<dd>
+									<ul>
+										<li>Firefox 17</li>
+										<li>Firefox ESR 10.0.11</li>
+									</ul>
+								</dd>
+							</dl>
+
+							[MFSA 2016-85 until (present)]
+							<section class="cve">
+								<h4 id="CVE-2018-12359" class="level-heading">
+									<a href="#CVE-2018-12359"><span class="anchor">#</span>CVE-2018-12359: Buffer overflow using computed size of canvas element</a>
+								</h4>
+								<dl class="summary">
+									<dt>Reporter</dt>
+									<dd>Nils</dd>
+									<dt>Impact</dt>
+									<dd><span class="level critical">critical</span></dd>
+								</dl>
+								<h5>Description</h5>
+								<p>A buffer overflow can occur when rendering canvas content while adjusting the height and width of the <code>&lt;canvas&gt;</code> element dynamically, causing data to be written outside of the currently computed boundaries. This results in a potentially exploitable crash.</p>
+								<h5>References</h5>
+								<ul>
+									<li><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459162">Bug 1459162</a></li>
+								</ul>
+							</section>
+
+							<section class="cve">
+								[...]
+							</section>								
+							"""
+
+							dl_summary = mfsa_soup.find('dl', class_='summary')
+							if dl_summary is not None:
+
+								dt_list = dl_summary.find_all('dt')
+								dd_list = dl_summary.find_all('dd')
+								for dt, dd in zip(dt_list, dd_list):
+
+									key = dt.get_text(strip=True)
+									value = dd.get_text(strip=True)
+
+									if key == 'Announced':
+										value = change_datetime_string_format(value, '%B %d, %Y', '%Y-%m-%d', 'en_US')
+									elif key == 'Impact':
+										value = value.title()
+									elif key == 'Products':
+										value = [product.strip() for product in value.split(',')]
+									elif key == 'Fixed in':
+										value = [li.get_text(strip=True) for li in dd.find_all('li')]
+									
+									key = key.title()
+									mfsa_info[key] = value
+							else:
+								print('--> No summary description list found for this MFSA.')
+
+							section_list = mfsa_soup.find_all('section', class_='cve')
+							cve_list = []
+							for section in section_list:
+								h4_cve = section.find('h4', id=CVE_REGEX)
+								if h4_cve is not None:
+									cve_list.append(h4_cve['id'])
+
+							if cve_list:
+								mfsa_info['CVEs'] = cve_list
+
+							advisory_info[mfsa_id] = mfsa_info
+
+					####################################################################################################
+
+					elif short_name == 'xen':
+
+						for xsa_full_id, xsa_url in zip(advisory_ids, advisory_urls):
+							
+							xsa_info = {}
+							xsa_id = xsa_full_id.rsplit('-')[-1]
+							print(f'--> Scraping additional information from the "{xsa_full_id}" advisory page "{xsa_url}"...')
+							
+							xsa_response = download_page(xsa_url)
+							if xsa_response is not None:
+
+								xsa_soup = bs4.BeautifulSoup(xsa_response.text, 'html.parser')
+								xsa_info_table = xsa_soup.find('table')
+								if xsa_info_table is not None:
+
+									xsa_info_th = xsa_info_table.find_all('th')
+									xsa_info_td = xsa_info_table.find_all('td')
+									for th, td in zip(xsa_info_th, xsa_info_td):
+
+										key = th.get_text(strip=True)
+										value = td.get_text(strip=True)
+
+										if key == 'Advisory':
+											continue
+										elif key == 'CVE(s)':
+											key = 'CVEs'
+											value = [cve for cve in value.split(' ')]
+										else:
+											key = key.title()
+											
+										xsa_info[key] = value
+
+									advisory_info[xsa_full_id] = xsa_info
+
+							else:
+								print('--> Could not download the XSA page.')
+
+							##################################################
+
+							xsa_meta_url = f'https://xenbits.xen.org/xsa/xsa{xsa_id}.meta'
+							print(f'--> Scraping commit hashes from the XSA {xsa_id} metadata file "{xsa_meta_url}"...')
+							
+							xsa_meta_response = download_page(xsa_meta_url)
+							if xsa_meta_response is not None:
+
+								try:
+									xsa_metadata = json.loads(xsa_meta_response.text)
+								except json.decoder.JSONDecodeError:
+									xsa_metadata = None
+									error_string = repr(error)
+									print(f'--> Failed to parse the JSON metadata with the error: {error_string}')
+								
+								def nested_get(dictionary, key_list):
+									value = None
+									for key in key_list:
+										value = dictionary.get(key)
+										
+										if value is None:
+											break
+										elif isinstance(value, dict):
+											dictionary = value
+
+									return value
+
+								if xsa_metadata is not None:
+
+									commit_hash = nested_get(xsa_metadata, ['Recipes', 'master', 'Recipes', 'xen', 'StableRef'])
+									if commit_hash is not None:
+										git_urls.append(f'https://xenbits.xen.org/gitweb/?p=xen.git;a=commit;h={commit_hash}')
+										git_commit_hashes.append(commit_hash)
+									else:
+										print('--> Could not find any commit hash for the master branch.')
+
+							else:
+								print('--> Could not download the XSA metadata file.')
+
+					####################################################################################################
+
+					def json_or_nothing(container):
+						return json.dumps(container) if container else None
+
+					vulnerability_types		= json_or_nothing(vulnerability_types)
+
+					affected_products		= json_or_nothing(affected_products)
+
+					bugzilla_urls 			= json_or_nothing(bugzilla_urls)
+					bugzilla_ids 			= json_or_nothing(bugzilla_ids)
+					advisory_urls 			= json_or_nothing(advisory_urls)
+					advisory_ids 			= json_or_nothing(advisory_ids)
+					advisory_info 			= json_or_nothing(advisory_info)
+
+					git_urls 				= json_or_nothing(git_urls)
+					git_commit_hashes 		= json_or_nothing(git_commit_hashes)
+					svn_urls 				= json_or_nothing(svn_urls)
+					svn_revision_numbers 	= json_or_nothing(svn_revision_numbers)
+
+					####################################################################################################
 
 					csv_row = {
 						'CVE': cve, 'CVE URL': cve_url,
@@ -508,7 +717,7 @@ for full_name, info in PROJECT_INFO.items():
 						'Affected Product Versions': affected_products,
 
 						'Bugzilla URLs': bugzilla_urls, 'Bugzilla IDs': bugzilla_ids,
-						'Advisory URLs': advisory_urls, 'Advisory IDs': advisory_ids,
+						'Advisory URLs': advisory_urls, 'Advisory IDs': advisory_ids, 'Advisory Info': advisory_info,
 						'Git URLs': git_urls, 'Git Commit Hashes': git_commit_hashes,
 						'SVN URLs': svn_urls, 'SVN Revision Numbers': svn_revision_numbers
 					}
