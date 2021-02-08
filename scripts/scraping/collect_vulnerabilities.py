@@ -109,7 +109,7 @@ for full_name, info in PROJECT_INFO.items():
 
 		if DEBUG_MODE:
 			previous_len = len(page_url_list)
-			page_url_list = page_url_list[::-3]
+			page_url_list = page_url_list[::-2]
 			print(f'-> [DEBUG] Reduced the number of hub pages from {previous_len} to {len(page_url_list)}.')
 
 		database_id = info['database_id']
@@ -153,7 +153,7 @@ for full_name, info in PROJECT_INFO.items():
 				# Test a random sample of CVEs from each page.
 				if DEBUG_MODE:
 					previous_len = len(cve_a_list)
-					cve_a_list = random.sample(cve_a_list, 4)
+					cve_a_list = random.sample(cve_a_list, 6)
 					print(f'--> [DEBUG] Reduced the number of CVE pages from {previous_len} to {len(cve_a_list)}.')
 
 				for j, cve_a in enumerate(cve_a_list):
