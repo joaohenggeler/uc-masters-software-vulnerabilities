@@ -150,6 +150,7 @@ for full_name, info in PROJECT_INFO.items():
 
 				cve_a_list = vulnerability_table.find_all('a', title=CVE_REGEX)
 				
+				# Test a random sample of CVEs from each page.
 				if DEBUG_MODE:
 					previous_len = len(cve_a_list)
 					cve_a_list = random.sample(cve_a_list, 4)
@@ -174,6 +175,7 @@ for full_name, info in PROJECT_INFO.items():
 						Memory safety bugs were reported in Firefox 57 and Firefox ESR 52.5. Some of these bugs showed evidence of memory corruption and we presume that with enough effort that some of these could be exploited to run arbitrary code. This vulnerability affects Thunderbird &lt; 52.6, Firefox ESR &lt; 52.6, and Firefox &lt; 58.	<br>
 						<span class="datenote">Publish Date : 2018-06-11	Last Update Date : 2018-08-03</span>
 					</div>
+					
 					"""
 					publish_date = None
 					last_update_date = None
@@ -329,6 +331,7 @@ for full_name, info in PROJECT_INFO.items():
 					products_table = cve_soup.find('table', id='vulnprodstable')
 					if products_table is not None:
 
+						# Parse each row in the product table.
 						th_list = products_table.find_all('th')
 						th_list = [th.get_text(strip=True) for th in th_list]
 						column_indexes = {	'vendor': 	th_list.index('Vendor'),
@@ -345,6 +348,8 @@ for full_name, info in PROJECT_INFO.items():
 
 							td_list = tr.find_all('td')
 
+							# Get a specific cell value and any URL it references from
+							# the current row given its column name.
 							def get_column_value_and_url(name):
 								idx = column_indexes[name]
 								td = td_list[idx]
@@ -511,6 +516,7 @@ for full_name, info in PROJECT_INFO.items():
 
 					advisory_info = {}
 
+					# Download and extract information from any referenced Mozilla Foundation Security Advisories (MFSA) pages.
 					if short_name == 'mozilla':
 
 						for mfsa_id, mfsa_url in zip(advisory_ids, advisory_urls):
@@ -579,6 +585,7 @@ for full_name, info in PROJECT_INFO.items():
 									key = dt.get_text(strip=True)
 									value = dd.get_text(strip=True)
 
+									# Change the format of specific fields so they're consistent with the rest of the CSV file.
 									if key == 'Announced':
 										value = change_datetime_string_format(value, '%B %d, %Y', '%Y-%m-%d', 'en_US')
 									elif key == 'Impact':
@@ -607,6 +614,7 @@ for full_name, info in PROJECT_INFO.items():
 
 					####################################################################################################
 
+					# Download and extract information from any referenced Xen Security Advisories (XSA) pages.
 					elif short_name == 'xen':
 
 						for xsa_full_id, xsa_url in zip(advisory_ids, advisory_urls):
@@ -629,6 +637,7 @@ for full_name, info in PROJECT_INFO.items():
 										key = th.get_text(strip=True)
 										value = td.get_text(strip=True)
 
+										# Change the format of specific fields so they're consistent with the rest of the CSV file.
 										if key == 'Advisory':
 											continue
 										elif key == 'CVE(s)':
@@ -646,6 +655,7 @@ for full_name, info in PROJECT_INFO.items():
 
 							##################################################
 
+							# Download an additional page that contains this XSA's Git commit hashes.
 							xsa_meta_url = f'https://xenbits.xen.org/xsa/xsa{xsa_id}.meta'
 							print(f'--> Scraping commit hashes from the XSA {xsa_id} metadata file "{xsa_meta_url}"...')
 							
@@ -659,6 +669,9 @@ for full_name, info in PROJECT_INFO.items():
 									error_string = repr(error)
 									print(f'--> Failed to parse the JSON metadata with the error: {error_string}')
 								
+								# Tries to get a value from variously nested dictionaries by following
+								# a sequence of keys in a given order. If any intermediate dictionary
+								# doesn't exist, this function returns None.
 								def nested_get(dictionary, key_list):
 									value = None
 									for key in key_list:
@@ -685,6 +698,7 @@ for full_name, info in PROJECT_INFO.items():
 
 					####################################################################################################
 
+					# Serializes a list or dictionary using JSON, or as an empty string if the given container is empty.
 					def json_or_nothing(container):
 						return json.dumps(container) if container else None
 
@@ -725,7 +739,7 @@ for full_name, info in PROJECT_INFO.items():
 					csv_writer.writerow(csv_row)
 
 	else:
-		print('-> Could not download the first vulnerability page.')
+		print('-> Could not download the first hub page.')
 
 	print()
 	print()
