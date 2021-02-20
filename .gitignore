@@ -10,3 +10,6 @@ scripts/database.config
 
 # The symlink to the dataset.
 scripts/dataset
+
+# The five C/C++ project repositories.
+repositories
