@@ -3,6 +3,7 @@
 
 # Understand project databases.
 *.udb
+*.und
 
 # The database configuration file.
 scripts/database.config

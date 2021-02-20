@@ -20,7 +20,7 @@ import json
 import random
 import re
 import sys
-from typing import Callable, Optional, Union
+from typing import Callable, Iterator, Optional, Union
 from urllib.parse import urlsplit, parse_qsl
 
 import bs4 # type: ignore
@@ -179,7 +179,6 @@ class Cve:
 			Memory safety bugs were reported in Firefox 57 and Firefox ESR 52.5. Some of these bugs showed evidence of memory corruption and we presume that with enough effort that some of these could be exploited to run arbitrary code. This vulnerability affects Thunderbird &lt; 52.6, Firefox ESR &lt; 52.6, and Firefox &lt; 58.	<br>
 			<span class="datenote">Publish Date : 2018-06-11	Last Update Date : 2018-08-03</span>
 		</div>
-		
 		"""
 
 		dates_span = self.cve_details_soup.find('span', class_='datenote')
@@ -470,17 +469,17 @@ class Cve:
 		def handle_git_urls(url: str) -> Optional[str]:
 			commit_hash = get_query_param(url, ['id', 'h'])
 
-			# @TODO: If the hash length is less than 40, we need to refer to
-			# the repository to get the full hash.
-			if commit_hash is not None and len(commit_hash) < GIT_COMMIT_HASH_LENGTH:
-				pass
-
 			if commit_hash is None:
 				split_url = urlsplit(url)
 				path_components = split_url.path.rsplit('/')
 				commit_hash = path_components[-1]
 
-			if not GIT_COMMIT_HASH_REGEX.match(commit_hash):
+			# If the hash length is less than 40, we need to refer to the repository
+			# to get the full hash.
+			if commit_hash is not None and len(commit_hash) < GIT_COMMIT_HASH_LENGTH:
+				commit_hash = self.project.find_full_git_commit_hash(commit_hash)
+
+			if commit_hash is not None and not GIT_COMMIT_HASH_REGEX.match(commit_hash):
 				commit_hash = None
 			
 			if commit_hash is None:
@@ -514,13 +513,26 @@ class Cve:
 		self.git_urls, self.git_commit_hashes 		= list_all_urls([GIT_URL_REGEX, GITHUB_URL_REGEX], handle_git_urls)
 		self.svn_urls, self.svn_revision_numbers 	= list_all_urls(SVN_URL_REGEX, handle_svn_urls)
 
+	def remove_duplicated_values(self):
+
+		def remove_duplicates_from_list(value_list: list) -> list:
+			return list(dict.fromkeys(value_list))
+
+		self.vulnerability_types 	= remove_duplicates_from_list(self.vulnerability_types)
+
+		self.bugzilla_urls 			= remove_duplicates_from_list(self.bugzilla_urls)
+		self.bugzilla_ids 			= remove_duplicates_from_list(self.bugzilla_ids)
+		self.advisory_urls 			= remove_duplicates_from_list(self.advisory_urls)
+		self.advisory_ids 			= remove_duplicates_from_list(self.advisory_ids)
+
+		self.git_urls 				= remove_duplicates_from_list(self.git_urls)
+		self.git_commit_hashes 		= remove_duplicates_from_list(self.git_commit_hashes)
+		self.svn_urls 				= remove_duplicates_from_list(self.svn_urls)
+		self.svn_revision_numbers 	= remove_duplicates_from_list(self.svn_revision_numbers)
+
 	def serialize_containers(self):
 
 		def json_or_nothing(container: Union[list, dict]) -> Optional[str]:
-			# Remove duplicates from lists.
-			if isinstance(container, list):
-				container = list(dict.fromkeys(container))
-
 			return json.dumps(container) if container else None
 
 		self.vulnerability_types 	= json_or_nothing(self.vulnerability_types)
@@ -545,6 +557,8 @@ class Project:
 
 	TIMESTAMP = get_current_timestamp()
 
+	scrape_all_branches: bool
+
 	full_name: str
 	short_name: str
 	database_id: int
@@ -564,10 +578,11 @@ class Project:
 		try:
 			self.repository = git.Repo(self.repository_path)
 		except Exception as error:
-			error_string = repr(error)
-			print(f'Failed to get the repository for the project "{self}"" with the error: {error_string}')
+			print(f'Failed to get the repository for the project "{self}"" with the error: {repr(error)}')
 
-		self.csv_filename = f'{self.database_id}-{self.short_name}-{self.TIMESTAMP}.csv'
+		used_branches = 'all-branches' if self.scrape_all_branches else 'master-branch'
+
+		self.csv_filename = f'{self.database_id}-{self.short_name}-{used_branches}-{self.TIMESTAMP}.csv'
 
 	def __str__(self):
 		return self.full_name
@@ -575,12 +590,17 @@ class Project:
 	@staticmethod
 	def get_project_list_from_config(config: dict) -> list:
 		
+		scrape_all_branches = config['scrape_all_branches']
 		project_config = config['projects']
-		project_list = []
 
+		print(f'Scraping all branches? {scrape_all_branches}')
+		print()
+
+		project_list = []
 		for full_name, info in project_config.items():
 
 			short_name = info['short_name']
+			info['scrape_all_branches'] = scrape_all_branches
 			project: Project
 		
 			if short_name == 'mozilla':
@@ -590,6 +610,7 @@ class Project:
 			else:
 				project = Project(full_name, info)
 
+			print(f'Loaded the project "{project}" located in "{project.repository_path}".')
 			project_list.append(project)
 
 		return project_list
@@ -597,10 +618,23 @@ class Project:
 	def scrape_additional_information_from_security_advisories(self, cve: Cve):
 		pass
 
-	def find_git_commit_hashes(self, grep_pattern: str) -> list:
+	def scrape_additional_information_from_version_control(self, cve: Cve):
+		pass
+
+	def find_full_git_commit_hash(self, short_commit_hash: str) -> Optional[str]:
+
+		try:
+			# git show --format="%H" --no-patch [SHORT HASH]
+			full_commit_hash = self.repository.git.show(short_commit_hash, format='%H', no_patch=True)
+		except git.exc.GitCommandError as error:
+			full_commit_hash = None
+			print(f'Failed to find the full version of the commit hash "{short_commit_hash}" with the error: {repr(error)}')
+
+		return full_commit_hash
+
+	def find_git_commit_hashes_from_pattern(self, grep_pattern: str) -> list:
 		hash_list = []
 
-		# repository.git.show(f':/{bugzilla_id}', format='oneline', no_patch=True)
 		# git log --all --format=oneline --grep="[REGEX]"
 		log_result = self.repository.git.log(all=True, format='oneline', grep=grep_pattern)
 		
@@ -610,10 +644,28 @@ class Project:
 
 		return hash_list
 
-	def scrape_additional_information_from_version_control(self, cve: Cve):
-		pass
+	def is_git_commit_hash_in_master_branch(self, commit_hash: str) -> bool:
+		
+		try:
+			# git branch --contains [HASH]
+			result = self.repository.git.branch(contains=commit_hash) != ''
+		except git.exc.GitCommandError as error:
+			# If there's no such commit in the repository.
+			result = False
 
-	def scrape_vulnerabilities_from_cve_details(self):
+		return result
+
+	def filter_git_commit_hashes_by_branch(self, cve: Cve):
+		if not self.scrape_all_branches:
+			cve.git_commit_hashes = [hash for hash in cve.git_commit_hashes if self.is_git_commit_hash_in_master_branch(hash)]
+
+	def find_changed_files_in_git_commit(self, commit_hash: str) -> Iterator[str]:
+		# git diff --name-only [HASH] [HASH]^
+		diff_result = self.repository.git.diff(commit_hash, commit_hash + '^', name_only=True)
+		for file_path in diff_result.splitlines():
+			yield file_path
+
+	def scrape_vulnerabilities_from_cve_details(self) -> Iterator[Cve]:
 
 		print(f'Collecting the vulnerabilities for the "{self}" project ({self.vendor_id}, {self.product_id}):')
 		response = download_page('https://www.cvedetails.com/vulnerability-list.php', {'vendor_id': self.vendor_id, 'product_id': self.product_id})
@@ -630,7 +682,8 @@ class Project:
 
 		if DEBUG_MODE:
 			previous_len = len(page_url_list)
-			page_url_list = page_url_list[::-3]
+			page_url_list = page_url_list[::-2]
+			page_url_list = page_url_list[:6]
 			print(f'-> [DEBUG] Reduced the number of hub pages from {previous_len} to {len(page_url_list)}.')
 
 		for i, page_url in enumerate(page_url_list):
@@ -667,6 +720,9 @@ class Project:
 
 					self.scrape_additional_information_from_security_advisories(cve)
 					self.scrape_additional_information_from_version_control(cve)
+
+					cve.remove_duplicated_values()
+					self.filter_git_commit_hashes_by_branch(cve)
 				else:
 					print(f'--> Failed to download the page for {cve}.')
 
@@ -858,7 +914,7 @@ class MozillaProject(Project):
 	def scrape_additional_information_from_version_control(self, cve: Cve):
 		for id in cve.bugzilla_ids:
 			grep_pattern = fr'^[bB]ug {id} -'
-			hashes = self.find_git_commit_hashes(grep_pattern)
+			hashes = self.find_git_commit_hashes_from_pattern(grep_pattern)
 			cve.git_commit_hashes.extend(hashes)
 
 class XenProject(Project):
@@ -974,8 +1030,7 @@ class XenProject(Project):
 					xsa_metadata = json.loads(xsa_meta_response.text)
 				except json.decoder.JSONDecodeError as error:
 					xsa_metadata = None
-					error_string = repr(error)
-					print(f'--> Failed to parse the JSON metadata for {xsa_full_id} with the error: {error_string}')
+					print(f'--> Failed to parse the JSON metadata for {xsa_full_id} with the error: {repr(error)}')
 				
 				# Tries to get a value from variously nested dictionaries by following
 				# a sequence of keys in a given order. If any intermediate dictionary
@@ -1010,7 +1065,7 @@ class XenProject(Project):
 	def scrape_additional_information_from_version_control(self, cve: Cve):
 		for id in cve.advisory_ids:
 			grep_pattern = fr'[tT]his is.*{id}'
-			hashes = self.find_git_commit_hashes(grep_pattern)
+			hashes = self.find_git_commit_hashes_from_pattern(grep_pattern)
 			cve.git_commit_hashes.extend(hashes)
 
 ####################################################################################################

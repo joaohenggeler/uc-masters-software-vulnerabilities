@@ -23,8 +23,7 @@ def load_scraping_config() -> Optional[dict]:
 			database_config = json.loads(file.read())
 	except json.decoder.JSONDecodeError as error:
 		database_config = None
-		error_string = repr(error)
-		print(f'Failed to parse the JSON configuration file with the error: {error_string}')
+		print(f'Failed to parse the JSON configuration file with the error: {repr(error)}')
 		
 	return database_config
 
@@ -42,8 +41,7 @@ def download_page(url: str, params: dict = None, timeout: float = 5.0) -> Option
 		response.raise_for_status()
 	except Exception as error:
 		response = None
-		error_string = repr(error)
-		print(f'Failed to download the page "{url}" with the error: {error_string}')
+		print(f'Failed to download the page "{url}" with the error: {repr(error)}')
 	
 	return response
 
