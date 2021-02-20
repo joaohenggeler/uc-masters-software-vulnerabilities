@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 	This module contains utility functions or classes that are used by multiple scripts.
