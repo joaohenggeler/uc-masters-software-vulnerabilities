@@ -577,7 +577,7 @@ class Project:
 
 		try:
 			self.repository = git.Repo(self.repository_path)
-			print(f'Loaded the project "{self}" located in "{project.repository_path}".')
+			print(f'Loaded the project "{self}" located in "{self.repository_path}".')
 		except Exception as error:
 			print(f'Failed to get the repository for the project "{self}"" with the error: {repr(error)}')
 
