@@ -577,6 +577,7 @@ class Project:
 
 		try:
 			self.repository = git.Repo(self.repository_path)
+			print(f'Loaded the project "{self}" located in "{project.repository_path}".')
 		except Exception as error:
 			print(f'Failed to get the repository for the project "{self}"" with the error: {repr(error)}')
 
@@ -610,7 +611,6 @@ class Project:
 			else:
 				project = Project(full_name, info)
 
-			print(f'Loaded the project "{project}" located in "{project.repository_path}".')
 			project_list.append(project)
 
 		return project_list
@@ -623,6 +623,9 @@ class Project:
 
 	def find_full_git_commit_hash(self, short_commit_hash: str) -> Optional[str]:
 
+		if self.repository is None:
+			return None
+
 		try:
 			# git show --format="%H" --no-patch [SHORT HASH]
 			full_commit_hash = self.repository.git.show(short_commit_hash, format='%H', no_patch=True)
@@ -633,6 +636,10 @@ class Project:
 		return full_commit_hash
 
 	def find_git_commit_hashes_from_pattern(self, grep_pattern: str) -> list:
+		
+		if self.repository is None:
+			return []
+
 		hash_list = []
 
 		# git log --all --format=oneline --grep="[REGEX]"
@@ -646,6 +653,9 @@ class Project:
 
 	def is_git_commit_hash_in_master_branch(self, commit_hash: str) -> bool:
 		
+		if self.repository is None:
+			return False
+
 		try:
 			# git branch --contains [HASH]
 			result = self.repository.git.branch(contains=commit_hash) != ''
@@ -656,10 +666,14 @@ class Project:
 		return result
 
 	def filter_git_commit_hashes_by_branch(self, cve: Cve):
-		if not self.scrape_all_branches:
+		if self.repository is not None and not self.scrape_all_branches:
 			cve.git_commit_hashes = [hash for hash in cve.git_commit_hashes if self.is_git_commit_hash_in_master_branch(hash)]
 
 	def find_changed_files_in_git_commit(self, commit_hash: str) -> Iterator[str]:
+		
+		if self.repository is None:
+			return
+
 		# git diff --name-only [HASH] [HASH]^
 		diff_result = self.repository.git.diff(commit_hash, commit_hash + '^', name_only=True)
 		for file_path in diff_result.splitlines():
