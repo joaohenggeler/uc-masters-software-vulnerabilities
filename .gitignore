@@ -13,3 +13,6 @@ scripts/dataset
 
 # The five C/C++ project repositories.
 repositories
+
+# Configuration files.
+*.config
