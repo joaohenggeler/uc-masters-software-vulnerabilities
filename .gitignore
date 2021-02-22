@@ -14,5 +14,5 @@ scripts/dataset
 # The five C/C++ project repositories.
 repositories
 
-# Configuration files.
-*.config
+# For the scraping scripts.
+scripts/scraping/config.json

@@ -7,16 +7,11 @@
 	the URLs to other relevant websites like a project's Bugzilla or Security Advisory platforms.
 
 	For each project, this information is saved to a CSV file.
-
-	Requirements:
-
-	pip install beautifulsoup4
-	pip install GitPython
-	pip install requests
 """
 
 import csv
 import json
+import os
 import random
 import re
 import sys
@@ -26,7 +21,7 @@ from urllib.parse import urlsplit, parse_qsl
 import bs4 # type: ignore
 import git # type: ignore
 
-from estagio_scraping import load_scraping_config, download_page, get_current_timestamp, change_datetime_string_format
+from estagio_scraping import load_scraping_config, ScrapingManager, get_current_timestamp, change_datetime_string_format
 
 ####################################################################################################
 
@@ -88,14 +83,18 @@ if scraping_config is None:
 	print('The program will terminate as the configuration file could not be read correctly.')
 	sys.exit(1)
 
-DEBUG_MODE = scraping_config['debug']
-if DEBUG_MODE:
+DEBUG_OPTIONS = scraping_config['debug_options']
+DEBUG_ENABLED = DEBUG_OPTIONS['enabled']
+if DEBUG_ENABLED:
 	print('[DEBUG MODE IS ENABLED]')
+	print(DEBUG_OPTIONS)
 	print()
 
 ####################################################################################################
 
 class Cve:
+
+	CVE_DETAILS_SCRAPING_MANAGER: ScrapingManager = ScrapingManager('https://www.cvedetails.com')
 
 	id: str
 	url: str
@@ -166,7 +165,7 @@ class Cve:
 		return self.id
 
 	def download_cve_details_page(self) -> bool:
-		response = download_page(self.url)
+		response = Cve.CVE_DETAILS_SCRAPING_MANAGER.download_page(self.url)
 		if response is not None:
 			self.cve_details_soup = bs4.BeautifulSoup(response.text, 'html.parser')
 		
@@ -555,8 +554,9 @@ class Cve:
 
 class Project:
 
-	TIMESTAMP = get_current_timestamp()
+	TIMESTAMP: str = get_current_timestamp()
 
+	output_directory_path: str
 	scrape_all_branches: bool
 
 	full_name: str
@@ -567,7 +567,7 @@ class Project:
 	url_pattern: str
 	repository_path: str
 
-	csv_filename: str
+	csv_output_path: str
 
 	def __init__(self, project_name: str, project_info: dict):
 		
@@ -579,11 +579,16 @@ class Project:
 			self.repository = git.Repo(self.repository_path)
 			print(f'Loaded the project "{self}" located in "{self.repository_path}".')
 		except Exception as error:
+			self.repository = None
 			print(f'Failed to get the repository for the project "{self}"" with the error: {repr(error)}')
+
+		print()
 
 		used_branches = 'all-branches' if self.scrape_all_branches else 'master-branch'
 
-		self.csv_filename = f'{self.database_id}-{self.short_name}-{used_branches}-{self.TIMESTAMP}.csv'
+		os.makedirs(self.output_directory_path, exist_ok=True)
+		csv_filename = f'{self.database_id}-{self.short_name}-{used_branches}-{Project.TIMESTAMP}.csv'
+		self.csv_output_path = os.path.join(self.output_directory_path, csv_filename)
 
 	def __str__(self):
 		return self.full_name
@@ -591,6 +596,7 @@ class Project:
 	@staticmethod
 	def get_project_list_from_config(config: dict) -> list:
 		
+		output_directory_path = config['output_directory_path']
 		scrape_all_branches = config['scrape_all_branches']
 		project_config = config['projects']
 
@@ -601,6 +607,7 @@ class Project:
 		for full_name, info in project_config.items():
 
 			short_name = info['short_name']
+			info['output_directory_path'] = output_directory_path
 			info['scrape_all_branches'] = scrape_all_branches
 			project: Project
 		
@@ -608,6 +615,8 @@ class Project:
 				project = MozillaProject(full_name, info)
 			elif short_name == 'xen':
 				project = XenProject(full_name, info)
+			elif short_name == 'glibc':
+				project = GlibcProject(full_name, info)
 			else:
 				project = Project(full_name, info)
 
@@ -642,8 +651,9 @@ class Project:
 
 		hash_list = []
 
-		# git log --all --format=oneline --grep="[REGEX]"
-		log_result = self.repository.git.log(all=True, format='oneline', grep=grep_pattern)
+		# git log --all --format=oneline --grep="[REGEX]" --regexp-ignore-case --extended-regexp
+		# The --extended-regexp option enables the following special characters: ? + { | ( )
+		log_result = self.repository.git.log(all=True, format='oneline', grep=grep_pattern, regexp_ignore_case=True, extended_regexp=True)
 		
 		for line in log_result.splitlines():
 			hash, title = line.split(maxsplit=1)
@@ -682,7 +692,7 @@ class Project:
 	def scrape_vulnerabilities_from_cve_details(self) -> Iterator[Cve]:
 
 		print(f'Collecting the vulnerabilities for the "{self}" project ({self.vendor_id}, {self.product_id}):')
-		response = download_page('https://www.cvedetails.com/vulnerability-list.php', {'vendor_id': self.vendor_id, 'product_id': self.product_id})
+		response = Cve.CVE_DETAILS_SCRAPING_MANAGER.download_page('https://www.cvedetails.com/vulnerability-list.php', {'vendor_id': self.vendor_id, 'product_id': self.product_id})
 
 		if response is None:
 			print('Could not download the first hub page. No vulnerabilities will be scraped for this project.')
@@ -693,17 +703,19 @@ class Project:
 		page_div = main_soup.find('div', id='pagingb')
 		page_a_list = page_div.find_all('a', title=PAGE_TITLE_REGEX)
 		page_url_list = ['https://www.cvedetails.com' + page_a['href'] for page_a in page_a_list]
+		page_url_list[::-1]
 
-		if DEBUG_MODE:
+		if DEBUG_ENABLED:
 			previous_len = len(page_url_list)
-			page_url_list = page_url_list[::-2]
-			page_url_list = page_url_list[:6]
+			if previous_len > DEBUG_OPTIONS['min_hub_pages']:
+				page_url_list = page_url_list[::DEBUG_OPTIONS['hub_page_step']]
+			
 			print(f'-> [DEBUG] Reduced the number of hub pages from {previous_len} to {len(page_url_list)}.')
 
 		for i, page_url in enumerate(page_url_list):
 
 			print(f'-> Scraping hub page {i+1} of {len(page_url_list)}...')
-			page_response = download_page(page_url)
+			page_response = Cve.CVE_DETAILS_SCRAPING_MANAGER.download_page(page_url)
 			if page_response is None:
 				print(f'-> Failed to download hub page {i+1}.')
 				continue
@@ -713,9 +725,12 @@ class Project:
 			cve_a_list = vulnerability_table.find_all('a', title=CVE_REGEX)
 			
 			# Test a random sample of CVEs from each page.
-			if DEBUG_MODE:
+			if DEBUG_ENABLED:
 				previous_len = len(cve_a_list)
-				cve_a_list = random.sample(cve_a_list, 4)
+				if DEBUG_OPTIONS['use_random_sampling']:
+					cve_a_list = random.sample(cve_a_list, DEBUG_OPTIONS['max_cves_per_hub_page'])
+				else:
+					cve_a_list = cve_a_list[:DEBUG_OPTIONS['max_cves_per_hub_page']]
 				print(f'--> [DEBUG] Reduced the number of CVE pages from {previous_len} to {len(cve_a_list)}.')
 
 			for j, cve_a in enumerate(cve_a_list):
@@ -761,7 +776,7 @@ class Project:
 			'SVN URLs', 'SVN Revision Numbers'
 		]
 
-		with open(self.csv_filename, 'w', newline='') as csv_file:
+		with open(self.csv_output_path, 'w', newline='') as csv_file:
 
 			csv_writer = csv.DictWriter(csv_file, fieldnames=CSV_HEADER)
 			csv_writer.writeheader()
@@ -790,6 +805,8 @@ class Project:
 
 class MozillaProject(Project):
 
+	MOZILLA_SCRAPING_MANAGER: ScrapingManager = ScrapingManager('https://www.mozilla.org')
+
 	def __init__(self, project_name: str, project_info: dict):
 		super().__init__(project_name, project_info)
 
@@ -801,7 +818,7 @@ class MozillaProject(Project):
 			mfsa_info = {}
 			print(f'--> Scraping additional information from advisory page {mfsa_id}: "{mfsa_url}"...')
 
-			mfsa_response = download_page(mfsa_url)
+			mfsa_response = MozillaProject.MOZILLA_SCRAPING_MANAGER.download_page(mfsa_url)
 			if mfsa_response is None:
 				print(f'--> Could not download the page for {mfsa_id}.')
 				continue
@@ -927,11 +944,15 @@ class MozillaProject(Project):
 
 	def scrape_additional_information_from_version_control(self, cve: Cve):
 		for id in cve.bugzilla_ids:
-			grep_pattern = fr'^[bB]ug {id} -'
+			# E.g. " Bug 945192 - Followup to support Older SDKs in loaddlls.cpp. r=bbondy a=Sylvestre"
+			regex_id = re.escape(id)
+			grep_pattern = fr'^Bug {regex_id} -'
 			hashes = self.find_git_commit_hashes_from_pattern(grep_pattern)
 			cve.git_commit_hashes.extend(hashes)
 
 class XenProject(Project):
+
+	XEN_SCRAPING_MANAGER: ScrapingManager = ScrapingManager('https://xenbits.xen.org')
 
 	def __init__(self, project_name: str, project_info: dict):
 		super().__init__(project_name, project_info)
@@ -945,7 +966,7 @@ class XenProject(Project):
 			xsa_id = xsa_full_id.rsplit('-')[-1]
 			print(f'--> Scraping additional information from advisory page {xsa_full_id}: "{xsa_url}"...')
 			
-			xsa_response = download_page(xsa_url)
+			xsa_response = XenProject.XEN_SCRAPING_MANAGER.download_page(xsa_url)
 			if xsa_response is not None:
 
 				xsa_soup = bs4.BeautifulSoup(xsa_response.text, 'html.parser')
@@ -1016,7 +1037,7 @@ class XenProject(Project):
 			xsa_meta_url = f'https://xenbits.xen.org/xsa/xsa{xsa_id}.meta'
 			print(f'--> Scraping commit hashes from the metadata file related to {xsa_full_id}: "{xsa_meta_url}"...')
 			
-			xsa_meta_response = download_page(xsa_meta_url)
+			xsa_meta_response = XenProject.XEN_SCRAPING_MANAGER.download_page(xsa_meta_url)
 			if xsa_meta_response is not None:
 
 				"""
@@ -1078,7 +1099,27 @@ class XenProject(Project):
 
 	def scrape_additional_information_from_version_control(self, cve: Cve):
 		for id in cve.advisory_ids:
-			grep_pattern = fr'[tT]his is.*{id}'
+			# E.g. "This is CVE-2015-4164 / XSA-136."
+			# E.g. "This is XSA-136 / CVE-2015-4164."
+			# E.g. "This is XSA-215."
+			regex_cve = re.escape(str(cve))
+			regex_id = re.escape(id)
+			grep_pattern = fr'This is.*({regex_cve}|{regex_id})'
+			hashes = self.find_git_commit_hashes_from_pattern(grep_pattern)
+			cve.git_commit_hashes.extend(hashes)
+
+class GlibcProject(Project):
+
+	def __init__(self, project_name: str, project_info: dict):
+		super().__init__(project_name, project_info)
+
+	def scrape_additional_information_from_version_control(self, cve: Cve):
+		for id in cve.bugzilla_ids:
+			# E.g. "Don't ignore too long lines in nss_files (BZ #17079)"
+			# E.g. "Fix integer overflows in internal memalign and malloc [BZ #22343] [BZ #22774]"
+			# E.g. "Fix nan functions handling of payload strings (bug 16961, bug 16962)."
+			regex_id = re.escape(id)
+			grep_pattern = fr'(BZ|Bug).*{regex_id}'
 			hashes = self.find_git_commit_hashes_from_pattern(grep_pattern)
 			cve.git_commit_hashes.extend(hashes)
 
@@ -1087,6 +1128,12 @@ class XenProject(Project):
 project_list = Project.get_project_list_from_config(scraping_config)
 
 print()
+
+if not DEBUG_ENABLED:
+	for project in project_list:
+		if project.repository is None:
+			print(f'Cannot run the script in the non-debug mode since the repository for project "{project}" was not loaded correctly.')
+			sys.exit(1)
 
 for project in project_list:
 
