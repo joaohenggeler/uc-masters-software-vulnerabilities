@@ -1,0 +1,5 @@
+File Path,Topological Index,Neutral Git Commit Hash,Vulnerable Git Commit Hash,CVEs
+modules/cache/mod_mem_cache.c,0,9a29cd5f657671998da41c51e1933d23312ad310,5ebab647ff9d54fd719d0312a321e9f7ab8b17e1,"[""CVE-2007-1862""]"
+modules/loggers/mod_log_config.c,1,066712a8cdcb414467706def84e461b393af503c,7f188926f73457ae029d572fd7b6e790e8f4fde6,"[""CVE-2012-0021""]"
+modules/dav/main/util.c,2,02780d57bd9287c472c9ce5c25c6e46d04d67ea6,be6ef336b248743839cbaf7c2cf2b369121cddfb,"[""CVE-2013-6438""]"
+modules/lua/lua_request.c,3,78eb3b9235515652ed141353d98c239237030410,8f40799093982ce366269ae49d4dc4b837378f4c,"[""CVE-2015-0228""]"
