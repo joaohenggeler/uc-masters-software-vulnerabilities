@@ -12,6 +12,11 @@ if not DEBUG_ENABLED:
 	Project.ensure_all_project_repositories_were_loaded(project_list)
 
 for project in project_list:
-	project.find_and_save_affected_files_to_csv_file()
 
+	print(project)
+	project.collect_and_save_affected_files_to_csv_file()
+
+	print()
+	print()
+		
 print('Finished running')

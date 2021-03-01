@@ -17,6 +17,10 @@ if not DEBUG_ENABLED:
 	Project.ensure_all_project_repositories_were_loaded(project_list)
 
 for project in project_list:
+
 	project.collect_and_save_vulnerabilities_to_csv_file()
+
+	print()
+	print()
 
 print('Finished running')
