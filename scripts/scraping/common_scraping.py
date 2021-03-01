@@ -4,16 +4,17 @@ import csv
 import glob
 import json
 import locale
-import logging as log
+import logging
 import os
 import random
 import re
+import shutil
 import subprocess
 import sys
 import time
 from datetime import datetime
 from string import Template
-from typing import Callable, Iterator, Optional, Union
+from typing import Callable, Iterator, Optional, Tuple, Union
 from urllib.parse import urlsplit, parse_qsl
 
 import bs4 # type: ignore
@@ -24,7 +25,31 @@ import requests
 
 ####################################################################################################
 
-# log.basicConfig(filename='scraping.log', filemode='w', format='[%(asctime)s | %(levelname)s] %(name)s: %(message)s')
+def add_log_file_handler(log: logging.Logger):
+
+	handler = logging.FileHandler('scraping.log', 'w', 'utf-8')
+	handler.setLevel(logging.DEBUG)
+	formatter = logging.Formatter('[%(levelname)s] %(funcName)s: %(message)s')
+	handler.setFormatter(formatter)
+
+	log.addHandler(handler)
+
+def add_log_stream_handler(log: logging.Logger):
+
+	handler = logging.StreamHandler()
+	handler.setLevel(logging.ERROR)
+	formatter = logging.Formatter('%(funcName)s: %(message)s\n')
+	handler.setFormatter(formatter)
+
+	log.addHandler(handler)
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+add_log_file_handler(log)
+add_log_stream_handler(log)
+
+log.info(f'Initializing "{__name__}"...')
+# log.basicConfig(filename='scraping.log', filemode='w', level=log.DEBUG, format='%(asctime)s [%(levelname)s] %(funcName)s: %(message)s')
 
 ####################################################################################################
 
@@ -35,24 +60,21 @@ def load_scraping_config(config_path: str = 'config.json') -> dict:
 			config = json.loads(file.read())
 	except json.decoder.JSONDecodeError as error:
 		config = {}
-		print(f'Failed to parse the JSON configuration file with the error: {repr(error)}')
-		print()
+		log.error(f'Failed to parse the JSON configuration file with the error: {repr(error)}')
 		
 	return config
 
 SCRAPING_CONFIG = load_scraping_config()
 
 if not SCRAPING_CONFIG:
-	print(f'The module will terminate as the configuration file could not be read correctly.')
+	log.critical(f'The module will terminate as the configuration file could not be read correctly.')
 	sys.exit(1)
 
 DEBUG_OPTIONS = SCRAPING_CONFIG['debug_options']
 DEBUG_ENABLED = DEBUG_OPTIONS['enabled']
 
 if DEBUG_ENABLED:
-	print('[DEBUG MODE IS ENABLED]')
-	print(DEBUG_OPTIONS)
-	print()
+	log.debug(f'Debug mode is enabled with the following options: {DEBUG_OPTIONS}')
 
 ####################################################################################################
 
@@ -73,6 +95,35 @@ def serialize_json_container(container: Union[list, dict]) -> Optional[str]:
 
 def deserialize_json_container(container_str: Optional[str]) -> Union[list, dict, None]:
 	return json.loads(container_str) if pd.notna(container_str) else None # type: ignore[arg-type]
+
+def has_file_extension(file_path: str, file_extension: str) -> bool:
+	return file_path.lower().endswith('.' + file_extension)
+
+def delete_file(file_path: str) -> bool:
+	success = False
+
+	try:
+		os.remove(file_path)
+		success = True
+	except OSError:
+		pass
+
+	return success
+
+def delete_directory(directory_path: str) -> bool:
+	success = False
+	
+	try:
+		shutil.rmtree(directory_path)
+		success = True
+	except OSError:
+		pass
+
+	return success
+
+def append_to_csv(df: pd.DataFrame, csv_path: str, **kwargs):
+	add_header = not os.path.exists(csv_path)
+	df.to_csv(csv_path, mode='a', header=add_header, **kwargs)
 
 ####################################################################################################
 
@@ -132,7 +183,7 @@ class ScrapingManager():
 			response.raise_for_status()
 		except Exception as error:
 			response = None
-			print(f'Failed to download the page "{url}" with the error: {repr(error)}')
+			log.error(f'Failed to download the page "{url}" with the error: {repr(error)}')
 		
 		return response
 
@@ -189,7 +240,7 @@ Examples:
 - Apache: http://svn.apache.org/viewcvs?rev=292949&view=rev
 """
 
-SOURCE_FILE_EXTENSIONS = ['c', 'cpp', 'cc', 'cxx', 'c++', 'cp', 'h', 'hpp']
+SOURCE_FILE_EXTENSIONS = ['c', 'cpp', 'cc', 'cxx', 'c++', 'cp', 'h', 'hpp', 'hh', 'hxx']
 
 ####################################################################################################
 
@@ -283,7 +334,7 @@ class Cve:
 
 		dates_span = self.cve_details_soup.find('span', class_='datenote')
 		if dates_span is None:
-			print(f'--> No dates span found for {self}.')
+			log.warning(f'--> No dates span found for {self}.')
 
 		dates_text = dates_span.get_text(strip=True)
 		
@@ -337,7 +388,7 @@ class Cve:
 
 		scores_table = self.cve_details_soup.find('table', id='cvssscorestable')
 		if scores_table is None:
-			print(f'--> No scores table found for {self}.')
+			log.warning(f'--> No scores table found for {self}.')
 			return
 
 		scores_th_list = scores_table.find_all('th')
@@ -418,7 +469,7 @@ class Cve:
 
 		products_table = self.cve_details_soup.find('table', id='vulnprodstable')
 		if products_table is None:
-			print(f'--> No products table found for {self}.')
+			log.warning(f'--> No products table found for {self}.')
 			return
 
 		# Parse each row in the product table.
@@ -494,7 +545,7 @@ class Cve:
 
 		references_table = self.cve_details_soup.find('table', id='vulnrefstable')
 		if references_table is None:
-			print(f'--> No references table found for {self}.')
+			log.warning(f'--> No references table found for {self}.')
 			return
 
 		# Creates a list of URL that match a regex (or a list of regexes). If a handler function is passed as the second argument, then it will be called
@@ -538,7 +589,7 @@ class Cve:
 			id = get_query_param(url, ['id', 'bug_id'])
 			
 			if id is None:
-				print(f'--> Could not find a valid Bugzilla ID in "{url}".')
+				log.error(f'--> Could not find a valid Bugzilla ID in "{url}".')
 
 			return id
 
@@ -562,7 +613,7 @@ class Cve:
 					break
 
 			if id is None:
-				print(f'--> Could not find a valid advisory ID in "{url}".')
+				log.error(f'--> Could not find a valid advisory ID in "{url}".')
 
 			return id
 
@@ -583,7 +634,7 @@ class Cve:
 				commit_hash = None
 			
 			if commit_hash is None:
-				print(f'--> Could not find a valid commit hash in "{url}".')
+				log.error(f'--> Could not find a valid commit hash in "{url}".')
 			
 			return commit_hash
 
@@ -603,7 +654,7 @@ class Cve:
 					revision_number = None
 
 			if revision_number is None:
-				print(f'--> Could not find a valid revision number in "{url}".')
+				log.error(f'--> Could not find a valid revision number in "{url}".')
 
 			return revision_number
 
@@ -677,14 +728,15 @@ class Project:
 		for key, value in project_info.items():
 			setattr(self, key, value)
 
+		self.output_directory_path = os.path.join(self.output_directory_path, self.short_name)
+		self.output_directory_path = os.path.abspath(self.output_directory_path)
+
 		try:
 			self.repository = git.Repo(self.repository_path)
-			print(f'Loaded the project "{self}" located in "{self.repository_path}".')
+			log.info(f'Loaded the project "{self}" located in "{self.repository_path}".')
 		except Exception as error:
 			self.repository = None
-			print(f'Failed to get the repository for the project "{self}"" with the error: {repr(error)}')
-
-		print()
+			log.error(f'Failed to get the repository for the project "{self}"" with the error: {repr(error)}')
 		
 		csv_prefix = os.path.join(self.output_directory_path, f'$type-{self.database_id}-')
 		self.csv_prefix_template = Template(csv_prefix)
@@ -704,8 +756,7 @@ class Project:
 		scrape_all_branches = config['scrape_all_branches']
 		project_config = config['projects']
 
-		print(f'Scraping all branches? {scrape_all_branches}')
-		print()
+		log.info(f'Scraping all branches? {scrape_all_branches}')
 
 		project_list = []
 		for full_name, info in project_config.items():
@@ -734,7 +785,7 @@ class Project:
 	def ensure_all_project_repositories_were_loaded(project_list: list):
 		for project in project_list:
 			if project.repository is None:
-				print(f'The repository for project "{project}" was not loaded correctly.')
+				log.critical(f'The repository for project "{project}" was not loaded correctly.')
 				sys.exit(1)
 
 	def find_output_csv_files(self, type: str) -> Iterator[str]:
@@ -760,7 +811,7 @@ class Project:
 			full_commit_hash = self.repository.git.show(short_commit_hash, format='%H', no_patch=True)
 		except git.exc.GitCommandError as error:
 			full_commit_hash = None
-			print(f'Failed to find the full version of the commit hash "{short_commit_hash}" with the error: {repr(error)}')
+			log.error(f'Failed to find the full version of the commit hash "{short_commit_hash}" with the error: {repr(error)}')
 
 		return full_commit_hash
 
@@ -833,12 +884,12 @@ class Project:
 
 		except git.exc.GitCommandError as error:
 			# If there's no such commit in the repository.
-			print('Found one or more invalid commits while trying to sort the commit hashes topologically.')
+			log.error('Found one or more invalid commits while trying to sort the commit hashes topologically.')
 			sorted_hash_list = []
 
 		return sorted_hash_list
 
-	def find_changed_files_in_git_commit(self, commit_hash: str, file_extension_filter=[]) -> Iterator[str]:
+	def find_changed_files_in_git_commit(self, commit_hash: str, file_extension_filter: list = []) -> Iterator[str]:
 		
 		if self.repository is None:
 			return
@@ -850,34 +901,60 @@ class Project:
 			yield_file = len(file_extension_filter) == 0
 						
 			for file_extension in file_extension_filter:
-				if file_path.endswith('.' + file_extension):
+				if has_file_extension(file_path, file_extension):
 					yield_file = True
 					break
 
 			if yield_file:
 				yield file_path
 
-	def find_parent_git_commit_hash(self, commit_hash) -> Optional[str]:
+	def find_parent_git_commit_hash_for_changed_file(self, commit_hash: str, file_path: str) -> Optional[str]:
 		
 		if self.repository is None:
 			return None
 
 		try:
-			# git log [HASH] --parents --max-count=1 --format="%P"
-			parent_commit_hash = self.repository.git.log(commit_hash, parents=True, max_count=1, format='%P')
+			# git log [HASH] --parents --max-count=1 --format="%P" -- [FILE PATH 1] [FILE PATH 2] [...] [FILE PATH N]
+			parent_commit_hash = self.repository.git.log(commit_hash, '--', file_path, parents=True, max_count=1, format='%P')
 		except git.exc.GitCommandError as error:
 			parent_commit_hash = None
-			print(f'Failed to find the parent of the commit hash "{commit_hash}" with the error: {repr(error)}')
+			log.error(f'Failed to find the parent of the commit hash "{commit_hash}" with the error: {repr(error)}')
 
 		return parent_commit_hash
 
+	def checkout_files_in_git_commit(self, commit_hash: str, file_path_list: list) -> bool:
+
+		if self.repository is None:
+			return False
+
+		success = False
+
+		try:
+			# git checkout [COMMIT] -- [FILE PATH 1] [FILE PATH 2] [...] [FILE PATH N]
+			self.repository.git.checkout(commit_hash, '--', *file_path_list)
+			success = True
+		except git.exc.GitCommandError as error:
+			log.error(f'Failed to checkout the files in commit "{commit_hash}" with the error: {repr(error)}')
+			
+		return success
+
+	def hard_reset_git_head(self):
+		if self.repository is None:
+			return
+
+		try:
+			# git reset --hard
+			self.repository.git.reset(hard=True)
+		except git.exc.GitCommandError as error:
+			log.error(f'Failed to hard reset the current HEAD with the error: {repr(error)}')
+
 	def scrape_vulnerabilities_from_cve_details(self) -> Iterator[Cve]:
 
-		print(f'Collecting the vulnerabilities for the "{self}" project ({self.vendor_id}, {self.product_id}):')
+		log.info(f'Collecting the vulnerabilities for the "{self}" project ({self.vendor_id}, {self.product_id}):')
 		response = Cve.CVE_DETAILS_SCRAPING_MANAGER.download_page('https://www.cvedetails.com/vulnerability-list.php', {'vendor_id': self.vendor_id, 'product_id': self.product_id})
 
 		if response is None:
-			print('Could not download the first hub page. No vulnerabilities will be scraped for this project.')
+			log.error('Could not download the first hub page. No vulnerabilities will be scraped for this project.')
 			return
 		
 		main_soup = bs4.BeautifulSoup(response.text, 'html.parser')
@@ -892,14 +969,14 @@ class Project:
 			if previous_len > DEBUG_OPTIONS['min_hub_pages']:
 				page_url_list = page_url_list[::DEBUG_OPTIONS['hub_page_step']]
 			
-			print(f'-> [DEBUG] Reduced the number of hub pages from {previous_len} to {len(page_url_list)}.')
+			log.debug(f'Reduced the number of hub pages from {previous_len} to {len(page_url_list)}.')
 
 		for i, page_url in enumerate(page_url_list):
 
-			print(f'-> Scraping hub page {i+1} of {len(page_url_list)}...')
+			log.info(f'Scraping hub page {i+1} of {len(page_url_list)}...')
 			page_response = Cve.CVE_DETAILS_SCRAPING_MANAGER.download_page(page_url)
 			if page_response is None:
-				print(f'-> Failed to download hub page {i+1}.')
+				log.error(f'Failed to download hub page {i+1}.')
 				continue
 	
 			page_soup = bs4.BeautifulSoup(page_response.text, 'html.parser')
@@ -913,14 +990,14 @@ class Project:
 					cve_a_list = random.sample(cve_a_list, DEBUG_OPTIONS['max_cves_per_hub_page'])
 				else:
 					cve_a_list = cve_a_list[:DEBUG_OPTIONS['max_cves_per_hub_page']]
-				print(f'--> [DEBUG] Reduced the number of CVE pages from {previous_len} to {len(cve_a_list)}.')
+				log.debug(f'Reduced the number of CVE pages from {previous_len} to {len(cve_a_list)}.')
 
 			for j, cve_a in enumerate(cve_a_list):
 
 				cve_id = cve_a.get_text(strip=True)
 				cve = Cve(cve_id, self)
 
-				print(f'--> Scraping the CVE page {j+1} of {len(cve_a_list)}: "{cve.id}" from "{cve.url}"...')
+				log.info(f'Scraping the CVE page {j+1} of {len(cve_a_list)}: "{cve.id}" from "{cve.url}"...')
 				download_success = cve.download_cve_details_page()
 				
 				if download_success:
@@ -936,9 +1013,11 @@ class Project:
 					self.remove_invalid_git_commit_hashes(cve)
 					self.remove_git_commit_hashes_by_branch(cve)
 				else:
-					print(f'--> Failed to download the page for {cve}.')
+					log.error(f'Failed to download the page for {cve}.')
 
 				yield cve
+
+	####################################################################################################
 
 	def collect_and_save_vulnerabilities_to_csv_file(self):
 
@@ -990,15 +1069,17 @@ class Project:
 
 				csv_writer.writerow(csv_row)
 
-	def collect_and_save_affected_files_to_csv_file(self):
+	def find_and_save_affected_files_to_csv_file(self):
 
 		for csv_path in self.find_output_csv_files('cve'):
 
-			cve_results = pd.read_csv(csv_path, usecols=['CVE', 'Git Commit Hashes'])
-			cve_results = cve_results.dropna()
-			cve_results['Git Commit Hashes'] = cve_results['Git Commit Hashes'].map(deserialize_json_container)
+			log.info(f'Finding affected files for the project "{self}" using the information in "{csv_path}".')
 
-			git_commit_hashes = cve_results['Git Commit Hashes'].tolist()
+			cves = pd.read_csv(csv_path, usecols=['CVE', 'Git Commit Hashes'])
+			cves = cves.dropna()
+			cves['Git Commit Hashes'] = cves['Git Commit Hashes'].map(deserialize_json_container)
+
+			git_commit_hashes = cves['Git Commit Hashes'].tolist()
 			hash_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
 			hash_list = self.sort_git_commit_hashes_topologically(hash_list)
 			
@@ -1009,14 +1090,16 @@ class Project:
 			for commit_hash in hash_list:
 
 				changed_file_list = self.find_changed_files_in_git_commit(commit_hash, SOURCE_FILE_EXTENSIONS)
-				parent_commit_hash = self.find_parent_git_commit_hash(commit_hash)
 
 				has_source_file = False
 				for file_path in changed_file_list:
 
 					has_source_file = True
-					is_commit = cve_results['Git Commit Hashes'].map(lambda hash_list: commit_hash in hash_list)
-					cve_list = cve_results.loc[is_commit, 'CVE'].tolist()
+
+					parent_commit_hash = self.find_parent_git_commit_hash_for_changed_file(commit_hash, file_path)
+
+					is_commit = cves['Git Commit Hashes'].map(lambda hash_list: commit_hash in hash_list)
+					cve_list = cves.loc[is_commit, 'CVE'].tolist()
 					cve_list = serialize_json_container(cve_list)
 
 					row = {
@@ -1035,6 +1118,73 @@ class Project:
 			csv_file_path = csv_path.replace('cve-', 'affected-files-')
 			affected_files.to_csv(csv_file_path, index=False)
 
+	def generate_and_save_metrics_to_csv_file(self):
+
+		understand = UnderstandSat(self)
+	
+		for csv_path in self.find_output_csv_files('affected-files'):
+
+			log.info(f'Generating metrics for the project "{self}" using the information in "{csv_path}".')
+
+			affected_files = pd.read_csv(csv_path, usecols=['File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash'])
+			grouped_files = affected_files.groupby(by=['Topological Index', 'Neutral Git Commit Hash'])
+			
+			final_csv_file_path = csv_path.replace('affected-files-', f'metrics-')
+			temp_csv_file_path = csv_path.replace('affected-files-', f'temp-metrics-')
+			delete_file(final_csv_file_path)
+
+			for (topological_index, neutral_commit_hash), group_df in grouped_files:
+				
+				def run_understand_on_affected_files(commit_hash: str, file_path_list: list, is_vulnerable: bool):
+					
+					if commit_hash is None:
+						return
+
+					understand.create_project_database(temp_csv_file_path)	
+					understand.add_files_to_project_database(file_path_list)
+
+					checkout_success = self.checkout_files_in_git_commit(commit_hash, file_path_list)
+
+					if not checkout_success:
+						log.error(f'Failed to checkout commit {commit_hash} (vulnerable = {is_vulnerable}) for the files: {file_path_list}')
+
+					understand.generate_project_metrics()
+					self.hard_reset_git_head()
+
+					temp_df = pd.read_csv(temp_csv_file_path)
+
+					temp_df.insert(0, 'Vulnerable', None)
+					temp_df.insert(1, 'Git Commit Hash', None)
+
+					temp_df['Vulnerable'] = 'Yes' if is_vulnerable else 'No'
+					temp_df['Git Commit Hash'] = commit_hash
+					temp_df['File'].map(lambda x: x.replace('\\', '/') if pd.notna(x) else x)
+
+					append_to_csv(temp_df, final_csv_file_path, index=False)
+
+				##########
+
+				group_df = group_df.replace({np.nan: None})
+
+				file_path_list = group_df['File Path'].tolist()
+				file_path_list = [os.path.join(self.repository_path, file_path) for file_path in file_path_list]
+				file_path_list = [os.path.normpath(file_path) for file_path in file_path_list]
+				
+				run_understand_on_affected_files(neutral_commit_hash, file_path_list, False)
+
+				vulnerable_commit_hash_list = group_df['Vulnerable Git Commit Hash'].tolist()
+
+				for file_path, vulnerable_commit_hash in zip(file_path_list, vulnerable_commit_hash_list):						
+					run_understand_on_affected_files(vulnerable_commit_hash, [file_path], True)
+
+			##########
+
+			delete_file(temp_csv_file_path)
+		
+		##########
+
+		understand.delete_project_database()
+
 ####################################################################################################
 
 class MozillaProject(Project):
@@ -1050,11 +1200,11 @@ class MozillaProject(Project):
 		for mfsa_id, mfsa_url in zip(cve.advisory_ids, cve.advisory_urls):
 
 			mfsa_info = {}
-			print(f'--> Scraping additional information from advisory page {mfsa_id}: "{mfsa_url}"...')
+			log.info(f'Scraping additional information from advisory page {mfsa_id}: "{mfsa_url}"...')
 
 			mfsa_response = MozillaProject.MOZILLA_SCRAPING_MANAGER.download_page(mfsa_url)
 			if mfsa_response is None:
-				print(f'--> Could not download the page for {mfsa_id}.')
+				log.error(f'Could not download the page for {mfsa_id}.')
 				continue
 
 			mfsa_soup = bs4.BeautifulSoup(mfsa_response.text, 'html.parser')
@@ -1145,7 +1295,7 @@ class MozillaProject(Project):
 					key = key.title()
 					mfsa_info[key] = value
 			else:
-				print(f'--> No summary description list found for {mfsa_id}.')
+				log.warning(f'No summary description list found for {mfsa_id}.')
 
 			# Get the CVE information for all MFSA layout versions.
 			cve_list = []
@@ -1200,7 +1350,7 @@ class XenProject(Project):
 			
 			xsa_info = {}
 			xsa_id = xsa_full_id.rsplit('-')[-1]
-			print(f'--> Scraping additional information from advisory page {xsa_full_id}: "{xsa_url}"...')
+			log.info(f'Scraping additional information from advisory page {xsa_full_id}: "{xsa_url}"...')
 			
 			xsa_response = XenProject.XEN_SCRAPING_MANAGER.download_page(xsa_url)
 			if xsa_response is not None:
@@ -1262,16 +1412,16 @@ class XenProject(Project):
 					cve.advisory_info[xsa_full_id] = xsa_info
 
 				else:
-					print(f'--> No information table found for {xsa_full_id}.')
+					log.warning(f'No information table found for {xsa_full_id}.')
 
 			else:
-				print(f'--> Could not download the page for {xsa_full_id}.')
+				log.error(f'Could not download the page for {xsa_full_id}.')
 
 			##################################################
 
 			# Download an additional page that contains this XSA's Git commit hashes.
 			xsa_meta_url = f'https://xenbits.xen.org/xsa/xsa{xsa_id}.meta'
-			print(f'--> Scraping commit hashes from the metadata file related to {xsa_full_id}: "{xsa_meta_url}"...')
+			log.info(f'Scraping commit hashes from the metadata file related to {xsa_full_id}: "{xsa_meta_url}"...')
 			
 			xsa_meta_response = XenProject.XEN_SCRAPING_MANAGER.download_page(xsa_meta_url)
 			if xsa_meta_response is not None:
@@ -1301,7 +1451,7 @@ class XenProject(Project):
 					xsa_metadata = json.loads(xsa_meta_response.text)
 				except json.decoder.JSONDecodeError as error:
 					xsa_metadata = None
-					print(f'--> Failed to parse the JSON metadata for {xsa_full_id} with the error: {repr(error)}')
+					log.error(f'Failed to parse the JSON metadata for {xsa_full_id} with the error: {repr(error)}')
 				
 				# Tries to get a value from variously nested dictionaries by following
 				# a sequence of keys in a given order. If any intermediate dictionary
@@ -1328,10 +1478,10 @@ class XenProject(Project):
 						if commit_hash is not None:
 							cve.git_commit_hashes.append(commit_hash)
 						else:
-							print(f'--> Could not find any commit hash for {xsa_full_id} in the "{reciple_key}" branch.')
+							log.error(f'Could not find any commit hash for {xsa_full_id} in the "{reciple_key}" branch.')
 
 			else:
-				print(f'--> Could not download the metadata file for {xsa_full_id}.')
+				log.error(f'Could not download the metadata file for {xsa_full_id}.')
 
 	def scrape_additional_information_from_version_control(self, cve: Cve):
 		for id in cve.advisory_ids:
@@ -1395,12 +1545,12 @@ class Sat():
 	def __str__(self):
 		return self.name
 
-	def run(self, *args) -> Optional[str]:
+	def run(self, *args) -> Tuple[bool, str]:
 		
 		arguments = [self.executable_path] + [arg for arg in args]
 		result = subprocess.run(arguments, capture_output=True, text=True)
 
-		return result.stdout
+		return (result.stdout != '', result.stdout)
 
 	def get_version(self) -> str:
 		return self.version or 'Unknown'
@@ -1409,21 +1559,77 @@ class Sat():
 
 class UnderstandSat(Sat):
 
-	def __init__(self, name: str = 'Understand', executable_path: str = None):
-		super().__init__(name, executable_path)
-		self.version = self.run('version')
+	project: Project
+	database_path: Optional[str]
 
-	def add_files(self, file_path_list: list):
-		pass
+	def __init__(self, project: Project, executable_path: Optional[str] = None):
+		super().__init__('Understand', executable_path)
+		
+		version_success, build_number = self.run('version')
+		if version_success:
+			build_number = re.findall(r'\d+', build_number)[0]
+			self.version = build_number
 
-	def generate_metrics(self):
-		pass
+		self.project = project
+		self.database_path = None
+
+	"""
+		Understand Metrics Settings:
+		- WriteColumnTitles				on/off (default on)
+		- ShowFunctionParameterTypes	on/off (default off)
+		- ShowDeclaredInFile			on/off (default off)
+		- FileNameDisplayMode			NoPath/FullPath/RelativePath (default NoPath)
+		- DeclaredInFileDisplayMode		NoPath/FullPath/RelativePath (default NoPath)
+		- OutputFile					<CSV File Path> (default "<Database Name>.csv")
+		
+		These were listed using the command: und list -all settings <Database Name>
+	"""
+
+	def create_project_database(self, output_csv_path: str) -> bool:
+
+		self.database_path = os.path.join(self.project.output_directory_path, self.project.short_name + '.und')
+
+		success, _ = self.run	(
+									'-quiet', '-db', self.database_path,
+									'create', '-languages', 'c++',
+									'settings', '-metrics', 'all',
+												'-metricsWriteColumnTitles', 'on',
+												'-metricsShowFunctionParameterTypes', 'on',
+												'-metricsShowDeclaredInFile', 'on',
+												'-metricsFileNameDisplayMode', 'NoPath',
+												'-metricsDeclaredInFileDisplayMode', 'RelativePath',
+												'-metricsOutputFile', output_csv_path
+								)
+
+		return success
+
+	def add_files_to_project_database(self, file_path_list: list) -> bool:
+
+		success, _ = self.run	(
+									'-quiet', '-db', self.database_path,
+									'add', *file_path_list
+								)
+
+		return success
+
+	def generate_project_metrics(self) -> bool:
+				
+		success, _ = self.run	(
+									'-quiet', '-db', self.database_path,
+									'analyze',
+									'metrics'
+								)
+
+		return success
+
+	def delete_project_database(self) -> bool:
+		success = False
+		if self.database_path is not None:
+			success = delete_directory(self.database_path)
+			self.database_path = None
+		return success
 
 ####################################################################################################
 
 if __name__ == '__main__':
-	
-	understand = UnderstandSat()
-	print(f'{understand} at {understand.executable_path}')
-	print(f'Version: {understand.get_version()}')
-	print(f'Version: {understand.get_version()}')
+	pass
