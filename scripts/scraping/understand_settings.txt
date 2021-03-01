@@ -1,0 +1,259 @@
+
+--------------------------General Settings-------------------------
+Option                          Current Setting  Available Settings
+
+Comparison Options: 
+  ComparisonProjectPath           None
+
+File Options: 
+  OpenFilesAsReadOnly            off             on/off
+  EnforcePortability             off             on/off
+  MaxFileSizeParsed              10 MB           2-150 MB
+  FileEncoding                   System          System/UTF-8
+Other Possible File Encodings are: 
+   Big5                     Big5-HKSCS               EUC-JP
+   EUC-KR                   GB18030                  GB2312
+   GBK                      hp-roman8                IBM850
+   IBM866                   IBM874                   iscii-bng
+   iscii-dev                iscii-gjr                iscii-knd
+   iscii-mlm                iscii-ori                iscii-pnj
+   iscii-tlg                iscii-tml                ISO-2022-JP
+   ISO-8859-1               ISO-8859-10              ISO-8859-13
+   ISO-8859-14              ISO-8859-15              ISO-8859-16
+   ISO-8859-2               ISO-8859-3               ISO-8859-4
+   ISO-8859-5               ISO-8859-6               ISO-8859-7
+   ISO-8859-8               ISO-8859-9               KOI8-R
+   KOI8-U                   macintosh                Shift_JIS
+   TIS-620                  TSCII                    UTF-16
+   UTF-16BE                 UTF-16LE                 UTF-32
+   UTF-32BE                 UTF-32LE                 windows-1250
+   windows-1251             windows-1252             windows-1253
+   windows-1254             windows-1255             windows-1256
+   windows-1257             windows-1258             windows-949
+   WINSAMI2                 
+
+Languages (+ if in project):
+     Ada                                     Assembly
+     Basic                                   COBOL
+  +  C++                                     C#
+     Fortran                                 Java
+     Jovial                                  Pascal
+     Plm                                     Python
+     VHDL                                    Web
+
+
+FileTypes: 
+Extension  Language      Extension  Language      Extension  Language
+   .C         C++           .H         C++           .TXT       Text
+   .a         Ada           .ada       Ada           .adb       Ada
+   .ads       Ada           .asm       Assembly      .bat       MSDos Batch
+   .c         C             .cbl       COBOL         .cc        C++
+   .cgi       Perl          .cob       COBOL         .cpl       Jovial
+   .cpp       C++           .cpy       COBOL         .cs        C#
+   .css       CSS           .cxx       C++           .dfm       Delphi
+   .dpr       Delphi        .f         Fortran       .f03       Fortran
+   .f77       Fortran       .f90       Fortran       .f95       Fortran
+   .fmx       Delphi        .for       Fortran       .ftn       Fortran
+   .gpr       Ada           .h         C++           .hh        C++
+   .hpp       C++           .htm       Html          .html      Html
+   .hxx       C++           .inl       C++           .java      Java
+   .jov       Jovial        .js        Javascript    .m         Objective-C
+   .mm        Objective-C++   .pas       Pascal        .php       Php
+   .pl        Perl          .plm       Plm           .pm        Perl
+   .py        Python        .s         Assembly      .sp        Pascal
+   .sql       Sql           .tcl       Tcl           .ts        TypeScript
+   .tsx       TypeScript    .txt       Text          .v         Verilog
+   .vb        Basic         .vh        Verilog       .vhd       VHDL
+   .vhdl      VHDL          .xml       Xml        
+
+--------------------------Metric Settings--------------------------
+Option                          Current Setting  Available Settings
+  WriteColumnTitles              on              on/off
+  ShowFunctionParameterTypes     on              on/off
+  ShowDeclaredInFile             on              on/off
+  FileNameDisplayMode            NoPath          NoPath/FullPath/RelativePath
+  DeclaredInFileDisplayMode      RelativePath    NoPath/FullPath/RelativePath
+  OutputFile                     C:/Work/GitHub/estagio-software-vulnerabilities-2020-2021/scripts/scraping/output/glibc.csv
+
+Metrics (+ if selected):
+     AltAvgLineBlank                         AltAvgLineCode
+     AltAvgLineComment                       AltCountLineBlank
+     AltCountLineCode                        AltCountLineComment
+     AvgCyclomatic                           AvgCyclomaticModified
+     AvgCyclomaticStrict                     AvgEssential
+     AvgLine                                 AvgLineBlank
+     AvgLineCode                             AvgLineComment
+     CountClassBase                          CountClassCoupled
+     CountClassDerived                       CountDeclClass
+     CountDeclClassMethod                    CountDeclClassVariable
+     CountDeclFile                           CountDeclFileCode
+     CountDeclFileHeader                     CountDeclFunction
+     CountDeclInstanceMethod                 CountDeclInstanceVariable
+     CountDeclInstanceVariablePrivate        CountDeclInstanceVariableProtected
+     CountDeclInstanceVariablePublic         CountDeclMethod
+     CountDeclMethodAll                      CountDeclMethodConst
+     CountDeclMethodFriend                   CountDeclMethodPrivate
+     CountDeclMethodProtected                CountDeclMethodPublic
+     CountInput                              CountLine
+     CountLineBlank                          CountLineCode
+     CountLineCodeDecl                       CountLineCodeExe
+     CountLineComment                        CountLineInactive
+     CountLinePreprocessor                   CountOutput
+     CountPath                               CountPathLog
+     CountSemicolon                          CountStmt
+     CountStmtDecl                           CountStmtEmpty
+     CountStmtExe                            Cyclomatic
+     CyclomaticModified                      CyclomaticStrict
+     Essential                               Knots
+     MaxCyclomatic                           MaxCyclomaticModified
+     MaxCyclomaticStrict                     MaxEssential
+     MaxEssentialKnots                       MaxInheritanceTree
+     MaxNesting                              MinEssentialKnots
+     PercentLackOfCohesion                   RatioCommentToCode
+     SumCyclomatic                           SumCyclomaticModified
+     SumCyclomaticStrict                     SumEssential
+
+
+--------------------------Report Settings--------------------------
+Option                          Current Setting  Available Settings
+  DisplayCreationDate            off             on/off
+  DisplayParameters              off             on/off
+  IndexByMethod                  off             on/off
+  GroupByDirectory                  off             on/off
+  DisplayHeaderText              off             on/off
+  DisplayUserHeaderText          off             on/off
+    UserHeaderText               
+  FileNameDisplayMode            short           short/full
+  GenerateHTMLReport             on              on/off
+    NumberofPages                Alphabetic      Single/Alphabetic/NEntity
+    OutputDirectory              C:/Work/GitHub/estagio-software-vulnerabilities-2020-2021/scripts/scraping/output/glibc_html
+    HTMLClearDirectory           off             on/off
+    CustomHTMLTitlePage          No Custom Title Page
+  GenerateTextReport             on              on/off
+    NumberOfFiles                Single          Single/Separate  (per Report)
+    OutputFileSingle             C:/Work/GitHub/estagio-software-vulnerabilities-2020-2021/scripts/scraping/output/glibc.txt
+    TextClearDirectory           N/A
+    OutputDirectorySeparate      N/A
+
+Reports (+ if selected):
+  +  Data Dictionary                      +  File Contents
+  +  Program Unit Cross Reference         +  Object Cross Reference
+  +  Type Cross Reference                 +  Macro Cross Reference
+  +  Include File Cross Reference            Extend Tree
+     Invocation Tree                      +  Simple Invocation Tree
+  +  Program Unit Complexity              +  Project Metrics
+  +  Program Unit Metrics                 +  File Metrics
+  +  File Average Metrics                 +  Class Metrics
+  +  Class OO Metrics                     +  Uninitialized Items
+  +  Unused Objects and Functions         +  Unused Objects
+  +  Unused Types                         +  Unused Program Units
+
+
+--------------------------Import Settings--------------------------
+File                            Configuration    Exclude Filter
+
+--------------------------C/C++ Settings---------------------------
+Option                          Current Setting  Available Settings
+  UseStrict                        off             on/off
+  Compiler                         Microsoft Visual C++(Available listed below)
+    IncludePath                    None
+    AllowNestedComments            off             on/off
+  IgnorePreprocessorConditionals   off             on/off
+  Include Options (Current Includes listed below)
+    AddFoundFilesToProject         off             on/off
+    AddFoundSystemFiles            off             on/off
+    IgnoreDirectory                off             on/off
+    SearchForIncludesInProject     on              on/off
+    TreatSystemIncludesAsUser      on              on/off
+    IgnoreDirectory                off             on/off
+    CaseInsensitiveLookup          off             on/off
+  Linkage Options
+    AppendText                     None
+    PrependText                    None
+  Optimize
+    CreateImplicitSpecialMemberFunctions
+                                   off             on/off
+    CreateReferencesInAssembly     on              on/off
+    CreateReferencesInInactiveCode
+                                   on              on/off
+    CreateReferencesToLocalObjects 
+                                   on              on/off
+    CreateReferencesToMacrosDuringMacroExpansion
+                                   off             on/off
+    CreateReferencesToParameter    on              on/off
+    SaveCommentsWithEntities       on              on/off
+    SaveDuplicateReferences        off             on/off
+    SaveMacroExpansionText         off             on/off
+    MacroExpansionTruncation       1000
+    UseIncludeCache                on              on/off
+
+Available Compilers:
+     ARM                                     Aix
+     Alpha                                   Analog Devices DSP
+     Borland C++                             CAD-UL
+     CCS                                     CUDA C
+     CodeVision AVR                          Cosmic 68HC11
+     Diab                                    Epson S1C17
+     Franklin 8051                           Fujitsu FR
+     GNU GCC                                 Green Hills ARM
+     Green Hills MIPS                        Green Hills PowerPC
+     Green Hills SH                          Green Hills V850
+     HI-TECH PICC STD                        Hpux
+     IAR 68HC12                              IAR 78K0
+     IAR 8051                                IAR A90
+     IAR ARM                                 IAR AVR
+     IAR HCS12                               IAR M16C
+     IAR MCS x96                             IAR RL78
+     IAR TI MSP430                           Keil arm
+     Keil c166                               Keil c251
+     Keil c51                                Linux
+     MPLAB C18                               MPLAB C30
+     MPLAB C32                               MPLAB XC16
+     MPLAB XC8                               Mac
+     Metrowerks DSP                          Metrowerks PowerPC
+     Microsoft Visual C++                    Microsoft Visual C++ (16 bit)
+     NEC 78K0                                National Instruments LabWindows/CVI
+     Neuron C                                Raisonance 8051
+     Renesas H8                              Renesas NC30
+     Renesas RL78                            Renesas RX
+     Renesas SuperH                          Rowley MSP430
+     Sgi                                     Solaris
+     Sunos                                   TI ARM
+     TI C55X                                 TI CL2000
+     TI TMS320C28x                           Tasking 68k
+     Tasking 8051                            Tasking C166
+     Tasking TriCore                         Wind River PowerPC
+     
+
+Includes:
+     None
+
+  System:
+     None
+
+  Auto:
+     None
+
+  Ignore:
+     None
+
+  Replacements:
+     None
+
+Macros: 
+     None
+
+  Undefined:
+     None
+
+-------------------------Override Settings-------------------------
+Overrides are file/directory specific. No file/directory given for listing 
+overrides.Possible Override Options are:
+   File Type(s)
+   File Encoding
+   C++ Auto Includes
+   C++ Ignore Parent Auto Includes
+   C++ Includes
+   C++ Ignore Parent Includes
+   C++ Macros
+   C++ Ignore Parent Macros
