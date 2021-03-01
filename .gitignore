@@ -5,6 +5,9 @@
 *.udb
 *.und
 
+# Log files.
+*.log
+
 # The database configuration file.
 scripts/database.config
 
