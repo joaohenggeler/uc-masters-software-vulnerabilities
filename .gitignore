@@ -18,4 +18,4 @@ scripts/dataset
 repositories
 
 # For the scraping scripts.
-scripts/scraping/config.json
+scripts/scraping/dynamic_config.json

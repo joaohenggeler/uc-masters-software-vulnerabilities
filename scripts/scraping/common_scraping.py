@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import time
+from copy import deepcopy
 from datetime import datetime
 from string import Template
 from typing import Callable, Iterator, Optional, Tuple, Union
@@ -53,7 +54,7 @@ log.info(f'Initializing "{__name__}"...')
 
 ####################################################################################################
 
-def load_scraping_config(config_path: str = 'config.json') -> dict:
+def load_config_file(config_path: str) -> dict:
 
 	try:
 		with open(config_path) as file:
@@ -64,10 +65,31 @@ def load_scraping_config(config_path: str = 'config.json') -> dict:
 		
 	return config
 
-SCRAPING_CONFIG = load_scraping_config()
+def load_scraping_config() -> dict:
 
+	static_config = load_config_file('static_config.json')
+	dynamic_config = load_config_file('dynamic_config.json')
+
+	def merge_dictionaries(dict_1: dict, dict_2: dict) -> dict:
+
+		result = deepcopy(dict_1)
+
+		for key, value_2 in dict_2.items():
+
+			value_1 = result.get(key)
+
+			if isinstance(value_1, dict) and isinstance(value_2, dict):
+				result[key] = merge_dictionaries(value_1, value_2)
+			else:
+				result[key] = deepcopy(value_2)
+
+		return result
+
+	return merge_dictionaries(static_config, dynamic_config)
+
+SCRAPING_CONFIG = load_scraping_config()
 if not SCRAPING_CONFIG:
-	log.critical(f'The module will terminate as the configuration file could not be read correctly.')
+	log.critical(f'The module will terminate since no configurations were found.')
 	sys.exit(1)
 
 DEBUG_OPTIONS = SCRAPING_CONFIG['debug_options']
