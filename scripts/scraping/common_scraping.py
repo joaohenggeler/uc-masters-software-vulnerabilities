@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+"""
+	This module defines any methods and classes that are used by different scripts to scrape vulnerability metadata
+	from websites and to generated software metrics and security alerts using third-party programs.
+"""
+
 import csv
 import glob
 import json
@@ -27,6 +32,7 @@ import requests
 ####################################################################################################
 
 def add_log_file_handler(log: logging.Logger):
+	""" Creates and adds a handle for logging information to a file. """
 
 	handler = logging.FileHandler('scraping.log', 'w', 'utf-8')
 	handler.setLevel(logging.DEBUG)
@@ -36,6 +42,7 @@ def add_log_file_handler(log: logging.Logger):
 	log.addHandler(handler)
 
 def add_log_stream_handler(log: logging.Logger):
+	""" Creates and adds a handle for logging information to a stream. """
 
 	handler = logging.StreamHandler()
 	handler.setLevel(logging.ERROR)
@@ -50,11 +57,11 @@ add_log_file_handler(log)
 add_log_stream_handler(log)
 
 log.info(f'Initializing "{__name__}"...')
-# log.basicConfig(filename='scraping.log', filemode='w', level=log.DEBUG, format='%(asctime)s [%(levelname)s] %(funcName)s: %(message)s')
 
 ####################################################################################################
 
 def load_config_file(config_path: str) -> dict:
+	""" Loads a JSON configuration file. """
 
 	try:
 		with open(config_path) as file:
@@ -66,11 +73,13 @@ def load_config_file(config_path: str) -> dict:
 	return config
 
 def load_scraping_config() -> dict:
+	""" Creates the main configuration dictionary by loading and merging the static and dynamic JSON configuration files. """
 
 	static_config = load_config_file('static_config.json')
 	dynamic_config = load_config_file('dynamic_config.json')
 
 	def merge_dictionaries(dict_1: dict, dict_2: dict) -> dict:
+		""" Merges two dictionaries, including any nested ones. """
 
 		result = deepcopy(dict_1)
 
@@ -101,9 +110,13 @@ if DEBUG_ENABLED:
 ####################################################################################################
 
 def get_current_timestamp() -> str:
+	""" Gets the current timestamp as a string using the format "YYYYMMDDhhmmss". """
+
 	return datetime.now().strftime("%Y%m%d%H%M%S")
 
 def change_datetime_string_format(datetime_string: str, source_format: str, destination_format: str, desired_locale: str) -> str:
+	""" Changes the format of a datetime string. """
+
 	previous_locale = locale.getlocale(locale.LC_TIME)
 	locale.setlocale(locale.LC_TIME, desired_locale)
 	
@@ -113,15 +126,23 @@ def change_datetime_string_format(datetime_string: str, source_format: str, dest
 	return datetime_string
 
 def serialize_json_container(container: Union[list, dict]) -> Optional[str]:
+	""" Serializes a list or dictionary as a JSON object. """
+
 	return json.dumps(container) if container else None
 
 def deserialize_json_container(container_str: Optional[str]) -> Union[list, dict, None]:
+	""" Deserializes a JSON object to a list or dictionary. """
+
 	return json.loads(container_str) if pd.notna(container_str) else None # type: ignore[arg-type]
 
 def has_file_extension(file_path: str, file_extension: str) -> bool:
+	""" Checks if a file path ends with a given file extension. """
+
 	return file_path.lower().endswith('.' + file_extension)
 
 def delete_file(file_path: str) -> bool:
+	""" Deletes a file, whether it exists or not. """
+
 	success = False
 
 	try:
@@ -133,6 +154,8 @@ def delete_file(file_path: str) -> bool:
 	return success
 
 def delete_directory(directory_path: str) -> bool:
+	""" Deletes a directory and its contents, whether it exists or not. """
+
 	success = False
 	
 	try:
@@ -144,12 +167,15 @@ def delete_directory(directory_path: str) -> bool:
 	return success
 
 def append_to_csv(df: pd.DataFrame, csv_path: str, **kwargs):
+	""" Creates or appends a dataframe to a CSV file depending if it already exists. """
+
 	add_header = not os.path.exists(csv_path)
 	df.to_csv(csv_path, mode='a', header=add_header, **kwargs)
 
 ####################################################################################################
 
 class ScrapingManager():
+	""" Manages the connection and downloads for one or more websites. """
 
 	session: requests.Session
 	connect_timeout: float
@@ -188,6 +214,7 @@ class ScrapingManager():
 		self.sleep_random_amounts = sleep_random_amounts
 
 	def download_page(self, url: str, params: Optional[dict] = None) -> Optional[requests.Response]:
+		""" Downloads a web page givens its URL and query parameters. """
 
 		response: Optional[requests.Response]
 
@@ -267,6 +294,7 @@ SOURCE_FILE_EXTENSIONS = ['c', 'cpp', 'cc', 'cxx', 'c++', 'cp', 'h', 'hpp', 'hh'
 ####################################################################################################
 
 class Cve:
+	""" Represents a vulnerability (CVE) scraped from the CVE Details website. """
 
 	CVE_DETAILS_SCRAPING_MANAGER: ScrapingManager = ScrapingManager('https://www.cvedetails.com')
 
@@ -339,6 +367,8 @@ class Cve:
 		return self.id
 
 	def download_cve_details_page(self) -> bool:
+		""" Downloads the CVE's page from the CVE Details website. """
+
 		response = Cve.CVE_DETAILS_SCRAPING_MANAGER.download_page(self.url)
 		if response is not None:
 			self.cve_details_soup = bs4.BeautifulSoup(response.text, 'html.parser')
@@ -346,6 +376,7 @@ class Cve:
 		return response is not None
 
 	def scrape_dates_from_page(self):
+		""" Scrapes any date values from the CVE's page. """
 
 		"""
 		<div class="cvedetailssummary">
@@ -369,6 +400,7 @@ class Cve:
 		self.last_update_date = cve_dates.get('Last Update Date')
 
 	def scrape_basic_attributes_from_page(self):
+		""" Scrapes any basic attributes from the CVE's page. """
 
 		"""
 		<table id="cvssscorestable" class="details">
@@ -448,6 +480,7 @@ class Cve:
 		self.cwe = cwe
 
 	def scrape_affected_product_versions_from_page(self):
+		""" Scrapes any affected products and their versions from the CVE's page. """
 
 		"""
 		<table class="listtable" id="vulnprodstable">
@@ -510,8 +543,9 @@ class Cve:
 
 			td_list = tr.find_all('td')
 
-			# Get a specific cell value and any URL it references from the current row given its column name.
 			def get_column_value_and_url(name):
+				""" Gets a specific cell value and any URL it references from the current row given its column name.. """
+
 				idx = column_indexes[name]
 				td = td_list[idx]
 
@@ -543,6 +577,7 @@ class Cve:
 					self.affected_products[product].append(version)
 
 	def scrape_references_from_page(self):
+		""" Scrapes any references and links from the CVE's page. """
 
 		"""
 		<table class="listtable" id="vulnrefstable">
@@ -570,9 +605,10 @@ class Cve:
 			log.warning(f'--> No references table found for {self}.')
 			return
 
-		# Creates a list of URL that match a regex (or a list of regexes). If a handler function is passed as the second argument, then it will be called
-		# for each URL in order to create and return a secondary list. This may be used to extract specific parts of the URL.
 		def list_all_urls(url_regex: str, url_handler: Callable = None):
+			""" Creates a list of URL that match a regex (or a list of regexes). If a handler method is passed as the second argument, then it
+			will be called for each URL in order to create and return a secondary list. This may be used to extract specific parts of the URL."""
+
 			a_list = references_table.find_all('a', href=url_regex)
 			
 			url_list = []
@@ -590,8 +626,9 @@ class Cve:
 
 			return url_list, secondary_list
 
-		# Finds the value of the first parameter in a URL's query segment given a list of keys to check. If no value was found, this function returns None.
 		def get_query_param(url: str, query_key_list: list) -> Optional[str]:
+			""" Gets the value of the first parameter in a URL's query segment given a list of keys to check. """
+
 			split_url = urlsplit(url)
 			params = dict(parse_qsl(split_url.query))
 			result = None
@@ -603,9 +640,9 @@ class Cve:
 
 			return result
 
-		#
-		# Various helper functions to handle specific URLs from different sources.
-		#
+		"""
+			Various helper methods to handle specific URLs from different sources.
+		"""
 
 		def handle_bugzilla_urls(url: str) -> Optional[str]:
 			id = get_query_param(url, ['id', 'bug_id'])
@@ -687,8 +724,10 @@ class Cve:
 		self.svn_urls, self.svn_revision_numbers 	= list_all_urls(SVN_URL_REGEX, handle_svn_urls)
 
 	def remove_duplicated_values(self):
+		""" Removes any duplicated values from specific CVE attributes that contain lists. """
 
 		def remove_duplicates_from_list(value_list: list) -> list:
+			""" Removes any duplicated values from a list. """
 			return list(dict.fromkeys(value_list))
 
 		self.vulnerability_types 	= remove_duplicates_from_list(self.vulnerability_types)
@@ -704,6 +743,7 @@ class Cve:
 		self.svn_revision_numbers 	= remove_duplicates_from_list(self.svn_revision_numbers)
 
 	def serialize_containers(self):
+		""" Serializes specific CVE attributes that contain lists or dictionaries using JSON. """
 
 		self.vulnerability_types 	= serialize_json_container(self.vulnerability_types)
 
@@ -724,6 +764,7 @@ class Cve:
 ####################################################################################################
 
 class Project:
+	""" Represents a software project, its repository, and the vulnerabilities it's affected by. """
 
 	TIMESTAMP: str = get_current_timestamp()
 
@@ -773,7 +814,8 @@ class Project:
 
 	@staticmethod
 	def get_project_list_from_config(config: dict = SCRAPING_CONFIG) -> list:
-		
+		""" Creates a list of projects given the current configuration. """
+
 		output_directory_path = config['output_directory_path']
 		scrape_all_branches = config['scrape_all_branches']
 		project_config = config['projects']
@@ -804,13 +846,17 @@ class Project:
 		return project_list
 
 	@staticmethod
-	def ensure_all_project_repositories_were_loaded(project_list: list):
-		for project in project_list:
-			if project.repository is None:
-				log.critical(f'The repository for project "{project}" was not loaded correctly.')
-				sys.exit(1)
+	def debug_ensure_all_project_repositories_were_loaded(project_list: list):
+		""" Terminates the program if one or more projects are missing their repositories. This method does nothing outside debug mode. """
+
+		if DEBUG_ENABLED:
+			for project in project_list:
+				if project.repository is None:
+					log.critical(f'The repository for project "{project}" was not loaded correctly.')
+					sys.exit(1)
 
 	def find_output_csv_files(self, type: str) -> Iterator[str]:
+		""" Finds the paths to any CSV files that belong to this project by looking at their prefix type. """
 
 		csv_path = self.csv_prefix_template.substitute(type=type) + '*'
 
@@ -818,12 +864,15 @@ class Project:
 			yield path
 
 	def scrape_additional_information_from_security_advisories(self, cve: Cve):
+		""" Scrapes any additional information from the project's security advisories. This method should be overriden by a project's subclass. """
 		pass
 
 	def scrape_additional_information_from_version_control(self, cve: Cve):
+		""" Scrapes any additional information from the project's version control system. This method should be overriden by a project's subclass. """
 		pass
 
 	def find_full_git_commit_hash(self, short_commit_hash: str) -> Optional[str]:
+		""" Finds the full Git commit hash given the short hash. """
 
 		if self.repository is None:
 			return None
@@ -838,7 +887,8 @@ class Project:
 		return full_commit_hash
 
 	def find_git_commit_hashes_from_pattern(self, grep_pattern: str) -> list:
-		
+		""" Finds any Git commit hashes whose title and message match a given regex pattern. """
+
 		if self.repository is None:
 			return []
 
@@ -855,6 +905,7 @@ class Project:
 		return hash_list
 
 	def is_git_commit_hash_valid(self, commit_hash: str) -> bool:
+		""" Checks if a Git commit hash exists in the repository. """
 
 		if self.repository is None:
 			return False
@@ -869,11 +920,14 @@ class Project:
 		return is_valid	
 
 	def remove_invalid_git_commit_hashes(self, cve: Cve):
+		""" Removes any invalid Git commit hashes from a CVE. """
+
 		if self.repository is not None:
 			cve.git_commit_hashes = [hash for hash in cve.git_commit_hashes if self.is_git_commit_hash_valid(hash)]
 
 	def is_git_commit_hash_in_master_branch(self, commit_hash: str) -> bool:
-		
+		""" Checks if a Git commit hash exists in the repository's master branch. """
+
 		if self.repository is None:
 			return False
 
@@ -891,10 +945,14 @@ class Project:
 		return is_master
 	
 	def remove_git_commit_hashes_by_branch(self, cve: Cve):
+		""" Removes any Git commit hashes from a CVE that do not exist in the master branch. If the configuration file specified every branch,
+		this method does nothing. """
+
 		if self.repository is not None and not self.scrape_all_branches:
 			cve.git_commit_hashes = [hash for hash in cve.git_commit_hashes if self.is_git_commit_hash_in_master_branch(hash)]
 
 	def sort_git_commit_hashes_topologically(self, hash_list: list) -> list:
+		""" Sorts a list of Git commit hashes topologically. """
 
 		if self.repository is None or not hash_list:
 			return []
@@ -912,7 +970,8 @@ class Project:
 		return sorted_hash_list
 
 	def find_changed_files_in_git_commit(self, commit_hash: str, file_extension_filter: list = []) -> Iterator[str]:
-		
+		""" Finds the paths to any files that were changed in a given Git commit. These files may be optionally filtered by their file extensions. """
+
 		if self.repository is None:
 			return
 
@@ -931,12 +990,13 @@ class Project:
 				yield file_path
 
 	def find_parent_git_commit_hash_for_changed_file(self, commit_hash: str, file_path: str) -> Optional[str]:
-		
+		""" Finds the previous Git commit hash where a given file was last changed. """
+
 		if self.repository is None:
 			return None
 
 		try:
-			# git log [HASH] --parents --max-count=1 --format="%P" -- [FILE PATH 1] [FILE PATH 2] [...] [FILE PATH N]
+			# git log [HASH] --parents --max-count=1 --format="%P" -- [FILE PATH]
 			parent_commit_hash = self.repository.git.log(commit_hash, '--', file_path, parents=True, max_count=1, format='%P')
 		except git.exc.GitCommandError as error:
 			parent_commit_hash = None
@@ -945,6 +1005,7 @@ class Project:
 		return parent_commit_hash
 
 	def checkout_files_in_git_commit(self, commit_hash: str, file_path_list: list) -> bool:
+		""" Performs the Git checkout operation to a specific list of files in a given Git commit. """
 
 		if self.repository is None:
 			return False
@@ -961,6 +1022,8 @@ class Project:
 		return success
 
 	def hard_reset_git_head(self):
+		""" Performs a hard reset operation to the project's repository. """
+
 		if self.repository is None:
 			return
 
@@ -971,6 +1034,7 @@ class Project:
 			log.error(f'Failed to hard reset the current HEAD with the error: {repr(error)}')
 
 	def scrape_vulnerabilities_from_cve_details(self) -> Iterator[Cve]:
+		""" Scrapes any vulnerabilities related to this project from the CVE Details website. """
 
 		log.info(f'Collecting the vulnerabilities for the "{self}" project ({self.vendor_id}, {self.product_id}):')
 		response = Cve.CVE_DETAILS_SCRAPING_MANAGER.download_page('https://www.cvedetails.com/vulnerability-list.php', {'vendor_id': self.vendor_id, 'product_id': self.product_id})
@@ -1042,6 +1106,7 @@ class Project:
 	####################################################################################################
 
 	def collect_and_save_vulnerabilities_to_csv_file(self):
+		""" Collects any vulnerabilities related to this project and saves them to a CSV file. """
 
 		CSV_HEADER = [
 			'CVE', 'CVE URL',
@@ -1092,6 +1157,7 @@ class Project:
 				csv_writer.writerow(csv_row)
 
 	def find_and_save_affected_files_to_csv_file(self):
+		""" Finds any files affected by this project's vulnerabilities and saves them to a CSV file. """
 
 		for csv_path in self.find_output_csv_files('cve'):
 
@@ -1141,6 +1207,7 @@ class Project:
 			affected_files.to_csv(csv_file_path, index=False)
 
 	def generate_and_save_metrics_to_csv_file(self):
+		""" Generates the software metrics of any files affected by this project's vulnerabilities and saves them to a CSV file. """
 
 		understand = UnderstandSat(self)
 	
@@ -1210,6 +1277,7 @@ class Project:
 ####################################################################################################
 
 class MozillaProject(Project):
+	""" Represents the Mozilla project. """
 
 	MOZILLA_SCRAPING_MANAGER: ScrapingManager = ScrapingManager('https://www.mozilla.org')
 
@@ -1359,6 +1427,7 @@ class MozillaProject(Project):
 ####################################################################################################
 
 class XenProject(Project):
+	""" Represents the Xen project. """
 
 	XEN_SCRAPING_MANAGER: ScrapingManager = ScrapingManager('https://xenbits.xen.org')
 
@@ -1474,11 +1543,11 @@ class XenProject(Project):
 				except json.decoder.JSONDecodeError as error:
 					xsa_metadata = None
 					log.error(f'Failed to parse the JSON metadata for {xsa_full_id} with the error: {repr(error)}')
-				
-				# Tries to get a value from variously nested dictionaries by following
-				# a sequence of keys in a given order. If any intermediate dictionary
-				# doesn't exist, this function returns None.
+
 				def nested_get(dictionary: dict, key_list: list):
+					""" Tries to get a value from variously nested dictionaries by following a sequence of keys in a given order.
+					If any intermediate dictionary doesn't exist, this method returns None. """
+
 					value = None
 					for key in key_list:
 						value = dictionary.get(key)
@@ -1519,6 +1588,7 @@ class XenProject(Project):
 ####################################################################################################
 
 class ApacheProject(Project):
+	""" Represents the Apache HTTP Server project. """
 
 	def __init__(self, project_name: str, project_info: dict):
 		super().__init__(project_name, project_info)
@@ -1534,6 +1604,7 @@ class ApacheProject(Project):
 ####################################################################################################
 
 class GlibcProject(Project):
+	""" Represents the GNU C Library (glibc) project. """
 
 	def __init__(self, project_name: str, project_info: dict):
 		super().__init__(project_name, project_info)
@@ -1552,6 +1623,7 @@ class GlibcProject(Project):
 ####################################################################################################
 
 class Sat():
+	""" Represents a third-party static analysis tool (SAT) and allows the execution of its commands. """
 
 	name: str
 	executable_path: str
@@ -1568,18 +1640,21 @@ class Sat():
 		return self.name
 
 	def run(self, *args) -> Tuple[bool, str]:
-		
+		""" Runs the tool with a series of command line arguments. """
+
 		arguments = [self.executable_path] + [arg for arg in args]
 		result = subprocess.run(arguments, capture_output=True, text=True)
 
 		return (result.stdout != '', result.stdout)
 
 	def get_version(self) -> str:
+		""" Gets the tool's version number. """
 		return self.version or 'Unknown'
 
 ####################################################################################################
 
 class UnderstandSat(Sat):
+	""" Represents the Understand tool, which is used to generate software metrics given a project's source files. """
 
 	project: Project
 	database_path: Optional[str]
@@ -1608,6 +1683,7 @@ class UnderstandSat(Sat):
 	"""
 
 	def create_project_database(self, output_csv_path: str) -> bool:
+		""" Creates the tool's project database directory with a set of execution options. """
 
 		self.database_path = os.path.join(self.project.output_directory_path, self.project.short_name + '.und')
 
@@ -1626,6 +1702,7 @@ class UnderstandSat(Sat):
 		return success
 
 	def add_files_to_project_database(self, file_path_list: list) -> bool:
+		""" Adds a list of files to the project's database directory. """
 
 		success, _ = self.run	(
 									'-quiet', '-db', self.database_path,
@@ -1635,6 +1712,7 @@ class UnderstandSat(Sat):
 		return success
 
 	def generate_project_metrics(self) -> bool:
+		""" Generates the project's metrics using the files and any other options defined in the database directory. """
 				
 		success, _ = self.run	(
 									'-quiet', '-db', self.database_path,
@@ -1645,6 +1723,8 @@ class UnderstandSat(Sat):
 		return success
 
 	def delete_project_database(self) -> bool:
+		""" Deletes the tool's project database directory. """
+
 		success = False
 		if self.database_path is not None:
 			success = delete_directory(self.database_path)

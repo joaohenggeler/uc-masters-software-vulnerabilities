@@ -9,12 +9,11 @@
 	For each project, this information is saved to a CSV file.
 """
 
-from common_scraping import DEBUG_ENABLED, Project
+from common_scraping import Project
 
 project_list = Project.get_project_list_from_config()
 
-if not DEBUG_ENABLED:
-	Project.ensure_all_project_repositories_were_loaded(project_list)
+Project.debug_ensure_all_project_repositories_were_loaded(project_list)
 
 for project in project_list:
 	project.collect_and_save_vulnerabilities_to_csv_file()
