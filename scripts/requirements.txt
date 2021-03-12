@@ -1,0 +1,12 @@
+beautifulsoup4>=4.9.3
+GitPython>=3.1.13
+lxml>=4.6.2
+matplotlib-venn>=0.11.6
+mypy>=0.800
+mysql-connector-python>=8.0.22
+numpy>=1.19.4
+openpyxl>=3.0.5
+pandas>=1.1.5
+PyGithub>=1.54.1
+requests>=2.25.1
+xlrd>=2.0.1

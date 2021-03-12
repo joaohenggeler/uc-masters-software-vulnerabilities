@@ -3,6 +3,10 @@
 
 # Understand project databases.
 *.udb
+*.und
+
+# Log files.
+*.log
 
 # The database configuration file.
 scripts/database.config
@@ -12,3 +16,6 @@ scripts/dataset
 
 # The five C/C++ project repositories.
 repositories
+
+# For the scraping scripts.
+scripts/scraping/dynamic_config.json

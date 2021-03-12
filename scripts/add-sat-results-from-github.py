@@ -276,7 +276,7 @@ def insert_rule_and_alert_into_database(cursor, index,
 
 print('Finding the SAT result files in the GitHub repository...')
 
-github = Github('e8b607cb0e7b3722d57d7d2b8b0f586cffeb71de')
+github = Github('4460ebea9aacc8587235d326ab0134b239a44359')
 repository = github.get_repo('joseadp/uc-phd-josep-data')
 
 SAT_NAME_LIST = ['cppcheck', 'flawfinder']
