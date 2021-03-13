@@ -140,6 +140,13 @@ def has_file_extension(file_path: str, file_extension: str) -> bool:
 
 	return file_path.lower().endswith('.' + file_extension)
 
+def replace_in_filename(file_path: str, old: str, new: str) -> str:
+	""" Replaces a substring in a path's filename. """
+
+	directory_path, filename = os.path.split(file_path)
+	filename = filename.replace(old, new)
+	return os.path.join(directory_path, filename)
+
 def delete_file(file_path: str) -> bool:
 	""" Deletes a file, whether it exists or not. """
 
@@ -801,7 +808,7 @@ class Project:
 			self.repository = None
 			log.error(f'Failed to get the repository for the project "{self}"" with the error: {repr(error)}')
 		
-		csv_prefix = os.path.join(self.output_directory_path, f'$type-{self.database_id}-')
+		csv_prefix = os.path.join(self.output_directory_path, f'$prefix-{self.database_id}-')
 		self.csv_prefix_template = Template(csv_prefix)
 
 		used_branches = 'all-branches' if self.scrape_all_branches else 'master-branch'
@@ -855,10 +862,10 @@ class Project:
 					log.critical(f'The repository for project "{project}" was not loaded correctly.')
 					sys.exit(1)
 
-	def find_output_csv_files(self, type: str) -> Iterator[str]:
-		""" Finds the paths to any CSV files that belong to this project by looking at their prefix type. """
+	def find_output_csv_files(self, prefix: str) -> Iterator[str]:
+		""" Finds the paths to any CSV files that belong to this project by looking at their prefix. """
 
-		csv_path = self.csv_prefix_template.substitute(type=type) + '*'
+		csv_path = self.csv_prefix_template.substitute(prefix=prefix) + '*'
 
 		for path in glob.iglob(csv_path):
 			yield path
@@ -1127,7 +1134,7 @@ class Project:
 		
 		os.makedirs(self.output_directory_path, exist_ok=True)
 
-		csv_file_path = self.csv_file_path_template.substitute(type='cve')
+		csv_file_path = self.csv_file_path_template.substitute(prefix='cve')
 
 		with open(csv_file_path, 'w', newline='') as csv_file:
 
@@ -1203,7 +1210,8 @@ class Project:
 				if has_source_file:
 					topological_index += 1
 
-			csv_file_path = csv_path.replace('cve-', 'affected-files-')
+			csv_file_path = replace_in_filename(csv_path, 'cve', 'affected-files')
+
 			affected_files.to_csv(csv_file_path, index=False)
 
 	def generate_and_save_metrics_to_csv_file(self):
@@ -1218,8 +1226,9 @@ class Project:
 			affected_files = pd.read_csv(csv_path, usecols=['File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash'])
 			grouped_files = affected_files.groupby(by=['Topological Index', 'Neutral Git Commit Hash'])
 			
-			final_csv_file_path = csv_path.replace('affected-files-', f'metrics-')
-			temp_csv_file_path = csv_path.replace('affected-files-', f'temp-metrics-')
+			final_csv_file_path = replace_in_filename(csv_path, 'affected-files', 'metrics')
+			temp_csv_file_path = replace_in_filename(csv_path, 'affected-files', 'temp-metrics')
+
 			delete_file(final_csv_file_path)
 
 			for (topological_index, neutral_commit_hash), group_df in grouped_files:
@@ -1393,19 +1402,20 @@ class Project:
 
 			##########
 
-			def write_code_unit_csv(kind_regex: str, replacement_csv_name: str):
+			def write_code_unit_csv(kind_regex: str, replacement_csv_prefix: str):
 				""" Writes the rows of a specific kind of code unit to a CSV file. """
 				
 				is_code_unit = metrics['Kind'].str.contains(kind_regex)
 				code_unit_metrics = metrics.loc[is_code_unit]
 				code_unit_metrics = code_unit_metrics.dropna(axis=1, how='all')
 				
-				csv_file_path = csv_path.replace('metrics-', replacement_csv_name)
+				csv_file_path = replace_in_filename(csv_path, 'metrics', replacement_csv_prefix)
+
 				code_unit_metrics.to_csv(csv_file_path, index=False)
 
-			write_code_unit_csv('File', 'file-metrics-')
-			write_code_unit_csv('Function', 'function-metrics-')
-			write_code_unit_csv('Class|Struct|Union', 'class-metrics-')
+			write_code_unit_csv('File', 'file-metrics')
+			write_code_unit_csv('Function', 'function-metrics')
+			write_code_unit_csv('Class|Struct|Union', 'class-metrics')
 			
 ####################################################################################################
 
