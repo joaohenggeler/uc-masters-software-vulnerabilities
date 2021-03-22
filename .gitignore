@@ -8,6 +8,9 @@
 # Log files.
 *.log
 
+# Windows shortcuts.
+*.lnk
+
 # The database configuration file.
 scripts/database.config
 
