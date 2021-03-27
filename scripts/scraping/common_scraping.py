@@ -56,7 +56,7 @@ def add_log_stream_handler(log: logging.Logger):
 	log.addHandler(handler)
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 add_log_file_handler(log)
 add_log_stream_handler(log)
 
@@ -109,6 +109,7 @@ DEBUG_OPTIONS = SCRAPING_CONFIG['debug_options']
 DEBUG_ENABLED = DEBUG_OPTIONS['enabled']
 
 if DEBUG_ENABLED:
+	log.setLevel(logging.DEBUG)
 	log.debug(f'Debug mode is enabled with the following options: {DEBUG_OPTIONS}')
 
 try:
