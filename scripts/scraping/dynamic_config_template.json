@@ -1,0 +1,64 @@
+{
+	"debug_options":
+	{
+		"enabled": false,
+		
+		"min_hub_pages": 6,
+		"hub_page_step": 5,
+		"max_cves_per_hub_page": 5,
+		"use_random_sampling": true,
+
+		"ignored_projects": ["<Put zero or more project short names from the static config here>"]
+	},
+
+	"output_directory_path": "output",
+	"scrape_all_branches": false,
+
+	"clang_bin_path": "<Replace with path>",
+
+	"projects":
+	{
+		"Glibc":
+		{
+			"repository_path": "<Replace with path>"
+		},
+
+		"Apache HTTP Server":
+		{
+			"repository_path": "<Replace with path>"
+		},
+
+		"Xen":
+		{
+			"repository_path": "<Replace with path>"
+		},
+
+		"Linux Kernel":
+		{
+			"repository_path": "<Replace with path>"
+		},
+
+		"Mozilla":
+		{
+			"repository_path": "<Replace with path>"
+		}
+	},
+
+	"sats":
+	{
+		"Understand":
+		{
+			"executable_path": "<Replace with path>"
+		},
+
+		"Cppcheck":
+		{
+			"executable_path": "<Replace with path>"
+		},
+
+		"Flawfinder":
+		{
+			"executable_path": "<Replace with path>"
+		}
+	}
+}
