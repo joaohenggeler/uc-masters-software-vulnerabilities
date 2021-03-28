@@ -871,7 +871,8 @@ class Project:
 
 			short_name = info['short_name']
 
-			if DEBUG_ENABLED and short_name in DEBUG_OPTIONS['ignored_projects']:
+			if short_name in SCRAPING_CONFIG['ignored_projects']:
+				log.info(f'Ignoring project "{short_name}".')
 				continue
 
 			info['output_directory_path'] = output_directory_path
@@ -1056,6 +1057,10 @@ class Project:
 			log.error(f'Failed to find the parent of the commit hash "{commit_hash}" with the error: {repr(error)}')
 
 		return parent_commit_hash
+
+	def find_parent_git_commit_hash(self, commit_hash: str) -> Optional[str]:
+		""" Finds the previous Git commit hash. """
+		return self.find_parent_git_commit_hash_for_changed_file(commit_hash, '')
 
 	def checkout_files_in_git_commit(self, commit_hash: str, file_path_list: list) -> bool:
 		""" Performs the Git checkout operation on a specific list of files in a given Git commit. """
@@ -1702,7 +1707,7 @@ class MozillaProject(Project):
 
 					# Change the format of specific fields so they're consistent with the rest of the CSV file.
 					if key == 'Announced':
-						value = change_datetime_string_format(value, '%B %d, %Y', '%Y-%m-%d', 'en_US')
+						value = change_datetime_string_format(value, '%B %d, %Y', '%Y-%m-%d', 'en_US.UTF-8')
 					elif key == 'Impact':
 						value = value.title()
 					elif key == 'Products':

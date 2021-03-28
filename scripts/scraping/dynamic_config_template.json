@@ -6,11 +6,10 @@
 		"min_hub_pages": 6,
 		"hub_page_step": 5,
 		"max_cves_per_hub_page": 5,
-		"use_random_sampling": true,
-
-		"ignored_projects": ["<Put zero or more project short names from the static config here>"]
+		"use_random_sampling": true
 	},
 
+	"ignored_projects": ["<Put zero or more project short names from the static config here>"],
 	"output_directory_path": "output",
 	"scrape_all_branches": false,
 
