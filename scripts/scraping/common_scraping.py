@@ -808,6 +808,7 @@ class Project:
 	product_id: int
 	url_pattern: str
 	repository_path: str
+	repository_base_name: str
 	master_branch: str
 	language: str
 	include_directory_path: Optional[str]
@@ -825,6 +826,8 @@ class Project:
 		self.full_name = project_name
 		for key, value in project_info.items():
 			setattr(self, key, value)
+
+		self.repository_base_name = os.path.basename(self.repository_path)
 
 		self.output_directory_path = os.path.join(self.output_directory_path, self.short_name)
 		self.output_directory_path = os.path.abspath(self.output_directory_path)
@@ -922,8 +925,15 @@ class Project:
 
 	def get_relative_path_in_repository(self, full_path: str) -> str:
 		""" Converts the absolute path of a file in the project's repository into a relative one. """
-		path = os.path.relpath(full_path, self.repository_path)
-		return path.replace('\\', '/')
+
+		path = full_path.replace('\\', '/')
+
+		try:
+			_, path = path.split(self.repository_base_name + '/')			
+		except ValueError:
+			pass
+
+		return path
 
 	def find_full_git_commit_hash(self, short_commit_hash: str) -> Optional[str]:
 		""" Finds the full Git commit hash given the short hash. """
@@ -1043,7 +1053,7 @@ class Project:
 			if yield_file:
 				yield file_path
 
-	def find_parent_git_commit_hash_for_changed_file(self, commit_hash: str, file_path: str) -> Optional[str]:
+	def find_last_changed_git_commit_hash(self, commit_hash: str, file_path: str) -> Optional[str]:
 		""" Finds the previous Git commit hash where a given file was last changed. """
 
 		if self.repository is None:
@@ -1060,7 +1070,7 @@ class Project:
 
 	def find_parent_git_commit_hash(self, commit_hash: str) -> Optional[str]:
 		""" Finds the previous Git commit hash. """
-		return self.find_parent_git_commit_hash_for_changed_file(commit_hash, '')
+		return self.find_last_changed_git_commit_hash(commit_hash, '.')
 
 	def checkout_files_in_git_commit(self, commit_hash: str, file_path_list: list) -> bool:
 		""" Performs the Git checkout operation on a specific list of files in a given Git commit. """
@@ -1078,6 +1088,10 @@ class Project:
 			log.error(f'Failed to checkout the files in commit "{commit_hash}" with the error: {repr(error)}')
 			
 		return success
+
+	def checkout_entire_git_commit(self, commit_hash: str) -> bool:
+		""" Performs the Git checkout operation for every file in a given Git commit. """
+		return self.checkout_files_in_git_commit(commit_hash, ['.'])
 
 	def hard_reset_git_head(self):
 		""" Performs a hard reset operation to the project's repository. """
@@ -1248,12 +1262,13 @@ class Project:
 			hash_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
 			hash_list = self.sort_git_commit_hashes_topologically(hash_list)
 			
-			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index', 'Neutral Git Commit Hash',
-													'Vulnerable Git Commit Hash', 'CVEs'])
+			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash',
+													'Last Change Git Commit Hash', 'CVEs'])
 
 			topological_index = 0
 			for commit_hash in hash_list:
 
+				parent_commit_hash = self.find_parent_git_commit_hash(commit_hash)
 				changed_file_list = self.find_changed_files_in_git_commit(commit_hash, SOURCE_FILE_EXTENSIONS)
 
 				has_source_file = False
@@ -1261,7 +1276,7 @@ class Project:
 
 					has_source_file = True
 
-					parent_commit_hash = self.find_parent_git_commit_hash_for_changed_file(commit_hash, file_path)
+					last_change_commit_hash = self.find_last_changed_git_commit_hash(commit_hash, file_path)
 
 					is_commit = cves['Git Commit Hashes'].map(lambda hash_list: commit_hash in hash_list)
 					cve_list = cves.loc[is_commit, 'CVE'].tolist()
@@ -1272,6 +1287,7 @@ class Project:
 							'Topological Index': topological_index,
 							'Neutral Git Commit Hash': commit_hash,
 							'Vulnerable Git Commit Hash': parent_commit_hash,
+							'Last Change Git Commit Hash': last_change_commit_hash,
 							'CVEs': cve_list
 					}
 
@@ -1288,9 +1304,9 @@ class Project:
 		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities. """
 
 		affected_files = pd.read_csv(csv_file_path, usecols=['File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash'], dtype=str)
-		grouped_files = affected_files.groupby(by=['Topological Index', 'Neutral Git Commit Hash'])
+		grouped_files = affected_files.groupby(by=['Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash'])
 
-		for (topological_index, neutral_commit_hash), group_df in grouped_files:
+		for (topological_index, neutral_commit_hash, vulnerable_commit_hash), group_df in grouped_files:
 
 			group_df = group_df.replace({np.nan: None})
 
@@ -1301,7 +1317,7 @@ class Project:
 				if commit_hash is None:
 					return
 
-				checkout_success = self.checkout_files_in_git_commit(commit_hash, file_path_list)
+				checkout_success = self.checkout_entire_git_commit(commit_hash)
 
 				if checkout_success:
 					yield (commit_hash, is_vulnerable, file_path_list)
@@ -1314,11 +1330,7 @@ class Project:
 			file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in file_path_list]
 
 			yield from checkout_affected_files(neutral_commit_hash, False, file_path_list)
-
-			vulnerable_commit_hash_list = group_df['Vulnerable Git Commit Hash'].tolist()
-
-			for file_path, vulnerable_commit_hash in zip(file_path_list, vulnerable_commit_hash_list):						
-				yield from checkout_affected_files(vulnerable_commit_hash, True, [file_path])
+			yield from checkout_affected_files(vulnerable_commit_hash, True, file_path_list)
 
 		self.hard_reset_git_head()
 
@@ -2058,6 +2070,9 @@ class UnderstandSat(Sat):
 class CppcheckSat(Sat):
 	""" Represents the Cppcheck tool, which is used to generate security alerts given a project's source files. """
 
+	RULE_TO_CWE: dict = {}
+	mapped_rules_to_cwes: bool = False
+
 	def __init__(self, project: Project):
 		super().__init__('Cppcheck', project)
 
@@ -2066,8 +2081,21 @@ class CppcheckSat(Sat):
 			version_number = re.findall(r'\d+\.\d+', version_number)[0]
 			self.version = version_number
 
+		if not CppcheckSat.mapped_rules_to_cwes:
+			CppcheckSat.mapped_rules_to_cwes = True
+
+			with open('cppcheck_error_list.xml') as xml_file:
+				error_soup = bs4.BeautifulSoup(xml_file, 'xml')
+
+			if error_soup is not None:
+				error_list = error_soup.find_all('error', id=True, cwe=True)				
+				CppcheckSat.RULE_TO_CWE = {error['id']: error['cwe'] for error in error_list}
+			else:
+				log.error(f'Failed to map a list of SAT rules to their CWE values.')
+
 	def generate_project_alerts(self, file_path_list: list, output_csv_path: str) -> bool:
-		
+		""" Generates the project's alerts given list of files. """
+
 		if self.project.include_directory_path is not None:
 			include_arguments = ['-I', self.project.include_directory_path]
 		else:
@@ -2098,7 +2126,41 @@ class CppcheckSat(Sat):
 
 		return success
 
+	def read_and_convert_output_csv_in_default_format(self, csv_path: str) -> pd.DataFrame:
+		""" Reads a CSV file generated using Cppcheck's default output parameters and converts it to a more convenient format. """
+
+		# The default CSV files generated by Cppcheck don't quote values with commas correctly.
+		# This means that pd.read_csv() would fail because some lines have more columns than others.
+		# We'll read each line ourselves and interpret anything after the fourth column as being part
+		# of the "Message" column.
+		dictionary_list = []
+		with open(csv_path, 'r') as csv_file:
+			
+			for line in csv_file:
+				filepath_and_line, severity, rule, message = line.split(',', 3)
+				file_path, line = filepath_and_line.rsplit(':', 1)
+				message = message.rstrip()
+
+				dictionary_list.append({'File': file_path, 'Line': line, 'Severity': severity, 'Rule': rule, 'Message': message})
+
+		alerts = pd.DataFrame.from_dict(dictionary_list, dtype=str)
+
+		alerts['File'] = alerts['File'].map(lambda x: None if x == 'nofile' else self.project.get_relative_path_in_repository(x))
+		alerts['CWE'] = alerts['Rule'].map(lambda x: CppcheckSat.RULE_TO_CWE.get(x, ''))
+		
+		return alerts
+
+
 ####################################################################################################
 
 if __name__ == '__main__':
-	pass
+	project_list = Project.get_project_list_from_config()
+
+	Project.debug_ensure_all_project_repositories_were_loaded(project_list)
+
+	for project in project_list:
+		if project.short_name == 'mozilla':
+
+			cppcheck = CppcheckSat(project)
+			alerts = cppcheck.read_and_convert_output_csv_in_default_format(os.path.join('test_cases', 'cppcheck-1-f40f923a0a09ab1d0e28a308364a924893c5fd02.csv'))
+			alerts.to_csv(os.path.join('test_cases', 'converted-cppcheck.csv'), index=False)
