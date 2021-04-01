@@ -1135,7 +1135,6 @@ class Project:
 		page_div = main_soup.find('div', id='pagingb')
 		page_a_list = page_div.find_all('a', title=PAGE_TITLE_REGEX)
 		page_url_list = ['https://www.cvedetails.com' + page_a['href'] for page_a in page_a_list]
-		page_url_list[::-1]
 
 		if DEBUG_ENABLED:
 			previous_len = len(page_url_list)
@@ -1143,6 +1142,12 @@ class Project:
 				page_url_list = page_url_list[::DEBUG_OPTIONS['hub_page_step']]
 			
 			log.debug(f'Reduced the number of hub pages from {previous_len} to {len(page_url_list)}.')
+
+		else:
+			first_page = SCRAPING_CONFIG.get('start_at_cve_hub_page')
+			if first_page is not None:
+				log.info(f'Starting at hub page {first_page-1} at the user''s request.')
+				page_url_list = page_url_list[first_page-1:]
 
 		for i, page_url in enumerate(page_url_list):
 

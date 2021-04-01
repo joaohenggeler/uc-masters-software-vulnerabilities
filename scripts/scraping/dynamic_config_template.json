@@ -10,6 +10,8 @@
 	},
 
 	"ignored_projects": ["<Put zero or more project short names from the static config here>"],
+	"start_at_cve_hub_page": null,
+
 	"output_directory_path": "output",
 	"scrape_all_branches": false,
 
