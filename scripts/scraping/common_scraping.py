@@ -23,7 +23,7 @@ import time
 from copy import deepcopy
 from datetime import datetime
 from string import Template
-from typing import Callable, Iterator, List, Optional, Tuple, Union
+from typing import Callable, Iterator, List, Optional, Pattern, Tuple, Union
 from urllib.parse import urlsplit, parse_qsl
 
 import bs4 # type: ignore
@@ -321,8 +321,6 @@ Examples:
 
 - Apache: http://svn.apache.org/viewcvs?rev=292949&view=rev
 """
-
-SOURCE_FILE_EXTENSIONS = ['c', 'cpp', 'cc', 'cxx', 'c++', 'cp', 'h', 'hpp', 'hh', 'hxx']
 
 ####################################################################################################
 
@@ -813,6 +811,8 @@ class Project:
 	language: str
 	include_directory_path: Optional[str]
 
+	SOURCE_FILE_EXTENSIONS: list = ['c', 'cpp', 'cc', 'cxx', 'c++', 'cp', 'h', 'hpp', 'hh', 'hxx']
+
 	repository: git.Repo
 
 	output_directory_path: str
@@ -929,7 +929,7 @@ class Project:
 		path = full_path.replace('\\', '/')
 
 		try:
-			_, path = path.split(self.repository_base_name + '/')			
+			_, path = path.split(self.repository_base_name + '/', maxsplit=1)			
 		except ValueError:
 			pass
 
@@ -1033,25 +1033,87 @@ class Project:
 
 		return sorted_hash_list
 
-	def find_changed_files_in_git_commit(self, commit_hash: str, file_extension_filter: list = []) -> Iterator[str]:
-		""" Finds the paths to any files that were changed in a given Git commit. These files may be optionally filtered by their file extensions. """
+	GIT_DIFF_LINE_NUMBERS_REGEX: Pattern = re.compile(r'^@@ -(\d+)(,\d+)? \+(?:\d+)(?:,\d+)? @@.*')
+
+	def find_changed_files_in_git_commit(self, commit_hash: str) -> Iterator[ Tuple[str, List[List[int]]] ]:
+		""" Finds the paths to any source files that were changed in a given Git commit. These files are filtered by their file extensions. """
 
 		if self.repository is None:
 			return
 
-		# git diff --name-only [HASH] [HASH]^
-		diff_result = self.repository.git.diff(commit_hash, commit_hash + '^', name_only=True)
-		for file_path in diff_result.splitlines():
+		# git diff --unified=0 [HASH] [HASH]^
+		diff_result = self.repository.git.diff(commit_hash, commit_hash + '^', unified=0)
+		last_file_path: Optional[str] = None
+		last_changed_line_list: List[List[int]] = []
+	
+		def yield_last_file_if_it_exists() -> Iterator[ Tuple[str, List[List[int]]] ]:
 
-			yield_file = len(file_extension_filter) == 0
-						
-			for file_extension in file_extension_filter:
-				if has_file_extension(file_path, file_extension):
-					yield_file = True
-					break
+			nonlocal last_file_path, last_changed_line_list
 
-			if yield_file:
-				yield file_path
+			if last_file_path is not None:			
+				yield (last_file_path, last_changed_line_list)
+				last_file_path = None
+				last_changed_line_list = []
+
+		for line in diff_result.splitlines():
+
+			# E.g. "+++ b/embedding/components/windowwatcher/src/nsPrompt.cpp"
+			if line.startswith('+++'):
+
+				yield from yield_last_file_if_it_exists()
+
+				_, last_file_path = line.split('/', maxsplit=1)
+				is_source_file = any(has_file_extension(last_file_path, file_extension) for file_extension in Project.SOURCE_FILE_EXTENSIONS) # type: ignore[arg-type]
+
+				if not is_source_file:
+					last_file_path = None
+				
+			# E.g. "@@ -451,2 +428,2 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,"
+			# E.g. "@@ -263 +255,0 @@ do_test (int argc, char *argv[])"
+			elif last_file_path is not None and line.startswith('@@'):
+
+				match = Project.GIT_DIFF_LINE_NUMBERS_REGEX.search(line)
+				if match:
+
+					deletion_line_begin = int(match.group(1))
+
+					deletion_num_lines = match.group(2)
+					if deletion_num_lines is not None:
+						_, deletion_num_lines = deletion_num_lines.split(',', maxsplit=1)
+						deletion_num_lines = int(deletion_num_lines)
+					else:
+						deletion_num_lines = 0
+
+					deletion_line_end = deletion_line_begin + max(deletion_num_lines - 1, 0)
+					last_changed_line_list.append( [deletion_line_begin, deletion_line_end] )
+
+				else:
+					log.error(f'Could not find the line number information for the file "{last_file_path}" ({commit_hash}) in the diff line: "{line}".')
+
+		yield from yield_last_file_if_it_exists()
+
+		"""
+			E.g. for Mozilla: git diff --unified=0 a714da4a56957c826a7cafa381c4d8df832172f2 a714da4a56957c826a7cafa381c4d8df832172f2^
+
+			diff --git a/embedding/components/windowwatcher/src/nsPrompt.cpp b/embedding/components/windowwatcher/src/nsPrompt.cpp
+			index a782689cc853..f95e19ed7c97 100644
+			--- a/embedding/components/windowwatcher/src/nsPrompt.cpp
+			+++ b/embedding/components/windowwatcher/src/nsPrompt.cpp
+			@@ -58,3 +57,0 @@
+			-#include "nsIPrefService.h"
+			-#include "nsIPrefLocalizedString.h"
+			-
+			@@ -424,20 +420,0 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
+			-  // Trim obnoxiously long realms.
+			-  if (realm.Length() > 150) {
+			- [...]
+			-  }
+			@@ -451,2 +428,2 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
+			-  NS_NAMED_LITERAL_STRING(proxyText, "EnterLoginForProxy");
+			-  NS_NAMED_LITERAL_STRING(originText, "EnterLoginForRealm");
+			+  NS_NAMED_LITERAL_STRING(proxyText, "EnterUserPasswordForProxy");
+			+  NS_NAMED_LITERAL_STRING(originText, "EnterUserPasswordForRealm");
+		"""
 
 	def find_last_changed_git_commit_hash(self, commit_hash: str, file_path: str) -> Optional[str]:
 		""" Finds the previous Git commit hash where a given file was last changed. """
@@ -1146,7 +1208,7 @@ class Project:
 		else:
 			first_page = SCRAPING_CONFIG.get('start_at_cve_hub_page')
 			if first_page is not None:
-				log.info(f'Starting at hub page {first_page-1} at the user''s request.')
+				log.info(f'Starting at hub page {first_page} at the user''s request.')
 				page_url_list = page_url_list[first_page-1:]
 
 		for i, page_url in enumerate(page_url_list):
@@ -1267,33 +1329,36 @@ class Project:
 			hash_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
 			hash_list = self.sort_git_commit_hashes_topologically(hash_list)
 			
-			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash',
-													'Last Change Git Commit Hash', 'CVEs'])
+			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Changed Lines',
+													'Vulnerable Git Commit Hash', 'CVEs', 'Last Change Git Commit Hash'])
 
 			topological_index = 0
 			for commit_hash in hash_list:
 
 				parent_commit_hash = self.find_parent_git_commit_hash(commit_hash)
-				changed_file_list = self.find_changed_files_in_git_commit(commit_hash, SOURCE_FILE_EXTENSIONS)
+				changed_files_iterator = self.find_changed_files_in_git_commit(commit_hash)
 
 				has_source_file = False
-				for file_path in changed_file_list:
+				for file_path, changed_lines in changed_files_iterator:
 
 					has_source_file = True
 
-					last_change_commit_hash = self.find_last_changed_git_commit_hash(commit_hash, file_path)
+					changed_lines = serialize_json_container(changed_lines)
 
 					is_commit = cves['Git Commit Hashes'].map(lambda hash_list: commit_hash in hash_list)
 					cve_list = cves.loc[is_commit, 'CVE'].tolist()
 					cve_list = serialize_json_container(cve_list)
 
+					last_change_commit_hash = self.find_last_changed_git_commit_hash(commit_hash, file_path)
+
 					row = {
 							'File Path': file_path,
 							'Topological Index': topological_index,
 							'Neutral Git Commit Hash': commit_hash,
+							'Changed Lines': changed_lines,
 							'Vulnerable Git Commit Hash': parent_commit_hash,
-							'Last Change Git Commit Hash': last_change_commit_hash,
-							'CVEs': cve_list
+							'CVEs': cve_list,
+							'Last Change Git Commit Hash': last_change_commit_hash
 					}
 
 					affected_files = affected_files.append(row, ignore_index=True)		
@@ -1305,17 +1370,17 @@ class Project:
 
 			affected_files.to_csv(csv_file_path, index=False)
 
-	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list] ]:
+	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list, list] ]:
 		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities. """
 
-		affected_files = pd.read_csv(csv_file_path, usecols=['File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash'], dtype=str)
+		affected_files = pd.read_csv(csv_file_path, usecols=['File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Changed Lines', 'Vulnerable Git Commit Hash'], dtype=str)
 		grouped_files = affected_files.groupby(by=['Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash'])
 
 		for (topological_index, neutral_commit_hash, vulnerable_commit_hash), group_df in grouped_files:
 
 			group_df = group_df.replace({np.nan: None})
 
-			def checkout_affected_files(commit_hash: str, is_vulnerable: bool, file_path_list: list) -> Iterator[ Tuple[str, bool, list] ]:
+			def checkout_affected_files(commit_hash: str, is_vulnerable: bool, file_path_list: list, changed_lines_list: list) -> Iterator[ Tuple[str, bool, list, list] ]:
 				""" A helper method that performs the checkout. """
 
 				# For files that were added in the neutral commit and don't have a previous vulnerable commit.
@@ -1325,7 +1390,7 @@ class Project:
 				checkout_success = self.checkout_entire_git_commit(commit_hash)
 
 				if checkout_success:
-					yield (commit_hash, is_vulnerable, file_path_list)
+					yield (commit_hash, is_vulnerable, file_path_list, changed_lines_list)
 				else:
 					status = 'Vulnerable' if is_vulnerable else 'Neutral'
 					log.error(f'Failed to checkout commit {commit_hash} ({status}) for the files: {file_path_list}')
@@ -1333,9 +1398,10 @@ class Project:
 
 			file_path_list = group_df['File Path'].tolist()
 			file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in file_path_list]
+			changed_lines_list = group_df['Changed Lines'].tolist()
 
-			yield from checkout_affected_files(neutral_commit_hash, False, file_path_list)
-			yield from checkout_affected_files(vulnerable_commit_hash, True, file_path_list)
+			yield from checkout_affected_files(neutral_commit_hash, False, file_path_list, changed_lines_list)
+			yield from checkout_affected_files(vulnerable_commit_hash, True, file_path_list, changed_lines_list)
 
 		self.hard_reset_git_head()
 
@@ -1363,7 +1429,7 @@ class Project:
 			delete_file(temp_csv_file_path)
 			delete_file(final_csv_file_path)
 
-			for (commit_hash, is_vulnerable, file_path_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
+			for (commit_hash, is_vulnerable, file_path_list, changed_lines_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
 
 				success = understand.generate_project_metrics(file_path_list, temp_csv_file_path)
 
@@ -1463,7 +1529,7 @@ class Project:
 							elif aggregation_type == 'Max':
 								result = metrics_in_column.max()
 							else:
-								assert False
+								assert False, f'Unhandled aggregation function "{aggregation_type}".'
 
 							# Every value in the output file must be an integer.
 							result = round(result)
@@ -1496,7 +1562,7 @@ class Project:
 				elif 'Class' in kind or 'Struct' in kind or 'Union' in kind:
 					pass
 				else:
-					assert False
+					assert False, f'Unhandled code unit kind "{kind}".'
 
 			##########
 
@@ -1521,10 +1587,39 @@ class Project:
 		Methods used to generate security alerts using any files affected by a project's vulnerabilities.
 	"""
 
-	def find_code_units_from_line(self, file_path: str, line: int) -> Tuple[ List[dict], List[dict] ]:
-		""" Lists any functions and classes in a source file that overlap with a specific line number. """
+	def find_code_units_from_line(self, file_path: str, line_arg: Union[ int, List[List[int]] ]) -> Tuple[ List[dict], List[dict] ]:
+		""" Lists any functions and classes in a source file that overlap with a specific line number or ranges of lines.
 
-		assert line > 0
+		Use cases:
+		- Single line number (for security alerts).
+		- Multiple ranges of lines (for Git diffs, e.g. 10 to 20, 45 to 70).
+		"""
+
+		if isinstance(line_arg, int):
+
+			if line_arg <= 0:
+				log.warning(f'Clamping the line number {line_arg} to a minimum of one.')
+				line_arg = 1
+
+			lines = [[line_arg, line_arg]]
+
+		elif isinstance(line_arg, list):
+
+			for line_range in line_arg:
+
+				if line_range[0] <= 0 or line_range[1] <= 0:
+					log.warning(f'Clamping the line range {line_range} to a minimum of one.')
+					line_range[0] = max(line_range[0], 1)
+					line_range[1] = max(line_range[1], 1)
+
+				if line_range[0] > line_range[1]:
+					log.warning(f'Clamping the first line in range {line_range} to the second line.')
+					line_range[0] = line_range[1]
+
+			lines = line_arg
+
+		else:
+			assert False, f'Unhandled line argument type "{type(line_arg)}".'
 
 		function_list: List[dict] = []
 		class_list: List[dict] = []
@@ -1568,7 +1663,12 @@ class Project:
 						begin_line = node.extent.start.line
 						end_line = node.extent.end.line
 
-						if begin_line <= line <= end_line:
+						ranges_overlap = any(line_range[0] <= end_line and begin_line <= line_range[1] for line_range in lines)
+						# E.g. A code unit defined from 10 to 20 and two Git diffs from 5 to 9, and from 19 to 21.
+						# - A) 5 <= 20 and 10 <= 9 = True and False = False
+						# - B) 19 <= 20 and 10 <= 21 = True and True = True
+
+						if ranges_overlap:
 							code_unit_info = {'Name': node.displayname, 'Begin Line': begin_line, 'End Line': end_line}
 							code_unit_list.append(code_unit_info)
 
@@ -1597,7 +1697,7 @@ class Project:
 			delete_file(temp_csv_path)
 			delete_file(final_csv_path)
 
-			for (commit_hash, is_vulnerable, file_path_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
+			for (commit_hash, is_vulnerable, file_path_list, changed_lines_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
 
 				cppcheck_success = cppcheck.generate_project_alerts(file_path_list, temp_csv_path)
 
@@ -2006,9 +2106,9 @@ class Sat():
 		success = result.returncode == 0
 
 		if not success:
-			command_line_arguments = ' '.join(arguments)
+			command_linesuments = ' '.join(arguments)
 			error_message = result.stderr or result.stdout
-			log.error(f'Failed to run the command "{command_line_arguments}" with the error code {result.returncode} and the error message "{error_message}".')
+			log.error(f'Failed to run the command "{command_linesuments}" with the error code {result.returncode} and the error message "{error_message}".')
 
 		return (success, result.stdout)
 

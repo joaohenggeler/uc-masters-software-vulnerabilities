@@ -1,7 +1,0 @@
-Vulnerable,Git Commit Hash,Affected Functions,Affected Classes,File,Line,Column,Severity,Rule,CWE,Message
-No,26fefbada419ff667357f60744f4b9dd6a1844ff,,,dom/base/nsDOMClassInfo.cpp,1783,3,error,syntaxError,,syntax error: keyword 'if' is not allowed in global scope
-Yes,00b87e5ee3e81567d6317727660f0ef4348027f7,,,dom/base/nsDOMClassInfo.cpp,1783,3,error,syntaxError,,syntax error: keyword 'if' is not allowed in global scope
-No,90aa942f6fbdcbf1a65abc51c379a9bcbb10be94,,,dom/base/nsDocument.cpp,2211,,error,preprocessorErrorDirective,,"failed to expand 'MOZ_AUTO_DOC_UPDATE', Wrong number of parameters for macro 'MOZ_AUTO_DOC_UPDATE'."
-Yes,52a7f283b30e3dbad63f74305cc752d857b1ae52,,,dom/base/nsDocument.cpp,2211,,error,preprocessorErrorDirective,,"failed to expand 'MOZ_AUTO_DOC_UPDATE', Wrong number of parameters for macro 'MOZ_AUTO_DOC_UPDATE'."
-No,f8a6601ff42aed9bc7039a35ee6d8265c0565190,"[{""Name"": ""floor1_free_info(int *)"", ""Begin Line"": 54, ""End Line"": 60}]",,media/libvorbis/lib/vorbis_floor1.c,57,5,portability,memsetClassFloat,758,Using memset() on struct which contains a floating point number.
-Yes,8df09d9afc90dfa5fcacdceccef2556b1e98cd92,"[{""Name"": ""floor1_free_info(int *)"", ""Begin Line"": 54, ""End Line"": 60}]",,media/libvorbis/lib/vorbis_floor1.c,57,5,portability,memsetClassFloat,758,Using memset() on struct which contains a floating point number.
