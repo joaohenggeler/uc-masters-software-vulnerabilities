@@ -1,7 +1,7 @@
-File Path,Topological Index,Neutral Git Commit Hash,Changed Lines,CVEs,Vulnerable Git Commit Hash,Last Change Git Commit Hash
-stdio-common/vfprintf.c,0,7c1f4834d398163d1ac8101e35e9c36fc3176e6e,"[[238, 240], [1653, 1655], [1656, 1656], [1705, 1716], [1718, 1734], [1736, 1736], [2005, 2006]]","[""CVE-2012-0864""]",c6922934363f44b88250567f52036d8e9972c255,59ba27a63ada3f46b71ec99a314dfac5a38ad6d2
-posix/spawn_faction_addopen.c,1,89e435f3559c53084498e9baad22172b64429362,"[[38, 41], [45, 49], [55, 55]]","[""CVE-2014-4043""]",c3a2ebe1f7541cc35937621e08c28ff88afd0845,d4697bc93dc27a7bbf275ce7dd351bb1bfcf28de
-posix/spawn_faction_destroy.c,1,89e435f3559c53084498e9baad22172b64429362,"[[21, 23], [27, 43]]","[""CVE-2014-4043""]",c3a2ebe1f7541cc35937621e08c28ff88afd0845,d4697bc93dc27a7bbf275ce7dd351bb1bfcf28de
-posix/spawn_int.h,1,89e435f3559c53084498e9baad22172b64429362,"[[25, 25]]","[""CVE-2014-4043""]",c3a2ebe1f7541cc35937621e08c28ff88afd0845,d96de9634a334af16c0ac711074c15ac1762b23c
-posix/tst-spawn.c,1,89e435f3559c53084498e9baad22172b64429362,"[[171, 171], [226, 229], [232, 234], [263, 263]]","[""CVE-2014-4043""]",c3a2ebe1f7541cc35937621e08c28ff88afd0845,d4697bc93dc27a7bbf275ce7dd351bb1bfcf28de
-resolv/nss_dns/dns-network.c,2,317b199b4aff8cfa27f2302ab404d2bb5032b9a4,"[[120, 120], [125, 125], [128, 128]]","[""CVE-2016-3075""]",a6033052d08027f745867e5e346852da1959226c,f7a9f785e547bd599dee496fd906a28bcb4ec7fe
+File Path,Topological Index,Neutral Git Commit Hash,Changed Lines,Vulnerable Git Commit Hash,CVEs,Last Change Git Commit Hash
+stdio-common/vfprintf.c,0,7c1f4834d398163d1ac8101e35e9c36fc3176e6e,"[[238, 240], [1653, 1655], [1656, 1656], [1705, 1716], [1718, 1734], [1736, 1736], [2005, 2006]]",c6922934363f44b88250567f52036d8e9972c255,"[""CVE-2012-0864""]",59ba27a63ada3f46b71ec99a314dfac5a38ad6d2
+posix/spawn_faction_addopen.c,1,89e435f3559c53084498e9baad22172b64429362,"[[38, 41], [45, 49], [55, 55]]",c3a2ebe1f7541cc35937621e08c28ff88afd0845,"[""CVE-2014-4043""]",d4697bc93dc27a7bbf275ce7dd351bb1bfcf28de
+posix/spawn_faction_destroy.c,1,89e435f3559c53084498e9baad22172b64429362,"[[21, 23], [27, 43]]",c3a2ebe1f7541cc35937621e08c28ff88afd0845,"[""CVE-2014-4043""]",d4697bc93dc27a7bbf275ce7dd351bb1bfcf28de
+posix/spawn_int.h,1,89e435f3559c53084498e9baad22172b64429362,"[[25, 25]]",c3a2ebe1f7541cc35937621e08c28ff88afd0845,"[""CVE-2014-4043""]",d96de9634a334af16c0ac711074c15ac1762b23c
+posix/tst-spawn.c,1,89e435f3559c53084498e9baad22172b64429362,"[[171, 171], [226, 229], [232, 234], [263, 263]]",c3a2ebe1f7541cc35937621e08c28ff88afd0845,"[""CVE-2014-4043""]",d4697bc93dc27a7bbf275ce7dd351bb1bfcf28de
+resolv/nss_dns/dns-network.c,2,317b199b4aff8cfa27f2302ab404d2bb5032b9a4,"[[120, 120], [125, 125], [128, 128]]",a6033052d08027f745867e5e346852da1959226c,"[""CVE-2016-3075""]",f7a9f785e547bd599dee496fd906a28bcb4ec7fe

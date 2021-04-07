@@ -205,6 +205,20 @@ def append_file_to_csv(file_path: str, csv_path: str, **kwargs) -> None:
 	df = pd.read_csv(file_path, dtype=str, **kwargs)
 	append_dataframe_to_csv(df, csv_path)
 
+def check_range_overlap(range_1: Union[List[int], Tuple[int, int]], range_2: Union[List[int], Tuple[int, int]]) -> bool:
+	""" Checks whether two integer ranges overlap. Each range is either a list or tuple with two elements that represent
+	the beginning and ending points respectively. This second value cannot be smaller than the first one."""
+
+	"""
+		# E.g. A function defined from lines 10 to 20 and two Git diffs that show changes from lines 5 to 9, and from 19 to 21.
+		# - A) 5 <= 20 and 10 <= 9 = True and False = False
+		# - B) 19 <= 20 and 10 <= 21 = True and True = True
+	"""
+
+	assert range_1[0] <= range_1[1]
+	assert range_2[0] <= range_2[1]
+	return range_1[0] <= range_2[1] and range_2[0] <= range_1[1]
+
 ####################################################################################################
 
 class ScrapingManager():
@@ -1036,7 +1050,7 @@ class Project:
 	GIT_DIFF_LINE_NUMBERS_REGEX: Pattern = re.compile(r'^@@ -(\d+)(,\d+)? \+(?:\d+)(?:,\d+)? @@.*')
 
 	def find_changed_files_in_git_commit(self, commit_hash: str) -> Iterator[ Tuple[str, List[List[int]]] ]:
-		""" Finds the paths to any source files that were changed in a given Git commit. These files are filtered by their file extensions. """
+		""" Finds the paths and modified lines of any C/C++ source files that were changed in a given Git commit. """
 
 		if self.repository is None:
 			return
@@ -1047,6 +1061,7 @@ class Project:
 		last_changed_line_list: List[List[int]] = []
 	
 		def yield_last_file_if_it_exists() -> Iterator[ Tuple[str, List[List[int]]] ]:
+			""" Yields the previously found file path and its changed lines. """
 
 			nonlocal last_file_path, last_changed_line_list
 
@@ -1336,10 +1351,9 @@ class Project:
 			for commit_hash in hash_list:
 
 				parent_commit_hash = self.find_parent_git_commit_hash(commit_hash)
-				changed_files_iterator = self.find_changed_files_in_git_commit(commit_hash)
 
 				has_source_file = False
-				for file_path, changed_lines in changed_files_iterator:
+				for file_path, changed_lines in self.find_changed_files_in_git_commit(commit_hash):
 
 					has_source_file = True
 
@@ -1398,7 +1412,9 @@ class Project:
 
 			file_path_list = group_df['File Path'].tolist()
 			file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in file_path_list]
+			
 			changed_lines_list = group_df['Changed Lines'].tolist()
+			changed_lines_list = [deserialize_json_container(lines) for lines in changed_lines_list]
 
 			yield from checkout_affected_files(neutral_commit_hash, False, file_path_list, changed_lines_list)
 			yield from checkout_affected_files(vulnerable_commit_hash, True, file_path_list, changed_lines_list)
@@ -1634,6 +1650,13 @@ class Project:
 			with open(source_file_path, 'r') as source_file:
 				source_contents = source_file.read()
 				if self.language == 'c++':
+					# @Hack: This is a hacky way of getting clang to report C++ methods that belong to a class
+					# that is not defined in the file that we're processing. Although we tell clang where to
+					# look for the header files that define these classes, this wouldn't work for the Mozilla's
+					# repository structure. By removing the "<Class Name>::" pattern from a function's definition,
+					# we're essentially telling clang to consider them regular C-style functions. This works for
+					# our purposes since we only care about a function's name and its beginning and ending line
+					# numbers.
 					source_contents = re.sub(r'\S+::', '', source_contents)
 
 			clang_arguments = ['--language', self.language]
@@ -1654,22 +1677,17 @@ class Project:
 
 			for node in tu.cursor.walk_preorder():
 
-				# clang_Location_isFromMainFile()
+				# This should have the same behavior as clang_Location_isFromMainFile().
 				if node.location.file is not None and node.location.file.name == source_file_name:
 
 					def add_to_list(code_unit_list: List[dict]):
 						""" Helper method that checks whether the line number belonds to the current code unit. """						
 						
-						begin_line = node.extent.start.line
-						end_line = node.extent.end.line
-
-						ranges_overlap = any(line_range[0] <= end_line and begin_line <= line_range[1] for line_range in lines)
-						# E.g. A code unit defined from 10 to 20 and two Git diffs from 5 to 9, and from 19 to 21.
-						# - A) 5 <= 20 and 10 <= 9 = True and False = False
-						# - B) 19 <= 20 and 10 <= 21 = True and True = True
+						unit_lines = [node.extent.start.line, node.extent.end.line]
+						ranges_overlap = any(check_range_overlap(unit_lines, line_range) for line_range in lines)
 
 						if ranges_overlap:
-							code_unit_info = {'Name': node.displayname, 'Begin Line': begin_line, 'End Line': end_line}
+							code_unit_info = {'Name': node.displayname, 'Lines': unit_lines}
 							code_unit_list.append(code_unit_info)
 
 					if node.kind in FUNCTION_KINDS:
@@ -1697,24 +1715,58 @@ class Project:
 			delete_file(temp_csv_path)
 			delete_file(final_csv_path)
 
-			for (commit_hash, is_vulnerable, file_path_list, changed_lines_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
+			for (commit_hash, is_file_vulnerable, file_path_list, changed_lines_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
+
+				# For each neutral-vulnerable commit pair, the commit hash and vulnerability status are different, but the file list and
+				# changed lines are the same since it only uses the information from the neutral commit, even for the vulnerable one.
 
 				cppcheck_success = cppcheck.generate_project_alerts(file_path_list, temp_csv_path)
 
 				if cppcheck_success:
 					alerts = pd.read_csv(temp_csv_path, dtype=str)
 
-					alerts.insert(0, 'Vulnerable', None)
-					alerts.insert(1, 'Git Commit Hash', None)
-					alerts.insert(2, 'Affected Functions', None)
-					alerts.insert(3, 'Affected Classes', None)
+					alerts.insert(0, 'Vulnerable File', None)
+					alerts.insert(1, 'Changed Lines', None)
+					alerts.insert(2, 'Git Commit Hash', None)
+					alerts.insert(3, 'Affected Functions', None)
+					alerts.insert(4, 'Affected Classes', None)
 
-					alerts['Vulnerable'] = 'Yes' if is_vulnerable else 'No'
+					alerts['Vulnerable File'] = 'Yes' if is_file_vulnerable else 'No'
 					alerts['Git Commit Hash'] = commit_hash
 
+					file_path_to_lines = {self.get_relative_path_in_repository(file_path): lines for file_path, lines in zip(file_path_list, changed_lines_list)}
+
 					for row in alerts.itertuples():
+						
 						if pd.notna(row.File) and pd.notna(row.Line):
 							function_list, class_list = self.find_code_units_from_line(row.File, int(row.Line))
+						
+							def set_code_unit_vulnerability_status(code_unit_list):
+								""" Sets the vulnerability status of any functions or classes found after parsing the affected files. This is done by checking
+								if the lines modified from the vulnerable to neutral commit overlap with these code units. For example, a vulnerable file may
+								have five functions, but only one of them was actually changed when a vulnerability was patched. For neutral commits, nothing
+								is done since we'll assume that the file and its code units are on longer vulnerable (at least for this neutral-vulnerable
+								commit pair). """
+
+								if is_file_vulnerable:
+
+									# It's possible that the SAT generates alerts related to files that we're not currently iterating over (e.g. the header
+									# files of the current C/C++ source file). In those cases, we won't have a list of vulnerable lines.
+									vulnerable_lines = file_path_to_lines.get(row.File, [])
+									alerts.at[row.Index, 'Changed Lines'] = serialize_json_container(vulnerable_lines)
+									
+									for unit in code_unit_list:
+										is_unit_vulnerable = any(check_range_overlap(unit['Lines'], vulnerable_range) for vulnerable_range in vulnerable_lines)	
+										unit['Vulnerable'] = 'Yes' if is_unit_vulnerable else 'No'										
+								else:
+
+									alerts.at[row.Index, 'Changed Lines'] = None
+									for unit in code_unit_list:
+										unit['Vulnerable'] = 'No'
+
+							set_code_unit_vulnerability_status(function_list)
+							set_code_unit_vulnerability_status(class_list)
+
 							alerts.at[row.Index, 'Affected Functions'] = serialize_json_container(function_list)
 							alerts.at[row.Index, 'Affected Classes'] = serialize_json_container(class_list)
 						else:
