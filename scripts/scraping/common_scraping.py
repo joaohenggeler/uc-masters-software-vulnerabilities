@@ -1047,28 +1047,33 @@ class Project:
 
 		return sorted_hash_list
 
-	GIT_DIFF_LINE_NUMBERS_REGEX: Pattern = re.compile(r'^@@ -(\d+)(,\d+)? \+(?:\d+)(?:,\d+)? @@.*')
+	#GIT_DIFF_LINE_NUMBERS_REGEX: Pattern = re.compile(r'^@@ -(\d+)(,\d+)? \+(?:\d+)(?:,\d+)? @@.*')
 
-	def find_changed_files_in_git_commit(self, commit_hash: str) -> Iterator[ Tuple[str, List[List[int]]] ]:
+	GIT_DIFF_LINE_NUMBERS_REGEX: Pattern = re.compile(r'^@@ -(?P<del_begin>\d+)(,(?P<del_total>\d+))? \+(?P<add_begin>\d+)(,(?P<add_total>\d+))? @@.*')
+
+	def find_changed_files_and_lines_in_git_commit(self, from_commit_hash: str, to_commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
 		""" Finds the paths and modified lines of any C/C++ source files that were changed in a given Git commit. """
 
 		if self.repository is None:
 			return
 
-		# git diff --unified=0 [HASH] [HASH]^
-		diff_result = self.repository.git.diff(commit_hash, commit_hash + '^', unified=0)
+		# git diff --unified=0 [HASH FROM] [HASH TO]
+		# For the parent commit: git diff --unified=0 [HASH] [HASH]^
+		diff_result = self.repository.git.diff(from_commit_hash, to_commit_hash, unified=0)
 		last_file_path: Optional[str] = None
-		last_changed_line_list: List[List[int]] = []
+		last_deleted_lines_list: List[List[int]] = []
+		last_added_lines_list: List[List[int]] = []
 	
-		def yield_last_file_if_it_exists() -> Iterator[ Tuple[str, List[List[int]]] ]:
+		def yield_last_file_if_it_exists() -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
 			""" Yields the previously found file path and its changed lines. """
 
-			nonlocal last_file_path, last_changed_line_list
+			nonlocal last_file_path, last_deleted_lines_list, last_added_lines_list
 
 			if last_file_path is not None:			
-				yield (last_file_path, last_changed_line_list)
+				yield (last_file_path, last_deleted_lines_list, last_added_lines_list)
 				last_file_path = None
-				last_changed_line_list = []
+				last_deleted_lines_list = []
+				last_added_lines_list = []
 
 		for line in diff_result.splitlines():
 
@@ -1090,20 +1095,28 @@ class Project:
 				match = Project.GIT_DIFF_LINE_NUMBERS_REGEX.search(line)
 				if match:
 
-					deletion_line_begin = int(match.group(1))
+					def append_line_numbers(line_list: List[List[int]], begin_group_name: str, total_group_name: str) -> None:
 
-					deletion_num_lines = match.group(2)
-					if deletion_num_lines is not None:
-						_, deletion_num_lines = deletion_num_lines.split(',', maxsplit=1)
-						deletion_num_lines = int(deletion_num_lines)
-					else:
-						deletion_num_lines = 0
+						line_begin = int(match.group(begin_group_name)) # type: ignore[union-attr]
 
-					deletion_line_end = deletion_line_begin + max(deletion_num_lines - 1, 0)
-					last_changed_line_list.append( [deletion_line_begin, deletion_line_end] )
+						if line_begin == 0:
+							return
+
+						total_lines = match.group(total_group_name) # type: ignore[union-attr]
+						total_lines = int(total_lines) if total_lines is not None else 1
+
+						if total_lines == 0:
+							total_lines = 2
+
+						line_end = line_begin + max(total_lines - 1, 0)
+
+						line_list.append( [line_begin, line_end] )
+
+					append_line_numbers(last_deleted_lines_list, 'del_begin', 'del_total')
+					append_line_numbers(last_added_lines_list, 'add_begin', 'add_total')
 
 				else:
-					log.error(f'Could not find the line number information for the file "{last_file_path}" ({commit_hash}) in the diff line: "{line}".')
+					log.error(f'Could not find the line number information for the file "{last_file_path}" ({from_commit_hash} -> {to_commit_hash}) in the diff line: "{line}".')
 
 		yield from yield_last_file_if_it_exists()
 
@@ -1148,6 +1161,41 @@ class Project:
 	def find_parent_git_commit_hash(self, commit_hash: str) -> Optional[str]:
 		""" Finds the previous Git commit hash. """
 		return self.find_last_changed_git_commit_hash(commit_hash, '.')
+
+	def find_tag_name_from_git_commit_hash(self, commit_hash: str) -> Optional[str]:
+		""" @TODO """
+
+		if self.repository is None:
+			return None
+
+		try:
+			# git name-rev --tags --name-only [HASH]
+			# E.g. "v4.4-rc6~22^2~24" or "v2.6.39-rc3^0" or "undefined"
+			name_rev_result = self.repository.git.name_rev(commit_hash, tags=True, name_only=True)
+			split_result = re.split(r'~|\^', name_rev_result, maxsplit=1)
+			tag_name = split_result[0]
+		except git.exc.GitCommandError as error:
+			tag_name = None
+			log.error(f'Failed to find the tag name for the commit hash "{commit_hash}" with the error: {repr(error)}')
+
+		return tag_name
+
+	def find_date_from_git_commit_hash(self, commit_hash: str) -> Optional[str]:
+		""" @TODO """
+
+		if self.repository is None:
+			return None
+
+		try:
+			# git log --format="%cd" --date="format:%Y-%m-%d %H:%M:%S" [HASH]
+			log_result = self.repository.git.log(commit_hash, format='%cd', date='format:%Y-%m-%d %H:%M:%S')
+			split_result = log_result.split('\n', maxsplit=1)
+			date = split_result[0]
+		except git.exc.GitCommandError as error:
+			date = None
+			log.error(f'Failed to find the date for the commit hash "{commit_hash}" with the error: {repr(error)}')
+
+		return date
 
 	def checkout_files_in_git_commit(self, commit_hash: str, file_path_list: list) -> bool:
 		""" Performs the Git checkout operation on a specific list of files in a given Git commit. """
@@ -1344,20 +1392,28 @@ class Project:
 			hash_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
 			hash_list = self.sort_git_commit_hashes_topologically(hash_list)
 			
-			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Changed Lines',
-													'Vulnerable Git Commit Hash', 'CVEs', 'Last Change Git Commit Hash'])
+			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index',
+													'Neutral Git Commit Hash', 'Neutral Tag Name', 'Neutral Commit Date',
+													'Vulnerable Git Commit Hash', 'Vulnerable Tag Name', 'Vulnerable Commit Date',
+													'Deleted Lines', 'Added Lines', 'CVEs', 'Last Change Git Commit Hash'])
 
 			topological_index = 0
 			for commit_hash in hash_list:
 
+				tag_name = self.find_tag_name_from_git_commit_hash(commit_hash)
+				commit_date = self.find_date_from_git_commit_hash(commit_hash)
+
 				parent_commit_hash = self.find_parent_git_commit_hash(commit_hash)
+				parent_tag_name = self.find_tag_name_from_git_commit_hash(parent_commit_hash)
+				parent_commit_date = self.find_date_from_git_commit_hash(parent_commit_hash)
 
 				has_source_file = False
-				for file_path, changed_lines in self.find_changed_files_in_git_commit(commit_hash):
+				for file_path, deleted_lines, added_lines in self.find_changed_files_and_lines_in_git_commit(parent_commit_hash, commit_hash):
 
 					has_source_file = True
 
-					changed_lines = serialize_json_container(changed_lines)
+					deleted_lines = serialize_json_container(deleted_lines)
+					added_lines = serialize_json_container(added_lines)
 
 					is_commit = cves['Git Commit Hashes'].map(lambda hash_list: commit_hash in hash_list)
 					cve_list = cves.loc[is_commit, 'CVE'].tolist()
@@ -1369,8 +1425,13 @@ class Project:
 							'File Path': file_path,
 							'Topological Index': topological_index,
 							'Neutral Git Commit Hash': commit_hash,
-							'Changed Lines': changed_lines,
+							'Neutral Tag Name': tag_name,
+							'Neutral Commit Date': commit_date,
 							'Vulnerable Git Commit Hash': parent_commit_hash,
+							'Vulnerable Tag Name': parent_tag_name,
+							'Vulnerable Commit Date': parent_commit_date,
+							'Deleted Lines': deleted_lines,
+							'Added Lines': added_lines,
 							'CVEs': cve_list,
 							'Last Change Git Commit Hash': last_change_commit_hash
 					}
@@ -1384,17 +1445,22 @@ class Project:
 
 			affected_files.to_csv(csv_file_path, index=False)
 
-	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list, list] ]:
-		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities. """
+	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list, list, list] ]:
+		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities.
+		
+		For each neutral-vulnerable commit pair, the commit hash and vulnerability status are different, but the file list and
+		changed lines are the same since it only uses the information relative to the neutral commit, even for the vulnerable one."""
 
-		affected_files = pd.read_csv(csv_file_path, usecols=['File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Changed Lines', 'Vulnerable Git Commit Hash'], dtype=str)
+		affected_files = pd.read_csv(csv_file_path, usecols=[	'File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash',
+																'Deleted Lines', 'Added Lines'], dtype=str)
 		grouped_files = affected_files.groupby(by=['Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash'])
 
 		for (topological_index, neutral_commit_hash, vulnerable_commit_hash), group_df in grouped_files:
 
 			group_df = group_df.replace({np.nan: None})
 
-			def checkout_affected_files(commit_hash: str, is_vulnerable: bool, file_path_list: list, changed_lines_list: list) -> Iterator[ Tuple[str, bool, list, list] ]:
+			def checkout_affected_files(commit_hash: str, is_vulnerable: bool,
+										file_path_list: list, deleted_lines_list: list, added_lines_list: list) -> Iterator[ Tuple[str, bool, list, list, list] ]:
 				""" A helper method that performs the checkout. """
 
 				# For files that were added in the neutral commit and don't have a previous vulnerable commit.
@@ -1404,7 +1470,7 @@ class Project:
 				checkout_success = self.checkout_entire_git_commit(commit_hash)
 
 				if checkout_success:
-					yield (commit_hash, is_vulnerable, file_path_list, changed_lines_list)
+					yield (commit_hash, is_vulnerable, file_path_list, deleted_lines_list, added_lines_list)
 				else:
 					status = 'Vulnerable' if is_vulnerable else 'Neutral'
 					log.error(f'Failed to checkout commit {commit_hash} ({status}) for the files: {file_path_list}')
@@ -1412,12 +1478,15 @@ class Project:
 
 			file_path_list = group_df['File Path'].tolist()
 			file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in file_path_list]
-			
-			changed_lines_list = group_df['Changed Lines'].tolist()
-			changed_lines_list = [deserialize_json_container(lines) for lines in changed_lines_list]
 
-			yield from checkout_affected_files(neutral_commit_hash, False, file_path_list, changed_lines_list)
-			yield from checkout_affected_files(vulnerable_commit_hash, True, file_path_list, changed_lines_list)
+			deleted_lines_list = group_df['Deleted Lines'].tolist()
+			deleted_lines_list = [deserialize_json_container(lines) for lines in deleted_lines_list]
+
+			added_lines_list = group_df['Added Lines'].tolist()
+			added_lines_list = [deserialize_json_container(lines) for lines in added_lines_list]
+
+			yield from checkout_affected_files(neutral_commit_hash, False, file_path_list, deleted_lines_list, added_lines_list)
+			yield from checkout_affected_files(vulnerable_commit_hash, True, file_path_list, deleted_lines_list, added_lines_list)
 
 		self.hard_reset_git_head()
 
@@ -1445,7 +1514,7 @@ class Project:
 			delete_file(temp_csv_file_path)
 			delete_file(final_csv_file_path)
 
-			for (commit_hash, is_vulnerable, file_path_list, changed_lines_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
+			for (commit_hash, is_vulnerable, file_path_list, deleted_lines_list, added_lines_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
 
 				success = understand.generate_project_metrics(file_path_list, temp_csv_file_path)
 
@@ -1715,10 +1784,7 @@ class Project:
 			delete_file(temp_csv_path)
 			delete_file(final_csv_path)
 
-			for (commit_hash, is_file_vulnerable, file_path_list, changed_lines_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
-
-				# For each neutral-vulnerable commit pair, the commit hash and vulnerability status are different, but the file list and
-				# changed lines are the same since it only uses the information from the neutral commit, even for the vulnerable one.
+			for (commit_hash, is_file_vulnerable, file_path_list, deleted_lines_list, added_lines_list) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
 
 				cppcheck_success = cppcheck.generate_project_alerts(file_path_list, temp_csv_path)
 
@@ -1726,7 +1792,7 @@ class Project:
 					alerts = pd.read_csv(temp_csv_path, dtype=str)
 
 					alerts.insert(0, 'Vulnerable File', None)
-					alerts.insert(1, 'Changed Lines', None)
+					alerts.insert(1, 'Vulnerable Lines', None)
 					alerts.insert(2, 'Git Commit Hash', None)
 					alerts.insert(3, 'Affected Functions', None)
 					alerts.insert(4, 'Affected Classes', None)
@@ -1734,7 +1800,11 @@ class Project:
 					alerts['Vulnerable File'] = 'Yes' if is_file_vulnerable else 'No'
 					alerts['Git Commit Hash'] = commit_hash
 
-					file_path_to_lines = {self.get_relative_path_in_repository(file_path): lines for file_path, lines in zip(file_path_list, changed_lines_list)}
+					file_path_to_lines = {}
+					for file_path, lines in zip(file_path_list, deleted_lines_list):
+						if lines is not None:
+							file_path = self.get_relative_path_in_repository(file_path)
+							file_path_to_lines[file_path] = lines
 
 					for row in alerts.itertuples():
 						
@@ -1753,14 +1823,14 @@ class Project:
 									# It's possible that the SAT generates alerts related to files that we're not currently iterating over (e.g. the header
 									# files of the current C/C++ source file). In those cases, we won't have a list of vulnerable lines.
 									vulnerable_lines = file_path_to_lines.get(row.File, [])
-									alerts.at[row.Index, 'Changed Lines'] = serialize_json_container(vulnerable_lines)
+									alerts.at[row.Index, 'Vulnerable Lines'] = serialize_json_container(vulnerable_lines)
 									
 									for unit in code_unit_list:
 										is_unit_vulnerable = any(check_range_overlap(unit['Lines'], vulnerable_range) for vulnerable_range in vulnerable_lines)	
 										unit['Vulnerable'] = 'Yes' if is_unit_vulnerable else 'No'										
 								else:
 
-									alerts.at[row.Index, 'Changed Lines'] = None
+									alerts.at[row.Index, 'Vulnerable Lines'] = None
 									for unit in code_unit_list:
 										unit['Vulnerable'] = 'No'
 
