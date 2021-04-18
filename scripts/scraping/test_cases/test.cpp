@@ -42,6 +42,12 @@ union union_1
 	double bar;
 };
 
+template<typename Type>
+Type function_template(Type a, Type b)
+{
+	return (a > b) ? (a) : (b);
+}
+
 class class_1
 {
 	public:
@@ -124,6 +130,14 @@ namespace namespace_1
 	}
 };
 
+struct struct_abc
+{
+	int foo;
+	double bar;
+};
+
+typedef struct_abc struct_def;
+
 int main(int argc, char const *argv[])
 {
 	class local_class_1
@@ -134,7 +148,15 @@ int main(int argc, char const *argv[])
 		}
 	};
 
-	local_class_1 c;
+	int a = 2;
+	int b = 3;
+	int c = function_template(a, b);
+
+	local_class_1 lc1;
+
+	struct struct_abc abc;
+
+	struct_def def;
 
 	return 0;
 }

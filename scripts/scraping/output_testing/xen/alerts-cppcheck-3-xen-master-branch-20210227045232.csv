@@ -1,63 +1,63 @@
-Vulnerable Commit,Commit Hash,Changed Lines,Affected Functions,Affected Classes,Vulnerable File,File,Line,Column,Severity,Rule,CWE,Message
-Yes,6d49536d844a2685a50281c5385a093a61911987,,,,,xen/include/xen/sched.h,329,35,warning,multiplySizeof,682,Multiplying sizeof() with sizeof() indicates a logic error.
-Yes,6d49536d844a2685a50281c5385a093a61911987,,,,,tools/libxc/xc_dom.h,353,16,portability,arithOperationsOnVoidPointer,467,"'ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
-Yes,6d49536d844a2685a50281c5385a093a61911987,"[[54, 54], [76, 91], [107, 107], [109, 109], [189, 189], [190, 190]]","[{""Name"": ""xc_dom_probe_zimage32_kernel"", ""Signature"": ""xc_dom_probe_zimage32_kernel(struct xc_dom_image *)"", ""Lines"": [51, 93], ""Vulnerable"": ""Yes""}]",,Yes,tools/libxc/xc_dom_armzimageloader.c,83,66,portability,arithOperationsOnVoidPointer,467,"'dom->kernel_blob' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
-Yes,6d49536d844a2685a50281c5385a093a61911987,,,,,xen/include/xen/sched.h,494,43,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
-Yes,6d49536d844a2685a50281c5385a093a61911987,,,,,xen/include/xen/sched.h,510,5,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
-No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,,xen/include/xen/sched.h,329,35,warning,multiplySizeof,682,Multiplying sizeof() with sizeof() indicates a logic error.
-No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,,tools/libxc/xc_dom.h,353,16,portability,arithOperationsOnVoidPointer,467,"'ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
-No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,,xen/include/xen/sched.h,494,43,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
-No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,,xen/include/xen/sched.h,510,5,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
-Yes,e3d851340c551554b93743606f180bd310a55da8,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,f9a7931b0d268ac57f585d67fc11be7c21f0f9da,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,f9a7931b0d268ac57f585d67fc11be7c21f0f9da,"[[363, 363]]",,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Vulnerable"": ""No""}]",Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,e4dccc73a36f06f269c8bdc81fe58f8da9ff43fb,"[[363, 363]]",,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Vulnerable"": ""No""}]",No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,e4dccc73a36f06f269c8bdc81fe58f8da9ff43fb,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,c429d90b6d6fb4885fa358b35b2338a697ce7973,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,c429d90b6d6fb4885fa358b35b2338a697ce7973,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,0527125a6aae58a7eee8078184fced49dc2422ef,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,0527125a6aae58a7eee8078184fced49dc2422ef,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,0dbc6af04f990c60e26c0898e02d5b741b9fcb20,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,0dbc6af04f990c60e26c0898e02d5b741b9fcb20,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,7e03b128e0347b83f2b81697e2ad1e17c0682727,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,7e03b128e0347b83f2b81697e2ad1e17c0682727,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,eaccadee0122476fda2f02137e5f26ed6a64675f,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,eaccadee0122476fda2f02137e5f26ed6a64675f,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,ca04e01490acc333b43cfc784751d09134e65e18,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,2538aaa238aef15ade4e8a77db84691aea265693,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,624c8621764630e812154df9ce78d4f1eadfada1,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,624c8621764630e812154df9ce78d4f1eadfada1,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,03273df2ecbe04bdb16dab1b6dacf8175a0fe84a,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,f3fa3abf3e61fb1f25ce721e14ac324dda67311f,"[[46, 47], [287, 289], [322, 324], [326, 326], [407, 408]]","[{""Name"": ""elf_load_bsdsyms"", ""Signature"": ""elf_load_bsdsyms(struct elf_binary *)"", ""Lines"": [206, 413], ""Vulnerable"": ""Yes""}]",,Yes,xen/common/libelf/libelf-loader.c,288,5,error,autoVariables,562,Address of local auto-variable assigned to a function parameter.
-Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,"[[2451, 2452], [2455, 2457], [2461, 2461], [2463, 2464], [2468, 2468], [2470, 2471], [2484, 2484], [2486, 2486], [2488, 2489], [2491, 2491], [2507, 2507], [2527, 2527], [2541, 2541], [2547, 2547], [2559, 2559], [2560, 2560]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2046,35,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,"[[2451, 2452], [2455, 2457], [2461, 2461], [2463, 2464], [2468, 2468], [2470, 2471], [2484, 2484], [2486, 2486], [2488, 2489], [2491, 2491], [2507, 2507], [2527, 2527], [2541, 2541], [2547, 2547], [2559, 2559], [2560, 2560]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2057,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,"[[2451, 2452], [2455, 2457], [2461, 2461], [2463, 2464], [2468, 2468], [2470, 2471], [2484, 2484], [2486, 2486], [2488, 2489], [2491, 2491], [2507, 2507], [2527, 2527], [2541, 2541], [2547, 2547], [2559, 2559], [2560, 2560]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2091,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,"[[2451, 2452], [2455, 2457], [2461, 2461], [2463, 2464], [2468, 2468], [2470, 2471], [2484, 2484], [2486, 2486], [2488, 2489], [2491, 2491], [2507, 2507], [2527, 2527], [2541, 2541], [2547, 2547], [2559, 2559], [2560, 2560]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2101,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,"[[2451, 2452], [2455, 2457], [2461, 2461], [2463, 2464], [2468, 2468], [2470, 2471], [2484, 2484], [2486, 2486], [2488, 2489], [2491, 2491], [2507, 2507], [2527, 2527], [2541, 2541], [2547, 2547], [2559, 2559], [2560, 2560]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2114,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,"[[2451, 2452], [2455, 2457], [2461, 2461], [2463, 2464], [2468, 2468], [2470, 2471], [2484, 2484], [2486, 2486], [2488, 2489], [2491, 2491], [2507, 2507], [2527, 2527], [2541, 2541], [2547, 2547], [2559, 2559], [2560, 2560]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2123,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-No,c0d98b35714fb707217c9062b6518e158cd72eea,"[[2451, 2451], [2454, 2454], [2458, 2462], [2464, 2465], [2469, 2469], [2471, 2472], [2485, 2486], [2488, 2488], [2490, 2490], [2492, 2492], [2508, 2508], [2528, 2529], [2543, 2544], [2550, 2550], [2563, 2563], [2565, 2565]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,No,xen/arch/x86/hvm/vmx/vvmx.c,2046,35,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-No,c0d98b35714fb707217c9062b6518e158cd72eea,"[[2451, 2451], [2454, 2454], [2458, 2462], [2464, 2465], [2469, 2469], [2471, 2472], [2485, 2486], [2488, 2488], [2490, 2490], [2492, 2492], [2508, 2508], [2528, 2529], [2543, 2544], [2550, 2550], [2563, 2563], [2565, 2565]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,No,xen/arch/x86/hvm/vmx/vvmx.c,2057,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-No,c0d98b35714fb707217c9062b6518e158cd72eea,"[[2451, 2451], [2454, 2454], [2458, 2462], [2464, 2465], [2469, 2469], [2471, 2472], [2485, 2486], [2488, 2488], [2490, 2490], [2492, 2492], [2508, 2508], [2528, 2529], [2543, 2544], [2550, 2550], [2563, 2563], [2565, 2565]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,No,xen/arch/x86/hvm/vmx/vvmx.c,2091,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-No,c0d98b35714fb707217c9062b6518e158cd72eea,"[[2451, 2451], [2454, 2454], [2458, 2462], [2464, 2465], [2469, 2469], [2471, 2472], [2485, 2486], [2488, 2488], [2490, 2490], [2492, 2492], [2508, 2508], [2528, 2529], [2543, 2544], [2550, 2550], [2563, 2563], [2565, 2565]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,No,xen/arch/x86/hvm/vmx/vvmx.c,2101,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-No,c0d98b35714fb707217c9062b6518e158cd72eea,"[[2451, 2451], [2454, 2454], [2458, 2462], [2464, 2465], [2469, 2469], [2471, 2472], [2485, 2486], [2488, 2488], [2490, 2490], [2492, 2492], [2508, 2508], [2528, 2529], [2543, 2544], [2550, 2550], [2563, 2563], [2565, 2565]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,No,xen/arch/x86/hvm/vmx/vvmx.c,2114,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-No,c0d98b35714fb707217c9062b6518e158cd72eea,"[[2451, 2451], [2454, 2454], [2458, 2462], [2464, 2465], [2469, 2469], [2471, 2472], [2485, 2486], [2488, 2488], [2490, 2490], [2492, 2492], [2508, 2508], [2528, 2529], [2543, 2544], [2550, 2550], [2563, 2563], [2565, 2565]]","[{""Name"": ""nvmx_msr_read_intercept"", ""Signature"": ""nvmx_msr_read_intercept(unsigned int, int *)"", ""Lines"": [1993, 2159], ""Vulnerable"": ""No""}]",,No,xen/arch/x86/hvm/vmx/vvmx.c,2123,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-Yes,c04c1866e5131e450ddcd114e32401477c60b816,"[[1205, 1205]]",,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [439, 506], ""Vulnerable"": ""No""}]",Yes,tools/libxl/libxl_internal.h,470,21,error,syntaxError,,syntax error
-No,d8f65e68a7c1047fad97206a6282c281247fadc2,"[[1206, 1206]]",,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [439, 506], ""Vulnerable"": ""No""}]",No,tools/libxl/libxl_internal.h,470,21,error,syntaxError,,syntax error
-Yes,371a23e65db5eb3a80a148586aeb551d4d0015f1,,,,,tools/libxl/libxl_internal.h,463,21,error,syntaxError,,syntax error
-No,ce2f42605888f18f63ff9fe0d45dd69ae83045bb,,,,,tools/libxl/libxl_internal.h,463,21,error,syntaxError,,syntax error
-Yes,46a49b91f1026f64430b84dd83e845a33f06415e,"[[3316, 3316], [3712, 3712], [3740, 3740]]","[{""Name"": ""x86_emulate"", ""Signature"": ""x86_emulate(struct x86_emulate_ctxt *, const struct x86_emulate_ops *)"", ""Lines"": [1321, 4524], ""Vulnerable"": ""Yes""}]",,Yes,xen/arch/x86/x86_emulate/x86_emulate.c,3362,48,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-Yes,46a49b91f1026f64430b84dd83e845a33f06415e,"[[3316, 3316], [3712, 3712], [3740, 3740]]","[{""Name"": ""x86_emulate"", ""Signature"": ""x86_emulate(struct x86_emulate_ctxt *, const struct x86_emulate_ops *)"", ""Lines"": [1321, 4524], ""Vulnerable"": ""Yes""}]",,Yes,xen/arch/x86/x86_emulate/x86_emulate.c,3406,52,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-No,0e442727ceccfa32a7276cccd205b4722e68fdc1,"[[3317, 3317], [3714, 3714], [3743, 3743]]","[{""Name"": ""x86_emulate"", ""Signature"": ""x86_emulate(struct x86_emulate_ctxt *, const struct x86_emulate_ops *)"", ""Lines"": [1321, 4527], ""Vulnerable"": ""No""}]",,No,xen/arch/x86/x86_emulate/x86_emulate.c,3363,48,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-No,0e442727ceccfa32a7276cccd205b4722e68fdc1,"[[3317, 3317], [3714, 3714], [3743, 3743]]","[{""Name"": ""x86_emulate"", ""Signature"": ""x86_emulate(struct x86_emulate_ctxt *, const struct x86_emulate_ops *)"", ""Lines"": [1321, 4527], ""Vulnerable"": ""No""}]",,No,xen/arch/x86/x86_emulate/x86_emulate.c,3407,52,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-Yes,1a7ffe466cd057daaef245b0a1ab6b82588e4c01,,,,,xen/include/xen/types.h,36,1,error,syntaxError,,syntax error: 110 typedef
-No,937ef32565fa3a81fdb37b9dd5aa99a1b87afa75,,,,,xen/include/xen/types.h,36,1,error,syntaxError,,syntax error: 110 typedef
-Yes,156e90e8f9ad74c7f91633630a882bdbb6caf5ff,,,,,tools/libxl/libxl_internal.h,347,21,error,syntaxError,,syntax error
-No,91b0ae9db33f72468b1d411a07f53085c893c097,,,,,tools/libxl/libxl_internal.h,347,21,error,syntaxError,,syntax error
-Yes,eedecb3cf0b2ce1ffc2eb08f3c73f88d42c382c9,,,,,tools/libxl/libxl_internal.h,430,21,error,syntaxError,,syntax error
-No,40412e3c99722229f1ec93cd95fc8486d778f5df,,,,,tools/libxl/libxl_internal.h,430,21,error,syntaxError,,syntax error
-Yes,181677977fc35ddb848ae4d440fbb72e8afc8a1e,"[[1184, 1184]]",,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Vulnerable"": ""No""}]",Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,811b188addb9018d1daef19db73c577e9e99f7eb,"[[1185, 1185]]",,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Vulnerable"": ""No""}]",No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,811b188addb9018d1daef19db73c577e9e99f7eb,"[[704, 704]]",,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Vulnerable"": ""No""}]",Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,481dddb63b1fac2368c8e8be109babee0b1ca171,"[[705, 706]]",,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Vulnerable"": ""No""}]",No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,481dddb63b1fac2368c8e8be109babee0b1ca171,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,e3d851340c551554b93743606f180bd310a55da8,,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Vulnerable Commit,Commit Hash,Affected Functions,Affected Classes,Vulnerable File,File,Line,Column,Severity,Rule,CWE,Message
+Yes,6d49536d844a2685a50281c5385a093a61911987,,,,xen/include/xen/sched.h,329,35,warning,multiplySizeof,682,Multiplying sizeof() with sizeof() indicates a logic error.
+Yes,6d49536d844a2685a50281c5385a093a61911987,,,,tools/libxc/xc_dom.h,353,16,portability,arithOperationsOnVoidPointer,467,"'ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+Yes,6d49536d844a2685a50281c5385a093a61911987,"[{""Name"": ""xc_dom_probe_zimage32_kernel"", ""Signature"": ""xc_dom_probe_zimage32_kernel(struct xc_dom_image *)"", ""Lines"": [51, 93]}]",,Yes,tools/libxc/xc_dom_armzimageloader.c,83,66,portability,arithOperationsOnVoidPointer,467,"'dom->kernel_blob' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+Yes,6d49536d844a2685a50281c5385a093a61911987,,,,xen/include/xen/sched.h,494,43,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+Yes,6d49536d844a2685a50281c5385a093a61911987,,,,xen/include/xen/sched.h,510,5,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,xen/include/xen/sched.h,329,35,warning,multiplySizeof,682,Multiplying sizeof() with sizeof() indicates a logic error.
+No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,tools/libxc/xc_dom.h,353,16,portability,arithOperationsOnVoidPointer,467,"'ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,xen/include/xen/sched.h,494,43,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,xen/include/xen/sched.h,510,5,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+Yes,e3d851340c551554b93743606f180bd310a55da8,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,f9a7931b0d268ac57f585d67fc11be7c21f0f9da,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,f9a7931b0d268ac57f585d67fc11be7c21f0f9da,,,Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,e4dccc73a36f06f269c8bdc81fe58f8da9ff43fb,,,No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,e4dccc73a36f06f269c8bdc81fe58f8da9ff43fb,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,c429d90b6d6fb4885fa358b35b2338a697ce7973,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,c429d90b6d6fb4885fa358b35b2338a697ce7973,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,0527125a6aae58a7eee8078184fced49dc2422ef,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,0527125a6aae58a7eee8078184fced49dc2422ef,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,0dbc6af04f990c60e26c0898e02d5b741b9fcb20,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,0dbc6af04f990c60e26c0898e02d5b741b9fcb20,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,7e03b128e0347b83f2b81697e2ad1e17c0682727,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,7e03b128e0347b83f2b81697e2ad1e17c0682727,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,eaccadee0122476fda2f02137e5f26ed6a64675f,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,eaccadee0122476fda2f02137e5f26ed6a64675f,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,ca04e01490acc333b43cfc784751d09134e65e18,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,2538aaa238aef15ade4e8a77db84691aea265693,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,624c8621764630e812154df9ce78d4f1eadfada1,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,624c8621764630e812154df9ce78d4f1eadfada1,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,03273df2ecbe04bdb16dab1b6dacf8175a0fe84a,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,f3fa3abf3e61fb1f25ce721e14ac324dda67311f,,,Yes,xen/common/libelf/libelf-loader.c,288,5,error,autoVariables,562,Address of local auto-variable assigned to a function parameter.
+Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,,,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2046,35,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,,,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2057,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,,,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2091,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,,,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2101,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,,,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2114,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+Yes,36bc5fc631b08bcf03c6977e79f026a459d76302,,,Yes,xen/arch/x86/hvm/vmx/vvmx.c,2123,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,2046,35,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,2057,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,2091,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,2101,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,2114,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,2123,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+Yes,c04c1866e5131e450ddcd114e32401477c60b816,,,Yes,tools/libxl/libxl_internal.h,470,21,error,syntaxError,,syntax error
+No,d8f65e68a7c1047fad97206a6282c281247fadc2,,,No,tools/libxl/libxl_internal.h,470,21,error,syntaxError,,syntax error
+Yes,371a23e65db5eb3a80a148586aeb551d4d0015f1,,,,tools/libxl/libxl_internal.h,463,21,error,syntaxError,,syntax error
+No,ce2f42605888f18f63ff9fe0d45dd69ae83045bb,,,,tools/libxl/libxl_internal.h,463,21,error,syntaxError,,syntax error
+Yes,46a49b91f1026f64430b84dd83e845a33f06415e,,,Yes,xen/arch/x86/x86_emulate/x86_emulate.c,3362,48,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+Yes,46a49b91f1026f64430b84dd83e845a33f06415e,,,Yes,xen/arch/x86/x86_emulate/x86_emulate.c,3406,52,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+No,0e442727ceccfa32a7276cccd205b4722e68fdc1,,,No,xen/arch/x86/x86_emulate/x86_emulate.c,3363,48,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+No,0e442727ceccfa32a7276cccd205b4722e68fdc1,,,No,xen/arch/x86/x86_emulate/x86_emulate.c,3407,52,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
+Yes,1a7ffe466cd057daaef245b0a1ab6b82588e4c01,,,,xen/include/xen/types.h,36,1,error,syntaxError,,syntax error: 110 typedef
+No,937ef32565fa3a81fdb37b9dd5aa99a1b87afa75,,,,xen/include/xen/types.h,36,1,error,syntaxError,,syntax error: 110 typedef
+Yes,156e90e8f9ad74c7f91633630a882bdbb6caf5ff,,,,tools/libxl/libxl_internal.h,347,21,error,syntaxError,,syntax error
+No,91b0ae9db33f72468b1d411a07f53085c893c097,,,,tools/libxl/libxl_internal.h,347,21,error,syntaxError,,syntax error
+Yes,eedecb3cf0b2ce1ffc2eb08f3c73f88d42c382c9,,,,tools/libxl/libxl_internal.h,430,21,error,syntaxError,,syntax error
+No,40412e3c99722229f1ec93cd95fc8486d778f5df,,,,tools/libxl/libxl_internal.h,430,21,error,syntaxError,,syntax error
+Yes,181677977fc35ddb848ae4d440fbb72e8afc8a1e,,,Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,811b188addb9018d1daef19db73c577e9e99f7eb,,,No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,811b188addb9018d1daef19db73c577e9e99f7eb,,,Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,481dddb63b1fac2368c8e8be109babee0b1ca171,,,No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,481dddb63b1fac2368c8e8be109babee0b1ca171,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,e3d851340c551554b93743606f180bd310a55da8,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error

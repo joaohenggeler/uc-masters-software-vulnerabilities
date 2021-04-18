@@ -24,7 +24,7 @@ from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
 from string import Template
-from typing import Callable, Iterator, List, Optional, Pattern, Tuple, Union
+from typing import Any, Callable, Iterator, List, Optional, Pattern, Tuple, Union
 from urllib.parse import urlsplit, parse_qsl
 
 import bs4 # type: ignore
@@ -145,10 +145,10 @@ def serialize_json_container(container: Union[list, dict]) -> Optional[str]:
 
 	return json.dumps(container) if container else None
 
-def deserialize_json_container(container_str: Optional[str]) -> Union[list, dict, None]:
+def deserialize_json_container(container_str: Optional[str], default: Any = None) -> Union[list, dict, None]:
 	""" Deserializes a JSON object to a list or dictionary. """
 
-	return json.loads(container_str) if pd.notna(container_str) else None # type: ignore[arg-type]
+	return json.loads(container_str) if pd.notna(container_str) else default # type: ignore[arg-type]
 
 def has_file_extension(file_path: str, file_extension: str) -> bool:
 	""" Checks if a file path ends with a given file extension. """
@@ -928,7 +928,7 @@ class Project:
 					log.critical(f'The repository for project "{project}" was not loaded correctly.')
 					sys.exit(1)
 
-	def find_output_csv_files(self, prefix: str) -> Iterator[str]:
+	def iterate_over_output_csv_files(self, prefix: str) -> Iterator[str]:
 		""" Finds the paths to any CSV files that belong to this project by looking at their prefix. """
 		csv_path = self.csv_prefix_template.substitute(prefix=prefix) + '*'
 		yield from glob.iglob(csv_path)
@@ -1056,7 +1056,7 @@ class Project:
 
 	GIT_DIFF_LINE_NUMBERS_REGEX: Pattern = re.compile(r'^@@ -(?P<from_begin>\d+)(,(?P<from_total>\d+))? \+(?P<to_begin>\d+)(,(?P<to_total>\d+))? @@.*')
 
-	def find_changed_files_and_lines_in_git_commit(self, from_commit_hash: str, to_commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
+	def find_changed_files_and_lines_in_git_diff(self, from_commit_hash: str, to_commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
 		""" Finds the paths and modified lines of any C/C++ source files that were changed in a given Git commit. """
 
 		if self.repository is None:
@@ -1379,136 +1379,7 @@ class Project:
 		Methods used to find any files, functions, and classes affected by a project's vulnerabilities.
 	"""
 
-	def find_and_save_affected_files_to_csv_file(self):
-		""" Finds any files affected by this project's vulnerabilities and saves them to a CSV file. """
-
-		for csv_path in self.find_output_csv_files('cve'):
-
-			log.info(f'Finding affected files for the project "{self}" using the information in "{csv_path}".')
-
-			cves = pd.read_csv(csv_path, usecols=['CVE', 'Git Commit Hashes'], dtype=str)
-			cves = cves.dropna()
-			cves['Git Commit Hashes'] = cves['Git Commit Hashes'].map(deserialize_json_container)
-
-			git_commit_hashes = cves['Git Commit Hashes'].tolist()
-			hash_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
-			hash_list = self.sort_git_commit_hashes_topologically(hash_list)
-			
-			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index',
-													'Vulnerable Commit Hash', 'Vulnerable Tag Name', 'Vulnerable Author Date', 'Vulnerable Changed Lines',
-													'Neutral Commit Hash', 'Neutral Tag Name', 'Neutral Author Date', 'Neutral Changed Lines',
-													'CVEs', 'Last Change Commit Hash'])
-
-			topological_index = 0
-			for commit_hash in hash_list:
-
-				tag_name = self.find_tag_name_from_git_commit_hash(commit_hash)
-				commit_date = self.find_author_date_from_git_commit_hash(commit_hash)
-
-				parent_commit_hash = self.find_parent_git_commit_hash(commit_hash)
-				parent_tag_name = self.find_tag_name_from_git_commit_hash(parent_commit_hash)
-				parent_commit_date = self.find_author_date_from_git_commit_hash(parent_commit_hash)
-
-				has_source_file = False
-				for file_path, parent_changed_lines, changed_lines in self.find_changed_files_and_lines_in_git_commit(parent_commit_hash, commit_hash):
-
-					has_source_file = True
-
-					parent_changed_lines = serialize_json_container(parent_changed_lines)
-					changed_lines = serialize_json_container(changed_lines)
-
-					is_commit = cves['Git Commit Hashes'].map(lambda hash_list: commit_hash in hash_list)
-					cve_list = cves.loc[is_commit, 'CVE'].tolist()
-					cve_list = serialize_json_container(cve_list)
-
-					last_change_commit_hash = self.find_last_changed_git_commit_hash(commit_hash, file_path)
-
-					row = {
-							'File Path': file_path,
-							'Topological Index': topological_index,
-
-							'Vulnerable Commit Hash': parent_commit_hash,
-							'Vulnerable Tag Name': parent_tag_name,
-							'Vulnerable Author Date': parent_commit_date,
-							'Vulnerable Changed Lines': parent_changed_lines,
-
-							'Neutral Commit Hash': commit_hash,
-							'Neutral Tag Name': tag_name,
-							'Neutral Author Date': commit_date,
-							'Neutral Changed Lines': changed_lines,
-
-							'CVEs': cve_list,
-							'Last Change Commit Hash': last_change_commit_hash
-					}
-
-					affected_files = affected_files.append(row, ignore_index=True)		
-
-				if has_source_file:
-					topological_index += 1
-
-			csv_file_path = replace_in_filename(csv_path, 'cve', 'affected-files')
-
-			affected_files.to_csv(csv_file_path, index=False)
-
-	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list, list, dict] ]:
-		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities.
-		
-		For each neutral-vulnerable commit pair, the commit hash and vulnerability status are different, but the file list is the same
-		since it only uses the information relative to the neutral commit, even for the vulnerable one."""
-
-		affected_files = pd.read_csv(csv_file_path, usecols=[	'File Path', 'Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash',
-																'Vulnerable Changed Lines', 'Neutral Changed Lines'], dtype=str)
-		grouped_files = affected_files.groupby(by=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'])
-
-		for (topological_index, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
-
-			group_df = group_df.replace({np.nan: None})
-
-			def checkout_affected_files(commit_hash: str, is_vulnerable: bool,
-										file_path_list: list, changed_lines_list: list) -> Iterator[ Tuple[str, bool, list, list, dict] ]:
-				""" A helper method that performs the checkout and yields the result. """
-
-				# For files that were added in the neutral commit and don't have a previous vulnerable commit.
-				if commit_hash is None:
-					return
-
-				checkout_success = self.checkout_entire_git_commit(commit_hash)
-
-				if checkout_success:
-
-					# It's possible that the SATs generate metrics or alerts related to files that we're not currently
-					# iterating over (e.g. the header files of the current C/C++ source file). In those cases, we won't
-					# have a list of Changed Lines.
-					file_path_to_lines = defaultdict(lambda: [])
-					for file_path, lines in zip(file_path_list, changed_lines_list):
-
-						# Skip cases where there was no vulnerable commit since the file was added
-						# in the neutral one.
-						if lines is not None:
-							file_path = self.get_relative_path_in_repository(file_path)
-							file_path_to_lines[file_path] = lines
-
-					yield (commit_hash, is_vulnerable, file_path_list, changed_lines_list, file_path_to_lines)
-				else:
-					status = 'Vulnerable' if is_vulnerable else 'Neutral'
-					log.error(f'Failed to checkout commit {commit_hash} ({status}) for the files: {file_path_list}')
-
-
-			file_path_list = group_df['File Path'].tolist()
-			file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in file_path_list]
-
-			vulnerable_changed_lines_list = group_df['Vulnerable Changed Lines'].tolist()
-			vulnerable_changed_lines_list = [deserialize_json_container(lines) for lines in vulnerable_changed_lines_list]
-
-			neutral_changed_lines_list = group_df['Neutral Changed Lines'].tolist()
-			neutral_changed_lines_list = [deserialize_json_container(lines) for lines in neutral_changed_lines_list]
-
-			yield from checkout_affected_files(vulnerable_commit_hash, True, file_path_list, vulnerable_changed_lines_list)
-			yield from checkout_affected_files(neutral_commit_hash, False, file_path_list, neutral_changed_lines_list)
-			
-		self.hard_reset_git_head()
-
-	def find_code_units_from_line(self, file_path: str, line_arg: Union[ int, List[List[int]] ]) -> Tuple[ List[dict], List[dict] ]:
+	def find_code_units_from_lines(self, file_path: str, line_arg: Union[ int, List[List[int]] ]) -> Tuple[ List[dict], List[dict] ]:
 		""" Lists any functions and classes in a source file that overlap with a specific line number or ranges of lines.
 
 		Use cases:
@@ -1583,10 +1454,12 @@ class Project:
 
 			CLASS_KINDS = [CursorKind.STRUCT_DECL, CursorKind.UNION_DECL, CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE]
 
+			KINDS_TO_NAME = {CursorKind.STRUCT_DECL: 'Struct', CursorKind.UNION_DECL: 'Union', CursorKind.CLASS_DECL: 'Class', CursorKind.CLASS_TEMPLATE: 'Class'}
+
 			for node in tu.cursor.walk_preorder():
 
 				# This should have the same behavior as clang_Location_isFromMainFile().
-				if node.location.file is not None and node.location.file.name == source_file_name:
+				if node.location.file is not None and node.location.file.name == source_file_name and node.is_definition():
 
 					def add_to_list(code_unit_list: List[dict]):
 						""" Helper method that checks whether the line number belonds to the current code unit. """						
@@ -1596,6 +1469,11 @@ class Project:
 
 						if ranges_overlap:
 							code_unit_info = {'Name': node.spelling, 'Signature': node.displayname, 'Lines': unit_lines}
+
+							kind_name = KINDS_TO_NAME.get(node.kind)
+							if kind_name is not None:
+								code_unit_info.update({'Kind': kind_name})
+
 							code_unit_list.append(code_unit_info)
 
 					if node.kind in FUNCTION_KINDS:
@@ -1608,6 +1486,177 @@ class Project:
 
 		return (function_list, class_list)
 
+	def find_and_save_affected_files_to_csv_file(self):
+		""" Finds any files affected by this project's vulnerabilities and saves them to a CSV file. """
+
+		for csv_path in self.iterate_over_output_csv_files('cve'):
+
+			log.info(f'Finding affected files for the project "{self}" using the information in "{csv_path}".')
+
+			cves = pd.read_csv(csv_path, usecols=['CVE', 'Git Commit Hashes'], dtype=str)
+			cves = cves.dropna()
+			cves['Git Commit Hashes'] = cves['Git Commit Hashes'].map(deserialize_json_container)
+
+			git_commit_hashes = cves['Git Commit Hashes'].tolist()
+			hash_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
+			hash_list = self.sort_git_commit_hashes_topologically(hash_list)
+			
+			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index',
+													
+													'Vulnerable Commit Hash', 'Vulnerable Tag Name', 'Vulnerable Author Date',
+													'Vulnerable Changed Lines', 'Vulnerable Changed Functions', 'Vulnerable Changed Classes',
+
+													'Neutral Commit Hash', 'Neutral Tag Name', 'Neutral Author Date',
+													'Neutral Changed Lines', 'Neutral Changed Functions', 'Neutral Changed Classes',
+													
+													'CVEs', 'Last Change Commit Hash'])
+
+			topological_index = 0
+			for neutral_commit_hash in hash_list:
+
+				vulnerable_commit_hash = self.find_parent_git_commit_hash(neutral_commit_hash)
+				
+				vulnerable_tag_name = self.find_tag_name_from_git_commit_hash(vulnerable_commit_hash)
+				vulnerable_commit_date = self.find_author_date_from_git_commit_hash(vulnerable_commit_hash)
+
+				neutral_tag_name = self.find_tag_name_from_git_commit_hash(neutral_commit_hash)
+				neutral_commit_date = self.find_author_date_from_git_commit_hash(neutral_commit_hash)
+
+				has_source_file = False
+				for file_path, vulnerable_changed_lines, neutral_changed_lines in self.find_changed_files_and_lines_in_git_diff(vulnerable_commit_hash, neutral_commit_hash):
+
+					has_source_file = True
+
+					vulnerable_changed_lines = serialize_json_container(vulnerable_changed_lines)
+					neutral_changed_lines = serialize_json_container(neutral_changed_lines)
+
+					is_neutral_commit = cves['Git Commit Hashes'].map(lambda hash_list: neutral_commit_hash in hash_list)
+					cve_list = cves.loc[is_neutral_commit, 'CVE'].tolist()
+					cve_list = serialize_json_container(cve_list)
+
+					last_change_commit_hash = self.find_last_changed_git_commit_hash(neutral_commit_hash, file_path)
+
+					row = {
+							'File Path': file_path,
+							'Topological Index': topological_index,
+
+							'Vulnerable Commit Hash': vulnerable_commit_hash,
+							'Vulnerable Tag Name': vulnerable_tag_name,
+							'Vulnerable Author Date': vulnerable_commit_date,
+							'Vulnerable Changed Lines': vulnerable_changed_lines,
+
+							'Neutral Commit Hash': neutral_commit_hash,
+							'Neutral Tag Name': neutral_tag_name,
+							'Neutral Author Date': neutral_commit_date,
+							'Neutral Changed Lines': neutral_changed_lines,
+
+							'CVEs': cve_list,
+							'Last Change Commit Hash': last_change_commit_hash
+					}
+
+					affected_files = affected_files.append(row, ignore_index=True)		
+
+				if has_source_file:
+					topological_index += 1
+
+			# Since we need to parse the vulnerable and neutral version of each file, it's more convenient to perform
+			# the Git checkouts after iterating over every commit.
+			grouped_files = affected_files.groupby(by=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'])
+			for (_, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
+
+				def checkout_affected_files_and_find_code_units(commit_hash: str, is_vulnerable: bool) -> None:
+					""" A helper method that performs the checkout and finds any affected functions and classes."""
+
+					status = 'Vulnerable' if is_vulnerable else 'Neutral'
+
+					checkout_success = self.checkout_entire_git_commit(commit_hash)
+					if checkout_success:
+
+						for row in group_df.itertuples():
+
+							file_path = self.get_absolute_path_in_repository(row[1])
+							changed_lines = row[6] if is_vulnerable else row[12]
+							changed_lines = deserialize_json_container(changed_lines, [])
+
+							function_list, class_list = self.find_code_units_from_lines(file_path, changed_lines)
+							affected_files.at[row.Index, f'{status} Changed Functions'] = serialize_json_container(function_list)
+							affected_files.at[row.Index, f'{status} Changed Classes'] = serialize_json_container(class_list)
+					else:
+						log.error(f'Failed to checkout the commit {commit_hash} ({status}).')
+
+				checkout_affected_files_and_find_code_units(vulnerable_commit_hash, True)
+				checkout_affected_files_and_find_code_units(neutral_commit_hash, False)
+
+			self.hard_reset_git_head()
+
+			affected_files_csv_path = replace_in_filename(csv_path, 'cve', 'affected-files')
+			affected_files.to_csv(affected_files_csv_path, index=False)
+
+	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list, list, dict, dict] ]:
+		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities.
+		
+		For each neutral-vulnerable commit pair, the commit hash and vulnerability status are different, but the file list is the same
+		since it only uses the information relative to the neutral commit, even for the vulnerable one."""
+
+		affected_files = pd.read_csv(csv_file_path, usecols=[	'File Path', 'Topological Index',
+																'Vulnerable Commit Hash', 'Vulnerable Changed Functions', 'Vulnerable Changed Classes',
+																'Neutral Commit Hash', 'Neutral Changed Functions', 'Neutral Changed Classes'], dtype=str)
+		
+		grouped_files = affected_files.groupby(by=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'])
+		for (_, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
+
+			def checkout_affected_files(commit_hash: str, is_vulnerable: bool,
+										full_file_path_list: list, relative_file_path_list: list,
+										function_list: list, class_list: list) -> Iterator[ Tuple[str, bool, list, list, dict, dict] ]:
+				""" A helper method that performs the checkout and yields the result. """
+
+				checkout_success = self.checkout_entire_git_commit(commit_hash)
+				if checkout_success:
+
+					def map_file_paths_to_code_units(code_unit_list: list) -> dict:
+						""" Maps the relative file paths in the repository to their code units. """
+
+						# It's possible that the SATs generate metrics or alerts related to files that we're not currently
+						# iterating over (e.g. the header files of the current C/C++ source file). In those cases, we won't
+						# have a list of changed lines.
+						file_path_to_code_units = defaultdict(lambda: [])
+						for file_path, units in zip(relative_file_path_list, code_unit_list):
+
+							file_path = self.get_relative_path_in_repository(file_path)
+							file_path_to_code_units[file_path] = units if units is not None else []
+
+						return file_path_to_code_units
+
+					file_path_to_functions = map_file_paths_to_code_units(function_list)
+					file_path_to_classes = map_file_paths_to_code_units(class_list)
+
+					yield (commit_hash, is_vulnerable, full_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes)
+				else:
+					status = 'Vulnerable' if is_vulnerable else 'Neutral'
+					log.error(f'Failed to checkout the commit {commit_hash} ({status}).')
+
+			group_df = group_df.replace({np.nan: None})
+
+			relative_file_path_list = group_df['File Path'].tolist()
+			full_file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in relative_file_path_list]
+
+			vulnerable_function_list = group_df['Vulnerable Changed Functions'].tolist()
+			vulnerable_function_list = [deserialize_json_container(function_list) for function_list in vulnerable_function_list]
+
+			vulnerable_class_list = group_df['Vulnerable Changed Classes'].tolist()
+			vulnerable_class_list = [deserialize_json_container(class_list) for class_list in vulnerable_class_list]
+
+			neutral_function_list = group_df['Neutral Changed Functions'].tolist()
+			neutral_function_list = [deserialize_json_container(function_list) for function_list in neutral_function_list]
+
+			neutral_class_list = group_df['Neutral Changed Classes'].tolist()
+			neutral_class_list = [deserialize_json_container(class_list) for class_list in neutral_class_list]
+			
+			yield from checkout_affected_files(vulnerable_commit_hash, True, full_file_path_list, relative_file_path_list, vulnerable_function_list, vulnerable_class_list)
+			yield from checkout_affected_files(neutral_commit_hash, False, full_file_path_list, relative_file_path_list, neutral_function_list, neutral_class_list)
+			
+		self.hard_reset_git_head()
+
 	####################################################################################################
 
 	"""
@@ -1619,7 +1668,7 @@ class Project:
 
 		understand = UnderstandSat(self)
 	
-		for affected_csv_path in self.find_output_csv_files('affected-files'):
+		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
 
 			log.info(f'Generating metrics for the project "{self}" using the information in "{affected_csv_path}".')
 
@@ -1629,9 +1678,9 @@ class Project:
 			delete_file(temp_csv_file_path)
 			delete_file(final_csv_file_path)
 
-			for (commit_hash, is_commit_vulnerable, file_path_list, changed_lines_list, file_path_to_lines) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
+			for (commit_hash, is_commit_vulnerable, full_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
 
-				success = understand.generate_project_metrics(file_path_list, temp_csv_file_path)
+				success = understand.generate_project_metrics(full_file_path_list, temp_csv_file_path)
 
 				if success:
 
@@ -1639,45 +1688,41 @@ class Project:
 
 					metrics.insert(0, 'Vulnerable Commit', None)
 					metrics.insert(1, 'Commit Hash', None)
-					metrics.insert(2, 'Changed Lines', None)
-					metrics.insert(3, 'Affected Functions', None)
-					metrics.insert(4, 'Affected Classes', None)
-					metrics.insert(5, 'Vulnerable Code Unit', None)
+					metrics.insert(2, 'Vulnerable Code Unit', None)
+					metrics.insert(3, 'Code Unit Lines', None)
 
 					metrics['Vulnerable Commit'] = 'Yes' if is_commit_vulnerable else 'No'
 					metrics['Commit Hash'] = commit_hash
-					metrics['Changed Lines'] = metrics['File'].map(lambda x: serialize_json_container(file_path_to_lines[x]))
 					
-					# We can't ignore N/A values since that would exclude files that have no changed lines, i.e., files that
-					# were only added in the neutral commit.
-					grouped_files = metrics.groupby(by=['Commit Hash', 'Changed Lines', 'File'], dropna=False)
-					for (_, _, file_path), group_df in grouped_files:
+					# This will exclude functions and classes without a file which are sometimes generated by Understand.
+					grouped_files = metrics.groupby(by=['Commit Hash', 'File'])
+					for (_, file_path), group_df in grouped_files:
 
-						changed_lines_list = file_path_to_lines[file_path]
-						function_list, class_list = self.find_code_units_from_line(file_path, changed_lines_list)
+						function_list = file_path_to_functions[file_path]
+						class_list = file_path_to_classes[file_path]
 
-						metrics.loc[group_df.index, 'Affected Functions'] = serialize_json_container(function_list)
-						metrics.loc[group_df.index, 'Affected Classes'] = serialize_json_container(class_list)
+						def get_code_unit_status(signature: str, code_unit_list: list) -> Tuple[bool, list]:
+							""" Checks if a code unit is vulnerable given its name/signature and retrieves its line numbers. """
+							is_vulnerable = False
+							lines = []
 
-						def is_function_vulnerable(signature: str) -> bool:
-							""" Checks if a given function name appears in the changed functions list. """
-							# E.g. "EventStateManager::SetPointerLock(nsIWidget *,nsIContent *)" -> "setpointerlock".
+							# E.g. "EventStateManager::SetPointerLock(nsIWidget *,nsIContent *)" -> "setpointerlock
 							# The function names in the changed function list don't have the "::" operator.
 							name = signature.lower().split('(', 1)[0]
 							name = name.rsplit('::', 1)[-1]
-							return any(name == unit['Name'].lower() for unit in function_list)
+							
+							for unit in code_unit_list:
+								if name == unit['Name'].lower():
+									is_vulnerable = is_commit_vulnerable
+									lines = unit['Lines']
+									break
 
-						def is_class_vulnerable(name: str) -> bool:
-							""" Checks if a given class name appears in the changed classes list. """
-							name = name.lower()
-							return any(name == unit['Name'].lower() for unit in class_list)
+							return (is_vulnerable, lines)
 
 						for row in group_df.itertuples():
 
-							# But we do want to exclude functions and classes that have no associated file,
-							# as well as any code units that are associated with a file that was not changed
-							# in this commit.
-							if pd.isna(row.File) or row.File not in file_path_to_lines:
+							# Exclude any code units that are associated with a file that was not changed in this commit.
+							if row.File not in relative_file_path_list:
 								continue
 
 							kind = row.Kind
@@ -1688,21 +1733,15 @@ class Project:
 
 							elif 'Function' in kind:
 
-								if is_commit_vulnerable:
-									is_vulnerable = is_function_vulnerable(row.Name)
-								else:
-									is_vulnerable = False
-									
+								is_vulnerable, lines = get_code_unit_status(row.Name, function_list)									
 								metrics.at[row.Index, 'Vulnerable Code Unit'] = 'Yes' if is_vulnerable else 'No'
+								metrics.at[row.Index, 'Code Unit Lines'] = serialize_json_container(lines)
 
 							elif 'Class' in kind or 'Struct' in kind or 'Union' in kind:
 								
-								if is_commit_vulnerable:
-									is_vulnerable = is_class_vulnerable(row.Name)
-								else:
-									is_vulnerable = False
-
+								is_vulnerable, lines = get_code_unit_status(row.Name, class_list)									
 								metrics.at[row.Index, 'Vulnerable Code Unit'] = 'Yes' if is_vulnerable else 'No'
+								metrics.at[row.Index, 'Code Unit Lines'] = serialize_json_container(lines)
 
 							else:
 								assert False, f'Unhandled code unit kind "{kind}".'
@@ -1714,7 +1753,7 @@ class Project:
 	def split_and_update_metrics_in_csv_files(self):
 		""" Splits the metrics of any files affected by this project's vulnerabilities, updates them with new metrics, and saves them to a CSV file. """
 
-		for csv_path in self.find_output_csv_files('metrics'):
+		for csv_path in self.iterate_over_output_csv_files('metrics'):
 
 			log.info(f'Splitting and updating metrics for the project "{self}" using the information in "{csv_path}".')
 
@@ -1856,7 +1895,7 @@ class Project:
 
 		cppcheck = CppcheckSat(self)
 
-		for affected_csv_path in self.find_output_csv_files('affected-files'):
+		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
 
 			log.info(f'Generating the alerts for the project "{self}" using the information in "{affected_csv_path}".')
 
@@ -1866,19 +1905,18 @@ class Project:
 			delete_file(temp_csv_path)
 			delete_file(final_csv_path)
 
-			for (commit_hash, is_commit_vulnerable, file_path_list, changed_lines_list, file_path_to_lines) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
+			for (commit_hash, is_commit_vulnerable, full_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
 
-				cppcheck_success = cppcheck.generate_project_alerts(file_path_list, temp_csv_path)
+				cppcheck_success = cppcheck.generate_project_alerts(full_file_path_list, temp_csv_path)
 
 				if cppcheck_success:
 					alerts = pd.read_csv(temp_csv_path, dtype=str)
 
 					alerts.insert(0, 'Vulnerable Commit', None)
 					alerts.insert(1, 'Commit Hash', None)
-					alerts.insert(2, 'Changed Lines', None)
-					alerts.insert(3, 'Affected Functions', None)
-					alerts.insert(4, 'Affected Classes', None)
-					alerts.insert(5, 'Vulnerable File', None)
+					alerts.insert(2, 'Affected Functions', None)
+					alerts.insert(3, 'Affected Classes', None)
+					alerts.insert(4, 'Vulnerable File', None)
 
 					alerts['Vulnerable Commit'] = 'Yes' if is_commit_vulnerable else 'No'
 					alerts['Commit Hash'] = commit_hash
@@ -1888,38 +1926,27 @@ class Project:
 						if pd.isna(row.File) or pd.isna(row.Line):
 							log.warning('The following alert is missing its file or line number: ' + row)
 							continue
-						elif row.File not in file_path_to_lines:
+						# Exclude any code units that are associated with a file that was not changed in this commit.
+						elif row.File not in relative_file_path_list:
 							continue
 
-						function_list, class_list = self.find_code_units_from_line(row.File, int(row.Line))
+						function_list = file_path_to_functions[row.File]
+						class_list = file_path_to_classes[row.File]
+						alert_lines = [int(row.Line), int(row.Line)]
 
-						def set_code_unit_vulnerability_status(code_unit_list):
-							""" Sets the vulnerability status of any functions or classes found after parsing the affected files. This is done by checking
-							if the lines modified from the vulnerable to neutral commit overlap with these code units. For example, a vulnerable file may
-							have five functions, but only one of them was actually changed when a vulnerability was patched. For neutral commits, nothing
-							is done since we'll assume that the file and its code units are on longer vulnerable (at least for this neutral-vulnerable
-							commit pair). """
+						affected_function_list = []
+						affected_class_list = []
 
-							if is_commit_vulnerable:
+						for unit in function_list:
+							if check_range_overlap(unit['Lines'], alert_lines):
+								affected_function_list.append(unit)
 
-								vulnerable_lines = file_path_to_lines[row.File]
-								alerts.at[row.Index, 'Changed Lines'] = serialize_json_container(vulnerable_lines)
-								
-								for unit in code_unit_list:
-									is_unit_vulnerable = any(check_range_overlap(unit['Lines'], vulnerable_range) for vulnerable_range in vulnerable_lines)	
-									unit['Vulnerable'] = 'Yes' if is_unit_vulnerable else 'No'										
-							else:
+						for unit in class_list:
+							if check_range_overlap(unit['Lines'], alert_lines):
+								affected_class_list.append(unit)
 
-								neutral_lines = file_path_to_lines[row.File]
-								alerts.at[row.Index, 'Changed Lines'] = serialize_json_container(neutral_lines)
-								for unit in code_unit_list:
-									unit['Vulnerable'] = 'No'
-
-						set_code_unit_vulnerability_status(function_list)
-						set_code_unit_vulnerability_status(class_list)
-
-						alerts.at[row.Index, 'Affected Functions'] = serialize_json_container(function_list)
-						alerts.at[row.Index, 'Affected Classes'] = serialize_json_container(class_list)
+						alerts.at[row.Index, 'Affected Functions'] = serialize_json_container(affected_function_list)
+						alerts.at[row.Index, 'Affected Classes'] = serialize_json_container(affected_class_list)
 						alerts.at[row.Index, 'Vulnerable File'] = row[1]
 
 					append_dataframe_to_csv(alerts, final_csv_path)
@@ -2470,6 +2497,4 @@ if __name__ == '__main__':
 	for project in project_list:
 		if project.short_name == 'mozilla':
 
-			cppcheck = CppcheckSat(project)
-			alerts = cppcheck.read_and_convert_output_csv_in_default_format(os.path.join('test_cases', 'cppcheck-1-f40f923a0a09ab1d0e28a308364a924893c5fd02.csv'))
-			alerts.to_csv(os.path.join('test_cases', 'converted-cppcheck.csv'), index=False)
+			foo, bar = project.find_code_units_from_lines('test.cpp', [[1,100000]])
