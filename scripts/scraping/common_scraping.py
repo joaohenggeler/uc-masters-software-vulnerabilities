@@ -1379,50 +1379,16 @@ class Project:
 		Methods used to find any files, functions, and classes affected by a project's vulnerabilities.
 	"""
 
-	def find_code_units_from_lines(self, file_path: str, line_arg: Union[ int, List[List[int]] ]) -> Tuple[ List[dict], List[dict] ]:
-		""" Lists any functions and classes in a source file that overlap with a specific line number or ranges of lines.
-
-		Use cases:
-		- Single line number (for security alerts).
-		- Multiple ranges of lines (for Git diffs, e.g. 10 to 20, 45 to 70).
-		"""
-
-		if isinstance(line_arg, int):
-
-			if line_arg <= 0:
-				log.warning(f'Clamping the line number {line_arg} to a minimum of one.')
-				line_arg = 1
-
-			lines = [[line_arg, line_arg]]
-
-		elif isinstance(line_arg, list):
-
-			for line_range in line_arg:
-
-				if line_range[0] <= 0 or line_range[1] <= 0:
-					log.warning(f'Clamping the line range {line_range} to a minimum of one.')
-					line_range[0] = max(line_range[0], 1)
-					line_range[1] = max(line_range[1], 1)
-
-				if line_range[0] > line_range[1]:
-					log.warning(f'Clamping the first line in range {line_range} to the second line.')
-					line_range[0] = line_range[1]
-
-			lines = line_arg
-
-		else:
-			assert False, f'Unhandled line argument type "{type(line_arg)}".'
+	def find_code_units_in_file(self, file_path: str) -> Tuple[ List[dict], List[dict] ]:
+		""" Lists any functions and classes in a source file. """
 
 		function_list: List[dict] = []
 		class_list: List[dict] = []
 
-		if not lines:
-			return (function_list, class_list)
-
-		from clang.cindex import CursorKind, TranslationUnitLoadError
-
 		source_file_path = self.get_absolute_path_in_repository(file_path)
 		source_file_name = os.path.basename(source_file_path)
+
+		from clang.cindex import CursorKind, TranslationUnitLoadError
 
 		try:
 
@@ -1462,19 +1428,16 @@ class Project:
 				if node.location.file is not None and node.location.file.name == source_file_name and node.is_definition():
 
 					def add_to_list(code_unit_list: List[dict]):
-						""" Helper method that checks whether the line number belonds to the current code unit. """						
+						""" Helper method that adds the code unit's properties to the resulting list. """						
 						
 						unit_lines = [node.extent.start.line, node.extent.end.line]
-						ranges_overlap = any(check_range_overlap(unit_lines, line_range) for line_range in lines)
+						code_unit_info = {'Name': node.spelling, 'Signature': node.displayname, 'Lines': unit_lines}
 
-						if ranges_overlap:
-							code_unit_info = {'Name': node.spelling, 'Signature': node.displayname, 'Lines': unit_lines}
+						kind_name = KINDS_TO_NAME.get(node.kind)
+						if kind_name is not None:
+							code_unit_info.update({'Kind': kind_name})
 
-							kind_name = KINDS_TO_NAME.get(node.kind)
-							if kind_name is not None:
-								code_unit_info.update({'Kind': kind_name})
-
-							code_unit_list.append(code_unit_info)
+						code_unit_list.append(code_unit_info)
 
 					if node.kind in FUNCTION_KINDS:
 						add_to_list(function_list)
@@ -1504,10 +1467,10 @@ class Project:
 			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index',
 													
 													'Vulnerable Commit Hash', 'Vulnerable Tag Name', 'Vulnerable Author Date',
-													'Vulnerable Changed Lines', 'Vulnerable Changed Functions', 'Vulnerable Changed Classes',
+													'Vulnerable Changed Lines', 'Vulnerable File Functions', 'Vulnerable File Classes',
 
 													'Neutral Commit Hash', 'Neutral Tag Name', 'Neutral Author Date',
-													'Neutral Changed Lines', 'Neutral Changed Functions', 'Neutral Changed Classes',
+													'Neutral Changed Lines', 'Neutral File Functions', 'Neutral File Classes',
 													
 													'CVEs', 'Last Change Commit Hash'])
 
@@ -1564,23 +1527,31 @@ class Project:
 			grouped_files = affected_files.groupby(by=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'])
 			for (_, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
 
-				def checkout_affected_files_and_find_code_units(commit_hash: str, is_vulnerable: bool) -> None:
+				def checkout_affected_files_and_find_code_units(commit_hash: str, is_commit_vulnerable: bool) -> None:
 					""" A helper method that performs the checkout and finds any affected functions and classes."""
 
-					status = 'Vulnerable' if is_vulnerable else 'Neutral'
+					status = 'Vulnerable' if is_commit_vulnerable else 'Neutral'
 
 					checkout_success = self.checkout_entire_git_commit(commit_hash)
 					if checkout_success:
 
 						for row in group_df.itertuples():
 
-							file_path = self.get_absolute_path_in_repository(row[1])
-							changed_lines = row[6] if is_vulnerable else row[12]
+							file_path = row[1]
+							function_list, class_list = self.find_code_units_in_file(file_path)
+
+							changed_lines = row[6] if is_commit_vulnerable else row[12]
 							changed_lines = deserialize_json_container(changed_lines, [])
 
-							function_list, class_list = self.find_code_units_from_lines(file_path, changed_lines)
-							affected_files.at[row.Index, f'{status} Changed Functions'] = serialize_json_container(function_list)
-							affected_files.at[row.Index, f'{status} Changed Classes'] = serialize_json_container(class_list)
+							# Check whether the code units are actually vulnerable. A file in a vulnerable commit might
+							# have five functions, but only one could be vulnerable.
+							for unit in function_list + class_list:
+								was_unit_changed = any(check_range_overlap(unit['Lines'], line_range) for line_range in changed_lines)
+								unit_status = 'Yes' if was_unit_changed else 'No' if is_commit_vulnerable else 'No'
+								unit.update({'Vulnerable': unit_status})
+
+							affected_files.at[row.Index, f'{status} File Functions'] = serialize_json_container(function_list)
+							affected_files.at[row.Index, f'{status} File Classes'] = serialize_json_container(class_list)
 					else:
 						log.error(f'Failed to checkout the commit {commit_hash} ({status}).')
 
@@ -1599,8 +1570,8 @@ class Project:
 		since it only uses the information relative to the neutral commit, even for the vulnerable one."""
 
 		affected_files = pd.read_csv(csv_file_path, usecols=[	'File Path', 'Topological Index',
-																'Vulnerable Commit Hash', 'Vulnerable Changed Functions', 'Vulnerable Changed Classes',
-																'Neutral Commit Hash', 'Neutral Changed Functions', 'Neutral Changed Classes'], dtype=str)
+																'Vulnerable Commit Hash', 'Vulnerable File Functions', 'Vulnerable File Classes',
+																'Neutral Commit Hash', 'Neutral File Functions', 'Neutral File Classes'], dtype=str)
 		
 		grouped_files = affected_files.groupby(by=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'])
 		for (_, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
@@ -1618,7 +1589,7 @@ class Project:
 
 						# It's possible that the SATs generate metrics or alerts related to files that we're not currently
 						# iterating over (e.g. the header files of the current C/C++ source file). In those cases, we won't
-						# have a list of changed lines.
+						# have a list of code units.
 						file_path_to_code_units = defaultdict(lambda: [])
 						for file_path, units in zip(relative_file_path_list, code_unit_list):
 
@@ -1640,16 +1611,16 @@ class Project:
 			relative_file_path_list = group_df['File Path'].tolist()
 			full_file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in relative_file_path_list]
 
-			vulnerable_function_list = group_df['Vulnerable Changed Functions'].tolist()
+			vulnerable_function_list = group_df['Vulnerable File Functions'].tolist()
 			vulnerable_function_list = [deserialize_json_container(function_list) for function_list in vulnerable_function_list]
 
-			vulnerable_class_list = group_df['Vulnerable Changed Classes'].tolist()
+			vulnerable_class_list = group_df['Vulnerable File Classes'].tolist()
 			vulnerable_class_list = [deserialize_json_container(class_list) for class_list in vulnerable_class_list]
 
-			neutral_function_list = group_df['Neutral Changed Functions'].tolist()
+			neutral_function_list = group_df['Neutral File Functions'].tolist()
 			neutral_function_list = [deserialize_json_container(function_list) for function_list in neutral_function_list]
 
-			neutral_class_list = group_df['Neutral Changed Classes'].tolist()
+			neutral_class_list = group_df['Neutral File Classes'].tolist()
 			neutral_class_list = [deserialize_json_container(class_list) for class_list in neutral_class_list]
 			
 			yield from checkout_affected_files(vulnerable_commit_hash, True, full_file_path_list, relative_file_path_list, vulnerable_function_list, vulnerable_class_list)
@@ -1701,23 +1672,25 @@ class Project:
 						function_list = file_path_to_functions[file_path]
 						class_list = file_path_to_classes[file_path]
 
-						def get_code_unit_status(signature: str, code_unit_list: list) -> Tuple[bool, list]:
+						def get_code_unit_status(signature: str, code_unit_list: list) -> Tuple[str, list]:
 							""" Checks if a code unit is vulnerable given its name/signature and retrieves its line numbers. """
-							is_vulnerable = False
+							status = 'No'
 							lines = []
 
-							# E.g. "EventStateManager::SetPointerLock(nsIWidget *,nsIContent *)" -> "setpointerlock
-							# The function names in the changed function list don't have the "::" operator.
+							# E.g. "EventStateManager::SetPointerLock(nsIWidget *,nsIContent *)" -> "setpointerlock".
+							# E.g. "Action::~Action()" -> "~action".
+							# The function names in the function list don't have the "::" operator, but the destructors
+							# do start with "~".
 							name = signature.lower().split('(', 1)[0]
 							name = name.rsplit('::', 1)[-1]
-							
+
 							for unit in code_unit_list:
 								if name == unit['Name'].lower():
-									is_vulnerable = is_commit_vulnerable
+									status = unit['Vulnerable']
 									lines = unit['Lines']
 									break
 
-							return (is_vulnerable, lines)
+							return (status, lines)
 
 						for row in group_df.itertuples():
 
@@ -1733,14 +1706,14 @@ class Project:
 
 							elif 'Function' in kind:
 
-								is_vulnerable, lines = get_code_unit_status(row.Name, function_list)									
-								metrics.at[row.Index, 'Vulnerable Code Unit'] = 'Yes' if is_vulnerable else 'No'
+								status, lines = get_code_unit_status(row.Name, function_list)									
+								metrics.at[row.Index, 'Vulnerable Code Unit'] = status
 								metrics.at[row.Index, 'Code Unit Lines'] = serialize_json_container(lines)
 
 							elif 'Class' in kind or 'Struct' in kind or 'Union' in kind:
 								
-								is_vulnerable, lines = get_code_unit_status(row.Name, class_list)									
-								metrics.at[row.Index, 'Vulnerable Code Unit'] = 'Yes' if is_vulnerable else 'No'
+								status, lines = get_code_unit_status(row.Name, class_list)									
+								metrics.at[row.Index, 'Vulnerable Code Unit'] = status
 								metrics.at[row.Index, 'Code Unit Lines'] = serialize_json_container(lines)
 
 							else:
@@ -2497,4 +2470,4 @@ if __name__ == '__main__':
 	for project in project_list:
 		if project.short_name == 'mozilla':
 
-			foo, bar = project.find_code_units_from_lines('test.cpp', [[1,100000]])
+			foo, bar = project.find_code_units_in_file('test.cpp')

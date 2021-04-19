@@ -1,7 +1,7 @@
 Vulnerable Commit,Commit Hash,Affected Functions,Affected Classes,Vulnerable File,File,Line,Column,Severity,Rule,CWE,Message
 Yes,6d49536d844a2685a50281c5385a093a61911987,,,,xen/include/xen/sched.h,329,35,warning,multiplySizeof,682,Multiplying sizeof() with sizeof() indicates a logic error.
 Yes,6d49536d844a2685a50281c5385a093a61911987,,,,tools/libxc/xc_dom.h,353,16,portability,arithOperationsOnVoidPointer,467,"'ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
-Yes,6d49536d844a2685a50281c5385a093a61911987,"[{""Name"": ""xc_dom_probe_zimage32_kernel"", ""Signature"": ""xc_dom_probe_zimage32_kernel(struct xc_dom_image *)"", ""Lines"": [51, 93]}]",,Yes,tools/libxc/xc_dom_armzimageloader.c,83,66,portability,arithOperationsOnVoidPointer,467,"'dom->kernel_blob' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+Yes,6d49536d844a2685a50281c5385a093a61911987,"[{""Name"": ""xc_dom_probe_zimage32_kernel"", ""Signature"": ""xc_dom_probe_zimage32_kernel(struct xc_dom_image *)"", ""Lines"": [51, 93], ""Vulnerable"": ""Yes""}]",,Yes,tools/libxc/xc_dom_armzimageloader.c,83,66,portability,arithOperationsOnVoidPointer,467,"'dom->kernel_blob' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
 Yes,6d49536d844a2685a50281c5385a093a61911987,,,,xen/include/xen/sched.h,494,43,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
 Yes,6d49536d844a2685a50281c5385a093a61911987,,,,xen/include/xen/sched.h,510,5,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
 No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,xen/include/xen/sched.h,329,35,warning,multiplySizeof,682,Multiplying sizeof() with sizeof() indicates a logic error.
@@ -10,8 +10,8 @@ No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,xen/include/xen/sched.h,494,43,po
 No,2cd6bf3653a2b983c90bf3af42d199c499db4165,,,,xen/include/xen/sched.h,510,5,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
 Yes,e3d851340c551554b93743606f180bd310a55da8,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
 No,f9a7931b0d268ac57f585d67fc11be7c21f0f9da,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,f9a7931b0d268ac57f585d67fc11be7c21f0f9da,,,Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,e4dccc73a36f06f269c8bdc81fe58f8da9ff43fb,,,No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,f9a7931b0d268ac57f585d67fc11be7c21f0f9da,,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Kind"": ""Struct"", ""Vulnerable"": ""No""}]",Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,e4dccc73a36f06f269c8bdc81fe58f8da9ff43fb,,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Kind"": ""Struct"", ""Vulnerable"": ""No""}]",No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
 Yes,e4dccc73a36f06f269c8bdc81fe58f8da9ff43fb,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
 No,c429d90b6d6fb4885fa358b35b2338a697ce7973,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
 Yes,c429d90b6d6fb4885fa358b35b2338a697ce7973,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
@@ -41,8 +41,8 @@ No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,209
 No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,2101,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
 No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,2114,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
 No,c0d98b35714fb707217c9062b6518e158cd72eea,,,No,xen/arch/x86/hvm/vmx/vvmx.c,2123,16,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
-Yes,c04c1866e5131e450ddcd114e32401477c60b816,,,Yes,tools/libxl/libxl_internal.h,470,21,error,syntaxError,,syntax error
-No,d8f65e68a7c1047fad97206a6282c281247fadc2,,,No,tools/libxl/libxl_internal.h,470,21,error,syntaxError,,syntax error
+Yes,c04c1866e5131e450ddcd114e32401477c60b816,,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [439, 506], ""Kind"": ""Struct"", ""Vulnerable"": ""No""}]",Yes,tools/libxl/libxl_internal.h,470,21,error,syntaxError,,syntax error
+No,d8f65e68a7c1047fad97206a6282c281247fadc2,,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [439, 506], ""Kind"": ""Struct"", ""Vulnerable"": ""No""}]",No,tools/libxl/libxl_internal.h,470,21,error,syntaxError,,syntax error
 Yes,371a23e65db5eb3a80a148586aeb551d4d0015f1,,,,tools/libxl/libxl_internal.h,463,21,error,syntaxError,,syntax error
 No,ce2f42605888f18f63ff9fe0d45dd69ae83045bb,,,,tools/libxl/libxl_internal.h,463,21,error,syntaxError,,syntax error
 Yes,46a49b91f1026f64430b84dd83e845a33f06415e,,,Yes,xen/arch/x86/x86_emulate/x86_emulate.c,3362,48,error,shiftTooManyBits,758,Shifting 32-bit value by 32 bits is undefined behaviour
@@ -55,9 +55,9 @@ Yes,156e90e8f9ad74c7f91633630a882bdbb6caf5ff,,,,tools/libxl/libxl_internal.h,347
 No,91b0ae9db33f72468b1d411a07f53085c893c097,,,,tools/libxl/libxl_internal.h,347,21,error,syntaxError,,syntax error
 Yes,eedecb3cf0b2ce1ffc2eb08f3c73f88d42c382c9,,,,tools/libxl/libxl_internal.h,430,21,error,syntaxError,,syntax error
 No,40412e3c99722229f1ec93cd95fc8486d778f5df,,,,tools/libxl/libxl_internal.h,430,21,error,syntaxError,,syntax error
-Yes,181677977fc35ddb848ae4d440fbb72e8afc8a1e,,,Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,811b188addb9018d1daef19db73c577e9e99f7eb,,,No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-Yes,811b188addb9018d1daef19db73c577e9e99f7eb,,,Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
-No,481dddb63b1fac2368c8e8be109babee0b1ca171,,,No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,181677977fc35ddb848ae4d440fbb72e8afc8a1e,,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Kind"": ""Struct"", ""Vulnerable"": ""No""}]",Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,811b188addb9018d1daef19db73c577e9e99f7eb,,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Kind"": ""Struct"", ""Vulnerable"": ""No""}]",No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+Yes,811b188addb9018d1daef19db73c577e9e99f7eb,,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Kind"": ""Struct"", ""Vulnerable"": ""No""}]",Yes,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
+No,481dddb63b1fac2368c8e8be109babee0b1ca171,,"[{""Name"": ""libxl__ctx"", ""Signature"": ""libxl__ctx"", ""Lines"": [419, 486], ""Kind"": ""Struct"", ""Vulnerable"": ""No""}]",No,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
 Yes,481dddb63b1fac2368c8e8be109babee0b1ca171,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
 No,e3d851340c551554b93743606f180bd310a55da8,,,,tools/libxl/libxl_internal.h,450,21,error,syntaxError,,syntax error
