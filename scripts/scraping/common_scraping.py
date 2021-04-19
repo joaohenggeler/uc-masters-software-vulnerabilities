@@ -3,9 +3,6 @@
 """
 	This module defines any methods and classes that are used by different scripts to scrape vulnerability metadata
 	from websites and to generated software metrics and security alerts using third-party programs.
-
-	@Future:
-	- Maybe the functionality in "split_and_update_metrics.py" should be merged with "generate_metrics.py".
 """
 
 import csv
@@ -22,7 +19,7 @@ import sys
 import time
 from collections import defaultdict
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from string import Template
 from typing import Any, Callable, Iterator, List, Optional, Pattern, Tuple, Union
 from urllib.parse import urlsplit, parse_qsl
@@ -126,8 +123,20 @@ except Exception as error:
 
 def get_current_timestamp() -> str:
 	""" Gets the current timestamp as a string using the format "YYYYMMDDhhmmss". """
+	return datetime.now(tz=timezone.utc).strftime('%Y%m%d%H%M%S')
 
-	return datetime.now().strftime("%Y%m%d%H%M%S")
+def format_unix_timestamp(timestamp: str) -> Optional[str]:
+	""" Formats a Unix timestamp using the format "YYYY-MM-DD hh:mm:ss". """
+
+	result: Optional[str]
+
+	try:
+		result = datetime.fromtimestamp(int(timestamp), tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+	except Exception as error:
+		result = None
+		log.error(f'Failed to format the timestamp "{timestamp}" with the error: {repr(error)}')
+
+	return result
 
 def change_datetime_string_format(datetime_string: str, source_format: str, destination_format: str, desired_locale: str) -> str:
 	""" Changes the format of a datetime string. """
@@ -950,7 +959,7 @@ class Project:
 		path = full_path.replace('\\', '/')
 
 		try:
-			_, path = path.split(self.repository_base_name + '/', maxsplit=1)			
+			_, path = path.split(self.repository_base_name + '/', 1)			
 		except ValueError:
 			pass
 
@@ -1087,7 +1096,7 @@ class Project:
 
 				yield from yield_last_file_if_it_exists()
 
-				_, last_file_path = line.split('/', maxsplit=1)
+				_, last_file_path = line.split('/', 1)
 				is_source_file = any(has_file_extension(last_file_path, file_extension) for file_extension in Project.SOURCE_FILE_EXTENSIONS) # type: ignore[arg-type]
 
 				if not is_source_file:
@@ -1174,8 +1183,7 @@ class Project:
 			# git name-rev --tags --name-only [HASH]
 			# E.g. "v4.4-rc6~22^2~24" or "v2.6.39-rc3^0" or "undefined"
 			name_rev_result = self.repository.git.name_rev(commit_hash, tags=True, name_only=True)
-			split_result = re.split(r'~|\^', name_rev_result, maxsplit=1)
-			tag_name = split_result[0]
+			tag_name = re.split(r'~|\^', name_rev_result, 1)[0]
 		except git.exc.GitCommandError as error:
 			tag_name = None
 			log.error(f'Failed to find the tag name for the commit hash "{commit_hash}" with the error: {repr(error)}')
@@ -1189,13 +1197,13 @@ class Project:
 			return None
 
 		try:
-			# git log --format="%ad" --date="format-local:%Y-%m-%d %H:%M:%S" [HASH]
-			log_result = self.repository.git.log(commit_hash, format='%ad', date='format-local:%Y-%m-%d %H:%M:%S')
-			split_result = log_result.split('\n', maxsplit=1)
-			date = split_result[0]
+			# git log --format="%ad" --date="unix" [HASH]
+			log_result = self.repository.git.log(commit_hash, format='%ad', date='unix')
+			timestamp = log_result.split('\n', 1)[0]
+			date = format_unix_timestamp(timestamp)
 		except git.exc.GitCommandError as error:
 			date = None
-			log.error(f'Failed to find the date for the commit hash "{commit_hash}" with the error: {repr(error)}')
+			log.error(f'Failed to find the author date for the commit hash "{commit_hash}" with the error: {repr(error)}')
 
 		return date
 
