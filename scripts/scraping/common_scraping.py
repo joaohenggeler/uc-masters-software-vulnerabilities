@@ -114,8 +114,13 @@ try:
 	clang_bin_path = SCRAPING_CONFIG['clang_bin_path']
 	log.info(f'Loading libclang from "{clang_bin_path}".')
 	
-	clang.cindex.Config.set_library_path(clang_bin_path)
-	CLANG_INDEX = clang.cindex.Index.create()
+	try:
+		clang.cindex.Config.set_library_path(clang_bin_path)
+		CLANG_INDEX = clang.cindex.Index.create()
+	except Exception as error:
+		clang.cindex.Config.set_library_file(clang_bin_path)
+		CLANG_INDEX = clang.cindex.Index.create()
+
 except Exception as error:
 	log.error(f'Failed to load libclang with the error: {repr(error)}')
 
