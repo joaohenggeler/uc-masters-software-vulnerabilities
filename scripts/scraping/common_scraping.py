@@ -2,7 +2,7 @@
 
 """
 	This module defines any methods and classes that are used by different scripts to scrape vulnerability metadata
-	from websites and to generated software metrics and security alerts using third-party programs.
+	from websites and to generate software metrics and security alerts using third-party programs.
 """
 
 import csv
@@ -111,15 +111,17 @@ if DEBUG_ENABLED:
 	log.debug(f'Debug mode is enabled with the following options: {DEBUG_OPTIONS}')
 
 try:
-	clang_bin_path = SCRAPING_CONFIG['clang_bin_path']
-	log.info(f'Loading libclang from "{clang_bin_path}".')
+	clang_lib_path = SCRAPING_CONFIG['clang_lib_path']
+	log.info(f'Loading libclang from "{clang_lib_path}".')
 	
 	try:
-		clang.cindex.Config.set_library_path(clang_bin_path)
+		clang.cindex.Config.set_library_path(clang_lib_path)
 		CLANG_INDEX = clang.cindex.Index.create()
 	except Exception as error:
-		clang.cindex.Config.set_library_file(clang_bin_path)
+		clang.cindex.Config.set_library_file(clang_lib_path)
 		CLANG_INDEX = clang.cindex.Index.create()
+
+	log.info(f'Loaded libclang successfully.')
 
 except Exception as error:
 	log.error(f'Failed to load libclang with the error: {repr(error)}')
@@ -902,8 +904,6 @@ class Project:
 		scrape_all_branches = config['scrape_all_branches']
 		project_config = config['projects']
 
-		log.info(f'Scraping all branches? {scrape_all_branches}')
-
 		project_list = []
 		for full_name, info in project_config.items():
 
@@ -917,6 +917,8 @@ class Project:
 			info['scrape_all_branches'] = scrape_all_branches
 			project: Project
 		
+			log.info(f'Loading the project "{short_name}" with the following configurations: {info}')
+
 			if short_name == 'mozilla':
 				project = MozillaProject(full_name, info)
 			elif short_name == 'xen':
@@ -1063,7 +1065,7 @@ class Project:
 
 		except git.exc.GitCommandError as error:
 			# If there's no such commit in the repository.
-			log.error('Found one or more invalid commits while trying to sort the commit hashes topologically.')
+			log.error(f'Found one or more invalid commits while trying to sort the commit hashes topologically with the error: {repr(error)}')
 			sorted_hash_list = []
 
 		return sorted_hash_list
@@ -1076,9 +1078,15 @@ class Project:
 		if self.repository is None:
 			return
 
-		# git diff --unified=0 [HASH FROM] [HASH TO]
-		# For the parent commit: git diff --unified=0 [HASH]^ [HASH]
-		diff_result = self.repository.git.diff(from_commit_hash, to_commit_hash, unified=0)
+		try:
+			# git diff --unified=0 [HASH FROM] [HASH TO] --
+			# For the parent commit: git diff --unified=0 [HASH]^ [HASH] --
+			diff_result = self.repository.git.diff(from_commit_hash, to_commit_hash, '--', unified=0)
+
+		except git.exc.GitCommandError as error:
+			log.error(f'Failed to find the changes from the commit "{from_commit_hash}" to "{to_commit_hash}" with the error: {repr(error)}')
+			return
+
 		last_file_path: Optional[str] = None
 		last_from_lines_list: List[List[int]] = []
 		last_to_lines_list: List[List[int]] = []
@@ -1386,6 +1394,8 @@ class Project:
 
 				csv_writer.writerow(csv_row)
 
+		log.info(f'Finished running for the project "{self}".')
+
 	####################################################################################################
 
 	"""
@@ -1393,7 +1403,7 @@ class Project:
 	"""
 
 	def find_code_units_in_file(self, file_path: str) -> Tuple[ List[dict], List[dict] ]:
-		""" Lists any functions and classes in a source file. """
+		""" Lists any functions and classes in a source file in the project's repository. """
 
 		function_list: List[dict] = []
 		class_list: List[dict] = []
@@ -1465,6 +1475,8 @@ class Project:
 	def find_and_save_affected_files_to_csv_file(self):
 		""" Finds any files affected by this project's vulnerabilities and saves them to a CSV file. """
 
+		WRITE_CSV_FREQUENCY = 10
+
 		for csv_path in self.iterate_over_output_csv_files('cve'):
 
 			log.info(f'Finding affected files for the project "{self}" using the information in "{csv_path}".')
@@ -1477,6 +1489,7 @@ class Project:
 			hash_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
 			hash_list = self.sort_git_commit_hashes_topologically(hash_list)
 			
+			affected_files_csv_path = replace_in_filename(csv_path, 'cve', 'affected-files')
 			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index',
 													
 													'Vulnerable Commit Hash', 'Vulnerable Tag Name', 'Vulnerable Author Date',
@@ -1530,15 +1543,21 @@ class Project:
 							'Last Change Commit Hash': last_change_commit_hash
 					}
 
-					affected_files = affected_files.append(row, ignore_index=True)		
+					affected_files = affected_files.append(row, ignore_index=True)
 
 				if has_source_file:
+
+					# Update the results on disk periodically.
+					if topological_index % WRITE_CSV_FREQUENCY == 0:
+						log.info(f'Updating the results with basic commit information for topological index {topological_index}...')
+						affected_files.to_csv(affected_files_csv_path, index=False)
+
 					topological_index += 1
 
 			# Since we need to parse the vulnerable and neutral version of each file, it's more convenient to perform
 			# the Git checkouts after iterating over every commit.
 			grouped_files = affected_files.groupby(by=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'])
-			for (_, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
+			for (topological_index, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
 
 				def checkout_affected_files_and_find_code_units(commit_hash: str, is_commit_vulnerable: bool) -> None:
 					""" A helper method that performs the checkout and finds any affected functions and classes."""
@@ -1571,10 +1590,15 @@ class Project:
 				checkout_affected_files_and_find_code_units(vulnerable_commit_hash, True)
 				checkout_affected_files_and_find_code_units(neutral_commit_hash, False)
 
+				# Update the results on disk periodically.
+				if topological_index % WRITE_CSV_FREQUENCY == 0:
+					log.info(f'Updating the results with function and class information for topological index {topological_index}...')
+					affected_files.to_csv(affected_files_csv_path, index=False)
+
+			affected_files.to_csv(affected_files_csv_path, index=False)
 			self.hard_reset_git_head()
 
-			affected_files_csv_path = replace_in_filename(csv_path, 'cve', 'affected-files')
-			affected_files.to_csv(affected_files_csv_path, index=False)
+		log.info(f'Finished running for the project "{self}".')
 
 	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list, list, dict, dict] ]:
 		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities.
@@ -1736,6 +1760,8 @@ class Project:
 
 				delete_file(temp_csv_file_path)
 
+		log.info(f'Finished running for the project "{self}".')
+
 	def split_and_update_metrics_in_csv_files(self):
 		""" Splits the metrics of any files affected by this project's vulnerabilities, updates them with new metrics, and saves them to a CSV file. """
 
@@ -1870,6 +1896,8 @@ class Project:
 			write_code_unit_csv(r'Function', 'function-metrics')
 			write_code_unit_csv(r'Class|Struct|Union', 'class-metrics')
 
+		log.info(f'Finished running for the project "{self}".')
+
 	####################################################################################################
 	
 	"""
@@ -1938,6 +1966,8 @@ class Project:
 					append_dataframe_to_csv(alerts, final_csv_path)
 
 				delete_file(temp_csv_path)
+
+		log.info(f'Finished running for the project "{self}".')
 
 ####################################################################################################
 

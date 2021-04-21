@@ -15,7 +15,7 @@
 	"output_directory_path": "output",
 	"scrape_all_branches": false,
 
-	"clang_bin_path": "<Replace with path>",
+	"clang_lib_path": "<Replace with path>",
 
 	"projects":
 	{
