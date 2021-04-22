@@ -11,6 +11,7 @@
 
 	"ignored_projects": ["<Put zero or more project short names from the static config here>"],
 	"start_at_cve_hub_page": null,
+	"only_parse_affected_files": false,
 
 	"output_directory_path": "output",
 	"scrape_all_branches": false,
