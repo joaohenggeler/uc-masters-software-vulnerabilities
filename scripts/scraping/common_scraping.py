@@ -910,7 +910,7 @@ class Project:
 			short_name = info['short_name']
 
 			if short_name in SCRAPING_CONFIG['ignored_projects']:
-				log.info(f'Ignoring project "{short_name}".')
+				log.info(f'Ignoring the project "{short_name}".')
 				continue
 
 			info['output_directory_path'] = output_directory_path
@@ -1052,11 +1052,14 @@ class Project:
 		if self.repository is not None and not self.scrape_all_branches:
 			cve.git_commit_hashes = [hash for hash in cve.git_commit_hashes if self.is_git_commit_hash_in_master_branch(hash)]
 
-	def sort_git_commit_hashes_topologically(self, hash_list: list) -> list:
+	def sort_git_commit_hashes_topologically(self, hash_list: List[str]) -> List[str]:
 		""" Sorts a list of Git commit hashes topologically. """
 
-		if self.repository is None or not hash_list:
+		if self.repository is None:
 			return []
+
+		if len(hash_list) <= 1:
+			return hash_list
 
 		try:
 			# git rev-list --topo-order --reverse --no-walk=sorted [HASH 1] [HASH 2] [...] [HASH N]
@@ -1072,8 +1075,8 @@ class Project:
 
 	GIT_DIFF_LINE_NUMBERS_REGEX: Pattern = re.compile(r'^@@ -(?P<from_begin>\d+)(,(?P<from_total>\d+))? \+(?P<to_begin>\d+)(,(?P<to_total>\d+))? @@.*')
 
-	def find_changed_files_and_lines_in_git_diff(self, from_commit_hash: str, to_commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
-		""" Finds the paths and modified lines of any C/C++ source files that were changed in a given Git commit. """
+	def find_changed_files_and_lines_in_parent_git_commit(self, commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
+		""" Finds the paths and modified lines of any C/C++ source files that were changed since the previous commit."""
 
 		if self.repository is None:
 			return
@@ -1081,10 +1084,10 @@ class Project:
 		try:
 			# git diff --unified=0 [HASH FROM] [HASH TO] --
 			# For the parent commit: git diff --unified=0 [HASH]^ [HASH] --
-			diff_result = self.repository.git.diff(from_commit_hash, to_commit_hash, '--', unified=0)
+			diff_result = self.repository.git.diff(commit_hash + '^', commit_hash, '--', unified=0)
 
 		except git.exc.GitCommandError as error:
-			log.error(f'Failed to find the changes from the commit "{from_commit_hash}" to "{to_commit_hash}" with the error: {repr(error)}')
+			log.error(f'Failed to find the changes from the commit "{commit_hash}" with the error: {repr(error)}')
 			return
 
 		last_file_path: Optional[str] = None
@@ -1105,7 +1108,7 @@ class Project:
 		for line in diff_result.splitlines():
 
 			# E.g. "+++ b/embedding/components/windowwatcher/src/nsPrompt.cpp"
-			if line.startswith('+++'):
+			if line.startswith('+++ '):
 
 				yield from yield_last_file_if_it_exists()
 
@@ -1140,7 +1143,7 @@ class Project:
 					append_line_numbers(last_to_lines_list, 'to_begin', 'to_total')
 
 				else:
-					log.error(f'Could not find the line number information for the file "{last_file_path}" ({from_commit_hash} -> {to_commit_hash}) in the diff line: "{line}".')
+					log.error(f'Could not find the line number information for the file "{last_file_path}" ({commit_hash}) in the diff line: "{line}".')
 
 		yield from yield_last_file_if_it_exists()
 
@@ -1167,24 +1170,25 @@ class Project:
 			+  NS_NAMED_LITERAL_STRING(originText, "EnterUserPasswordForRealm");
 		"""
 
-	def find_last_changed_git_commit_hash(self, commit_hash: str, file_path: str) -> Optional[str]:
-		""" Finds the previous Git commit hash where a given file was last changed. """
+	def find_last_changed_git_commit_hashes(self, commit_hash: str, file_path: str) -> List[str]:
+		""" Finds any previous Git commit hashes where a given file was last changed. """
 
 		if self.repository is None:
-			return None
+			return []
 
 		try:
 			# git log [HASH] --parents --max-count=1 --format="%P" -- [FILE PATH]
-			parent_commit_hash = self.repository.git.log(commit_hash, '--', file_path, parents=True, max_count=1, format='%P')
+			commit_list = self.repository.git.log(commit_hash, '--', file_path, parents=True, max_count=1, format='%P')
+			commit_list = commit_list.split()
 		except git.exc.GitCommandError as error:
-			parent_commit_hash = None
+			commit_list = []
 			log.error(f'Failed to find the parent of the commit hash "{commit_hash}" with the error: {repr(error)}')
 
-		return parent_commit_hash
+		return commit_list
 
-	def find_parent_git_commit_hash(self, commit_hash: str) -> Optional[str]:
-		""" Finds the previous Git commit hash. """
-		return self.find_last_changed_git_commit_hash(commit_hash, '.')
+	def find_parent_git_commit_hashes(self, commit_hash: str) -> List[str]:
+		""" Finds any previous Git commit hashes. """
+		return self.find_last_changed_git_commit_hashes(commit_hash, '.')
 
 	def find_tag_name_from_git_commit_hash(self, commit_hash: str) -> Optional[str]:
 		""" Finds the tag name associated with a Git commit hash. """
@@ -1412,7 +1416,7 @@ class Project:
 		source_file_name = os.path.basename(source_file_path)
 
 		try:
-			with open(source_file_path, 'r', encoding='utf-8') as source_file:
+			with open(source_file_path, 'r', encoding='utf-8', errors='replace') as source_file:
 				source_contents = source_file.read()
 				if self.language == 'c++':
 					# @Hack: This is a hacky way of getting clang to report C++ methods that belong to a class
@@ -1485,61 +1489,60 @@ class Project:
 
 			affected_files_csv_path = replace_in_filename(csv_path, 'cve', 'affected-files')
 
-			if SCRAPING_CONFIG['only_parse_affected_files']:
+			log.info(f'Finding affected files for the project "{self}" using the information in "{csv_path}".')
+			
+			cves = pd.read_csv(csv_path, usecols=['CVE', 'Git Commit Hashes'], dtype=str)
+			cves = cves.dropna()
+			cves['Git Commit Hashes'] = cves['Git Commit Hashes'].map(deserialize_json_container)
 
-				log.info(f'Parsing the affected files for the project "{self}" using the information in "{affected_files_csv_path}".')
-				affected_files = pd.read_csv(affected_files_csv_path)
+			git_commit_hashes = cves['Git Commit Hashes'].tolist()
+			neutral_commit_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
+			neutral_commit_list = self.sort_git_commit_hashes_topologically(neutral_commit_list)
+			
+			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index', 'Parent Count',
+													
+													'Vulnerable Commit Hash', 'Vulnerable Tag Name', 'Vulnerable Author Date',
+													'Vulnerable Changed Lines', 'Vulnerable File Functions', 'Vulnerable File Classes',
 
-			else:
+													'Neutral Commit Hash', 'Neutral Tag Name', 'Neutral Author Date',
+													'Neutral Changed Lines', 'Neutral File Functions', 'Neutral File Classes',
+													
+													'CVEs', 'Last Change Commit Hashes'])
 
-				log.info(f'Finding affected files for the project "{self}" using the information in "{csv_path}".')
-				cves = pd.read_csv(csv_path, usecols=['CVE', 'Git Commit Hashes'], dtype=str)
-				cves = cves.dropna()
-				cves['Git Commit Hashes'] = cves['Git Commit Hashes'].map(deserialize_json_container)
+			topological_index = 0
+			for neutral_commit_hash in neutral_commit_list:
 
-				git_commit_hashes = cves['Git Commit Hashes'].tolist()
-				hash_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
-				hash_list = self.sort_git_commit_hashes_topologically(hash_list)
-				
-				
-				affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index',
-														
-														'Vulnerable Commit Hash', 'Vulnerable Tag Name', 'Vulnerable Author Date',
-														'Vulnerable Changed Lines', 'Vulnerable File Functions', 'Vulnerable File Classes',
+				vulnerable_commit_list = self.find_parent_git_commit_hashes(neutral_commit_hash)
+				vulnerable_commit_list = self.sort_git_commit_hashes_topologically(vulnerable_commit_list)
 
-														'Neutral Commit Hash', 'Neutral Tag Name', 'Neutral Author Date',
-														'Neutral Changed Lines', 'Neutral File Functions', 'Neutral File Classes',
-														
-														'CVEs', 'Last Change Commit Hash'])
+				neutral_tag_name = self.find_tag_name_from_git_commit_hash(neutral_commit_hash)
+				neutral_commit_date = self.find_author_date_from_git_commit_hash(neutral_commit_hash)
 
-				topological_index = 0
-				for neutral_commit_hash in hash_list:
+				is_neutral_commit = cves['Git Commit Hashes'].map(lambda hash_list: neutral_commit_hash in hash_list)
+				cve_list = cves.loc[is_neutral_commit, 'CVE'].tolist()
+				cve_list = serialize_json_container(cve_list)
 
-					vulnerable_commit_hash = self.find_parent_git_commit_hash(neutral_commit_hash)
-					
-					vulnerable_tag_name = self.find_tag_name_from_git_commit_hash(vulnerable_commit_hash)
-					vulnerable_commit_date = self.find_author_date_from_git_commit_hash(vulnerable_commit_hash)
+				has_source_file = False
+				for file_path, vulnerable_changed_lines, neutral_changed_lines in self.find_changed_files_and_lines_in_parent_git_commit(neutral_commit_hash):
 
-					neutral_tag_name = self.find_tag_name_from_git_commit_hash(neutral_commit_hash)
-					neutral_commit_date = self.find_author_date_from_git_commit_hash(neutral_commit_hash)
+					has_source_file = True
 
-					has_source_file = False
-					for file_path, vulnerable_changed_lines, neutral_changed_lines in self.find_changed_files_and_lines_in_git_diff(vulnerable_commit_hash, neutral_commit_hash):
+					vulnerable_changed_lines = serialize_json_container(vulnerable_changed_lines)
+					neutral_changed_lines = serialize_json_container(neutral_changed_lines)
 
-						has_source_file = True
+					last_change_commit_list = self.find_last_changed_git_commit_hashes(neutral_commit_hash, file_path)
+					last_change_commit_list = serialize_json_container(last_change_commit_list)
 
-						vulnerable_changed_lines = serialize_json_container(vulnerable_changed_lines)
-						neutral_changed_lines = serialize_json_container(neutral_changed_lines)
+					for vulnerable_commit_hash in vulnerable_commit_list:
 
-						is_neutral_commit = cves['Git Commit Hashes'].map(lambda hash_list: neutral_commit_hash in hash_list)
-						cve_list = cves.loc[is_neutral_commit, 'CVE'].tolist()
-						cve_list = serialize_json_container(cve_list)
-
-						last_change_commit_hash = self.find_last_changed_git_commit_hash(neutral_commit_hash, file_path)
+						parent_count = len(vulnerable_commit_list)
+						vulnerable_tag_name = self.find_tag_name_from_git_commit_hash(vulnerable_commit_hash)
+						vulnerable_commit_date = self.find_author_date_from_git_commit_hash(vulnerable_commit_hash)
 
 						row = {
 								'File Path': file_path,
 								'Topological Index': topological_index,
+								'Parent Count': parent_count,
 
 								'Vulnerable Commit Hash': vulnerable_commit_hash,
 								'Vulnerable Tag Name': vulnerable_tag_name,
@@ -1552,19 +1555,19 @@ class Project:
 								'Neutral Changed Lines': neutral_changed_lines,
 
 								'CVEs': cve_list,
-								'Last Change Commit Hash': last_change_commit_hash
+								'Last Change Commit Hashes': last_change_commit_list
 						}
 
 						affected_files = affected_files.append(row, ignore_index=True)
 
-					if has_source_file:
+				if has_source_file:
 
-						# Update the results on disk periodically.
-						if topological_index % WRITE_CSV_FREQUENCY == 0:
-							log.info(f'Updating the results with basic commit information for topological index {topological_index}...')
-							affected_files.to_csv(affected_files_csv_path, index=False)
+					# Update the results on disk periodically.
+					if topological_index % WRITE_CSV_FREQUENCY == 0:
+						log.info(f'Updating the results with basic commit information for topological index {topological_index}...')
+						affected_files.to_csv(affected_files_csv_path, index=False)
 
-						topological_index += 1
+					topological_index += 1
 
 			# Since we need to parse the vulnerable and neutral version of each file, it's more convenient to perform
 			# the Git checkouts after iterating over every commit.
@@ -1584,7 +1587,7 @@ class Project:
 							file_path = row[1]
 							function_list, class_list = self.find_code_units_in_file(file_path)
 
-							changed_lines = row[6] if is_commit_vulnerable else row[12]
+							changed_lines = row[7] if is_commit_vulnerable else row[13]
 							changed_lines = deserialize_json_container(changed_lines, [])
 
 							# Check whether the code units are actually vulnerable. A file in a vulnerable commit might
@@ -2524,5 +2527,4 @@ if __name__ == '__main__':
 
 	for project in project_list:
 		if project.short_name == 'kernel':
-
-			foo, bar = project.find_code_units_in_file('test.cpp')
+			project.find_and_save_affected_files_to_csv_file()
