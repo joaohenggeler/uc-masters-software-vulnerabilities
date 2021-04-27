@@ -1615,6 +1615,24 @@ class Project:
 
 		log.info(f'Finished running for the project "{self}".')
 
+	def list_and_save_neutral_commits_to_csv_file(self):
+		""" Lists any neutral commits associated with this project's vulnerabilities and saves them to a simple CSV file. """
+
+		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
+
+			log.info(f'Finding affected neutral commits for the project "{self}" using the information in "{affected_csv_path}".')
+			
+			neutral_commits = pd.read_csv(affected_csv_path, usecols=['Neutral Commit Hash'], dtype=str)
+			neutral_commits.drop_duplicates(inplace=True)
+
+			neutral_commits.rename(columns={'Neutral Commit Hash': 'commit'}, inplace=True, errors='raise')
+			neutral_commits.insert(1, 'status', 0)
+
+			neutral_commits_csv_path = replace_in_filename(affected_csv_path, 'affected-files', 'affected-neutral-commits')
+			neutral_commits.to_csv(neutral_commits_csv_path, index=False)
+
+		log.info(f'Finished running for the project "{self}".')
+
 	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list, list, dict, dict] ]:
 		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities.
 		
