@@ -2,7 +2,7 @@
 
 """
 	This module defines any methods and classes that are used by different scripts to scrape vulnerability metadata
-	from websites and to generated software metrics and security alerts using third-party programs.
+	from websites and to generate software metrics and security alerts using third-party programs.
 """
 
 import csv
@@ -17,13 +17,15 @@ import shutil
 import subprocess
 import sys
 import time
+from collections import defaultdict
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from string import Template
-from typing import Callable, Iterator, Optional, Tuple, Union
+from typing import Any, Callable, Iterator, List, Optional, Pattern, Tuple, Union
 from urllib.parse import urlsplit, parse_qsl
 
 import bs4 # type: ignore
+import clang.cindex # type: ignore
 import git # type: ignore
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
@@ -36,7 +38,7 @@ def add_log_file_handler(log: logging.Logger):
 
 	handler = logging.FileHandler('scraping.log', 'w', 'utf-8')
 	handler.setLevel(logging.DEBUG)
-	formatter = logging.Formatter('[%(levelname)s] %(funcName)s: %(message)s')
+	formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(funcName)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 	handler.setFormatter(formatter)
 
 	log.addHandler(handler)
@@ -52,7 +54,7 @@ def add_log_stream_handler(log: logging.Logger):
 	log.addHandler(handler)
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 add_log_file_handler(log)
 add_log_stream_handler(log)
 
@@ -105,14 +107,43 @@ DEBUG_OPTIONS = SCRAPING_CONFIG['debug_options']
 DEBUG_ENABLED = DEBUG_OPTIONS['enabled']
 
 if DEBUG_ENABLED:
+	log.setLevel(logging.DEBUG)
 	log.debug(f'Debug mode is enabled with the following options: {DEBUG_OPTIONS}')
+
+try:
+	clang_lib_path = SCRAPING_CONFIG['clang_lib_path']
+	log.info(f'Loading libclang from "{clang_lib_path}".')
+	
+	try:
+		clang.cindex.Config.set_library_path(clang_lib_path)
+		CLANG_INDEX = clang.cindex.Index.create()
+	except Exception as error:
+		clang.cindex.Config.set_library_file(clang_lib_path)
+		CLANG_INDEX = clang.cindex.Index.create()
+
+	log.info(f'Loaded libclang successfully.')
+
+except Exception as error:
+	log.error(f'Failed to load libclang with the error: {repr(error)}')
 
 ####################################################################################################
 
 def get_current_timestamp() -> str:
 	""" Gets the current timestamp as a string using the format "YYYYMMDDhhmmss". """
+	return datetime.now(tz=timezone.utc).strftime('%Y%m%d%H%M%S')
 
-	return datetime.now().strftime("%Y%m%d%H%M%S")
+def format_unix_timestamp(timestamp: str) -> Optional[str]:
+	""" Formats a Unix timestamp using the format "YYYY-MM-DD hh:mm:ss". """
+
+	result: Optional[str]
+
+	try:
+		result = datetime.fromtimestamp(int(timestamp), tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+	except Exception as error:
+		result = None
+		log.error(f'Failed to format the timestamp "{timestamp}" with the error: {repr(error)}')
+
+	return result
 
 def change_datetime_string_format(datetime_string: str, source_format: str, destination_format: str, desired_locale: str) -> str:
 	""" Changes the format of a datetime string. """
@@ -130,10 +161,10 @@ def serialize_json_container(container: Union[list, dict]) -> Optional[str]:
 
 	return json.dumps(container) if container else None
 
-def deserialize_json_container(container_str: Optional[str]) -> Union[list, dict, None]:
+def deserialize_json_container(container_str: Optional[str], default: Any = None) -> Union[list, dict, None]:
 	""" Deserializes a JSON object to a list or dictionary. """
 
-	return json.loads(container_str) if pd.notna(container_str) else None # type: ignore[arg-type]
+	return json.loads(container_str) if pd.notna(container_str) else default # type: ignore[arg-type]
 
 def has_file_extension(file_path: str, file_extension: str) -> bool:
 	""" Checks if a file path ends with a given file extension. """
@@ -146,6 +177,12 @@ def replace_in_filename(file_path: str, old: str, new: str) -> str:
 	directory_path, filename = os.path.split(file_path)
 	filename = filename.replace(old, new)
 	return os.path.join(directory_path, filename)
+
+def join_and_normalize_paths(*component_list) -> str:
+	""" Joins and normalizes one or more components into a single path. """
+
+	joined_paths = os.path.join(*component_list)
+	return os.path.normpath(joined_paths)
 
 def delete_file(file_path: str) -> bool:
 	""" Deletes a file, whether it exists or not. """
@@ -173,11 +210,37 @@ def delete_directory(directory_path: str) -> bool:
 
 	return success
 
-def append_to_csv(df: pd.DataFrame, csv_path: str, **kwargs):
-	""" Creates or appends a dataframe to a CSV file depending if it already exists. """
+def append_dataframe_to_csv(df: pd.DataFrame, csv_path: str) -> None:
+	""" Creates or appends a dataframe to a CSV file depending on whether it already exists. """
 
 	add_header = not os.path.exists(csv_path)
-	df.to_csv(csv_path, mode='a', header=add_header, **kwargs)
+	df.to_csv(csv_path, mode='a', header=add_header, index=False)
+
+def append_file_to_csv(file_path: str, csv_path: str, **kwargs) -> None:
+	""" Creates or appends a file to another CSV file depending on whether it already exists. """
+
+	df = pd.read_csv(file_path, dtype=str, **kwargs)
+	append_dataframe_to_csv(df, csv_path)
+
+def check_range_overlap(range_1: List[int], range_2: List[int]) -> bool:
+	""" Checks whether two integer ranges overlap. Each range is either a list or tuple with two elements that represent
+	the beginning and ending points respectively. This second value cannot be smaller than the first one."""
+
+	"""
+		# E.g. A function defined from lines 10 to 20 and two Git diffs that show changes from lines 5 to 9, and from 19 to 21.
+		# - A) 5 <= 20 and 10 <= 9 = True and False = False
+		# - B) 19 <= 20 and 10 <= 21 = True and True = True
+	"""
+
+	if range_1[0] > range_1[1]:
+		log.warning(f'The first range number is greater than the second in {range_1} (1).')
+		return False
+
+	if range_2[0] > range_2[1]:
+		log.warning(f'The first range number is greater than the second in {range_2} (2).')
+		return False
+
+	return range_1[0] <= range_2[1] and range_2[0] <= range_1[1]
 
 ####################################################################################################
 
@@ -295,8 +358,6 @@ Examples:
 
 - Apache: http://svn.apache.org/viewcvs?rev=292949&view=rev
 """
-
-SOURCE_FILE_EXTENSIONS = ['c', 'cpp', 'cc', 'cxx', 'c++', 'cp', 'h', 'hpp', 'hh', 'hxx']
 
 ####################################################################################################
 
@@ -782,7 +843,12 @@ class Project:
 	product_id: int
 	url_pattern: str
 	repository_path: str
+	repository_base_name: str
 	master_branch: str
+	language: str
+	include_directory_path: Optional[str]
+
+	SOURCE_FILE_EXTENSIONS: list = ['c', 'cpp', 'cc', 'cxx', 'c++', 'cp', 'h', 'hpp', 'hh', 'hxx']
 
 	repository: git.Repo
 
@@ -798,6 +864,8 @@ class Project:
 		for key, value in project_info.items():
 			setattr(self, key, value)
 
+		self.repository_base_name = os.path.basename(self.repository_path)
+
 		self.output_directory_path = os.path.join(self.output_directory_path, self.short_name)
 		self.output_directory_path = os.path.abspath(self.output_directory_path)
 
@@ -808,6 +876,9 @@ class Project:
 			self.repository = None
 			log.error(f'Failed to get the repository for the project "{self}"" with the error: {repr(error)}')
 		
+		if self.include_directory_path is not None:
+			self.include_directory_path = join_and_normalize_paths(self.repository_path, self.include_directory_path)
+
 		csv_prefix = os.path.join(self.output_directory_path, f'$prefix-{self.database_id}-')
 		self.csv_prefix_template = Template(csv_prefix)
 
@@ -819,6 +890,12 @@ class Project:
 	def __str__(self):
 		return self.full_name
 
+	####################################################################################################
+
+	"""
+		Methods used to initialize or perform basic operations used by all projects.
+	"""
+
 	@staticmethod
 	def get_project_list_from_config(config: dict = SCRAPING_CONFIG) -> list:
 		""" Creates a list of projects given the current configuration. """
@@ -827,16 +904,21 @@ class Project:
 		scrape_all_branches = config['scrape_all_branches']
 		project_config = config['projects']
 
-		log.info(f'Scraping all branches? {scrape_all_branches}')
-
 		project_list = []
 		for full_name, info in project_config.items():
 
 			short_name = info['short_name']
+
+			if short_name in SCRAPING_CONFIG['ignored_projects']:
+				log.info(f'Ignoring the project "{short_name}".')
+				continue
+
 			info['output_directory_path'] = output_directory_path
 			info['scrape_all_branches'] = scrape_all_branches
 			project: Project
 		
+			log.info(f'Loading the project "{short_name}" with the following configurations: {info}')
+
 			if short_name == 'mozilla':
 				project = MozillaProject(full_name, info)
 			elif short_name == 'xen':
@@ -862,21 +944,33 @@ class Project:
 					log.critical(f'The repository for project "{project}" was not loaded correctly.')
 					sys.exit(1)
 
-	def find_output_csv_files(self, prefix: str) -> Iterator[str]:
+	def iterate_over_output_csv_files(self, prefix: str) -> Iterator[str]:
 		""" Finds the paths to any CSV files that belong to this project by looking at their prefix. """
-
 		csv_path = self.csv_prefix_template.substitute(prefix=prefix) + '*'
+		yield from glob.iglob(csv_path)
 
-		for path in glob.iglob(csv_path):
-			yield path
+	####################################################################################################
 
-	def scrape_additional_information_from_security_advisories(self, cve: Cve):
-		""" Scrapes any additional information from the project's security advisories. This method should be overriden by a project's subclass. """
-		pass
+	"""
+		Methods used to interface with a project's repository.
+	"""
 
-	def scrape_additional_information_from_version_control(self, cve: Cve):
-		""" Scrapes any additional information from the project's version control system. This method should be overriden by a project's subclass. """
-		pass
+	def get_absolute_path_in_repository(self, relative_path: str) -> str:
+		""" Converts the relative path of a file in the project's repository into an absolute one. """
+		full_path = os.path.join(self.repository_path, relative_path)
+		return os.path.normpath(full_path)
+
+	def get_relative_path_in_repository(self, full_path: str) -> str:
+		""" Converts the absolute path of a file in the project's repository into a relative one. """
+
+		path = full_path.replace('\\', '/')
+
+		try:
+			_, path = path.split(self.repository_base_name + '/', 1)			
+		except ValueError:
+			pass
+
+		return path
 
 	def find_full_git_commit_hash(self, short_commit_hash: str) -> Optional[str]:
 		""" Finds the full Git commit hash given the short hash. """
@@ -958,11 +1052,14 @@ class Project:
 		if self.repository is not None and not self.scrape_all_branches:
 			cve.git_commit_hashes = [hash for hash in cve.git_commit_hashes if self.is_git_commit_hash_in_master_branch(hash)]
 
-	def sort_git_commit_hashes_topologically(self, hash_list: list) -> list:
+	def sort_git_commit_hashes_topologically(self, hash_list: List[str]) -> List[str]:
 		""" Sorts a list of Git commit hashes topologically. """
 
-		if self.repository is None or not hash_list:
+		if self.repository is None:
 			return []
+
+		if len(hash_list) <= 1:
+			return hash_list
 
 		try:
 			# git rev-list --topo-order --reverse --no-walk=sorted [HASH 1] [HASH 2] [...] [HASH N]
@@ -971,48 +1068,164 @@ class Project:
 
 		except git.exc.GitCommandError as error:
 			# If there's no such commit in the repository.
-			log.error('Found one or more invalid commits while trying to sort the commit hashes topologically.')
+			log.error(f'Found one or more invalid commits while trying to sort the commit hashes topologically with the error: {repr(error)}')
 			sorted_hash_list = []
 
 		return sorted_hash_list
 
-	def find_changed_files_in_git_commit(self, commit_hash: str, file_extension_filter: list = []) -> Iterator[str]:
-		""" Finds the paths to any files that were changed in a given Git commit. These files may be optionally filtered by their file extensions. """
+	GIT_DIFF_LINE_NUMBERS_REGEX: Pattern = re.compile(r'^@@ -(?P<from_begin>\d+)(,(?P<from_total>\d+))? \+(?P<to_begin>\d+)(,(?P<to_total>\d+))? @@.*')
+
+	def find_changed_files_and_lines_in_parent_git_commit(self, commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
+		""" Finds the paths and modified lines of any C/C++ source files that were changed since the previous commit."""
 
 		if self.repository is None:
 			return
 
-		# git diff --name-only [HASH] [HASH]^
-		diff_result = self.repository.git.diff(commit_hash, commit_hash + '^', name_only=True)
-		for file_path in diff_result.splitlines():
+		try:
+			# git diff --unified=0 [HASH FROM] [HASH TO] --
+			# For the parent commit: git diff --unified=0 [HASH]^ [HASH] --
+			diff_result = self.repository.git.diff(commit_hash + '^', commit_hash, '--', unified=0)
 
-			yield_file = len(file_extension_filter) == 0
-						
-			for file_extension in file_extension_filter:
-				if has_file_extension(file_path, file_extension):
-					yield_file = True
-					break
+		except git.exc.GitCommandError as error:
+			log.error(f'Failed to find the changes from the commit "{commit_hash}" with the error: {repr(error)}')
+			return
 
-			if yield_file:
-				yield file_path
+		last_file_path: Optional[str] = None
+		last_from_lines_list: List[List[int]] = []
+		last_to_lines_list: List[List[int]] = []
+	
+		def yield_last_file_if_it_exists() -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
+			""" Yields the previously found file path and its changed lines. """
 
-	def find_parent_git_commit_hash_for_changed_file(self, commit_hash: str, file_path: str) -> Optional[str]:
-		""" Finds the previous Git commit hash where a given file was last changed. """
+			nonlocal last_file_path, last_from_lines_list, last_to_lines_list
+
+			if last_file_path is not None:			
+				yield (last_file_path, last_from_lines_list, last_to_lines_list)
+				last_file_path = None
+				last_from_lines_list = []
+				last_to_lines_list = []
+
+		for line in diff_result.splitlines():
+
+			# E.g. "+++ b/embedding/components/windowwatcher/src/nsPrompt.cpp"
+			if line.startswith('+++ '):
+
+				yield from yield_last_file_if_it_exists()
+
+				_, last_file_path = line.split('/', 1)
+				is_source_file = any(has_file_extension(last_file_path, file_extension) for file_extension in Project.SOURCE_FILE_EXTENSIONS) # type: ignore[arg-type]
+
+				if not is_source_file:
+					last_file_path = None
+				
+			# E.g. "@@ -451,2 +428,2 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,"
+			# E.g. "@@ -263 +255,0 @@ do_test (int argc, char *argv[])"
+			elif last_file_path is not None and line.startswith('@@'):
+
+				match = Project.GIT_DIFF_LINE_NUMBERS_REGEX.search(line)
+				if match:
+
+					def append_line_numbers(line_list: List[List[int]], begin_group_name: str, total_group_name: str) -> None:
+
+						line_begin = int(match.group(begin_group_name)) # type: ignore[union-attr]
+
+						if line_begin == 0:
+							return
+
+						total_lines = match.group(total_group_name) # type: ignore[union-attr]
+						total_lines = int(total_lines) if total_lines is not None else 1
+
+						line_end = line_begin + max(total_lines - 1, 0)
+
+						line_list.append( [line_begin, line_end] )
+
+					append_line_numbers(last_from_lines_list, 'from_begin', 'from_total')
+					append_line_numbers(last_to_lines_list, 'to_begin', 'to_total')
+
+				else:
+					log.error(f'Could not find the line number information for the file "{last_file_path}" ({commit_hash}) in the diff line: "{line}".')
+
+		yield from yield_last_file_if_it_exists()
+
+		"""
+			E.g. for Mozilla: git diff --unified=0 a714da4a56957c826a7cafa381c4d8df832172f2 a714da4a56957c826a7cafa381c4d8df832172f2^
+
+			diff --git a/embedding/components/windowwatcher/src/nsPrompt.cpp b/embedding/components/windowwatcher/src/nsPrompt.cpp
+			index a782689cc853..f95e19ed7c97 100644
+			--- a/embedding/components/windowwatcher/src/nsPrompt.cpp
+			+++ b/embedding/components/windowwatcher/src/nsPrompt.cpp
+			@@ -58,3 +57,0 @@
+			-#include "nsIPrefService.h"
+			-#include "nsIPrefLocalizedString.h"
+			-
+			@@ -424,20 +420,0 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
+			-  // Trim obnoxiously long realms.
+			-  if (realm.Length() > 150) {
+			- [...]
+			-  }
+			@@ -451,2 +428,2 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,
+			-  NS_NAMED_LITERAL_STRING(proxyText, "EnterLoginForProxy");
+			-  NS_NAMED_LITERAL_STRING(originText, "EnterLoginForRealm");
+			+  NS_NAMED_LITERAL_STRING(proxyText, "EnterUserPasswordForProxy");
+			+  NS_NAMED_LITERAL_STRING(originText, "EnterUserPasswordForRealm");
+		"""
+
+	def find_last_changed_git_commit_hashes(self, commit_hash: str, file_path: str) -> List[str]:
+		""" Finds any previous Git commit hashes where a given file was last changed. """
+
+		if self.repository is None:
+			return []
+
+		try:
+			# git log [HASH] --parents --max-count=1 --format="%P" -- [FILE PATH]
+			commit_list = self.repository.git.log(commit_hash, '--', file_path, parents=True, max_count=1, format='%P')
+			commit_list = commit_list.split()
+		except git.exc.GitCommandError as error:
+			commit_list = []
+			log.error(f'Failed to find the parent of the commit hash "{commit_hash}" with the error: {repr(error)}')
+
+		return commit_list
+
+	def find_parent_git_commit_hashes(self, commit_hash: str) -> List[str]:
+		""" Finds any previous Git commit hashes. """
+		return self.find_last_changed_git_commit_hashes(commit_hash, '.')
+
+	def find_tag_name_from_git_commit_hash(self, commit_hash: str) -> Optional[str]:
+		""" Finds the tag name associated with a Git commit hash. """
 
 		if self.repository is None:
 			return None
 
 		try:
-			# git log [HASH] --parents --max-count=1 --format="%P" -- [FILE PATH]
-			parent_commit_hash = self.repository.git.log(commit_hash, '--', file_path, parents=True, max_count=1, format='%P')
+			# git name-rev --tags --name-only [HASH]
+			# E.g. "v4.4-rc6~22^2~24" or "v2.6.39-rc3^0" or "undefined"
+			name_rev_result = self.repository.git.name_rev(commit_hash, tags=True, name_only=True)
+			tag_name = re.split(r'~|\^', name_rev_result, 1)[0]
 		except git.exc.GitCommandError as error:
-			parent_commit_hash = None
-			log.error(f'Failed to find the parent of the commit hash "{commit_hash}" with the error: {repr(error)}')
+			tag_name = None
+			log.error(f'Failed to find the tag name for the commit hash "{commit_hash}" with the error: {repr(error)}')
 
-		return parent_commit_hash
+		return tag_name
+
+	def find_author_date_from_git_commit_hash(self, commit_hash: str) -> Optional[str]:
+		""" Finds the author date (not the commit date) associated with a Git commit hash. """
+
+		if self.repository is None:
+			return None
+
+		try:
+			# git log --format="%ad" --date="unix" [HASH]
+			log_result = self.repository.git.log(commit_hash, format='%ad', date='unix')
+			timestamp = log_result.split('\n', 1)[0]
+			date = format_unix_timestamp(timestamp)
+		except git.exc.GitCommandError as error:
+			date = None
+			log.error(f'Failed to find the author date for the commit hash "{commit_hash}" with the error: {repr(error)}')
+
+		return date
 
 	def checkout_files_in_git_commit(self, commit_hash: str, file_path_list: list) -> bool:
-		""" Performs the Git checkout operation to a specific list of files in a given Git commit. """
+		""" Performs the Git checkout operation on a specific list of files in a given Git commit. """
 
 		if self.repository is None:
 			return False
@@ -1028,6 +1241,10 @@ class Project:
 			
 		return success
 
+	def checkout_entire_git_commit(self, commit_hash: str) -> bool:
+		""" Performs the Git checkout operation for every file in a given Git commit. """
+		return self.checkout_files_in_git_commit(commit_hash, ['.'])
+
 	def hard_reset_git_head(self):
 		""" Performs a hard reset operation to the project's repository. """
 
@@ -1039,6 +1256,21 @@ class Project:
 			self.repository.git.reset(hard=True)
 		except git.exc.GitCommandError as error:
 			log.error(f'Failed to hard reset the current HEAD with the error: {repr(error)}')
+
+	####################################################################################################
+
+	"""
+		Methods used to scrape vulnerability metadata from sources like online databases, bug trackers,
+		security advisories, and the project's version control system.
+	"""
+
+	def scrape_additional_information_from_security_advisories(self, cve: Cve):
+		""" Scrapes any additional information from the project's security advisories. This method should be overriden by a project's subclass. """
+		pass
+
+	def scrape_additional_information_from_version_control(self, cve: Cve):
+		""" Scrapes any additional information from the project's version control system. This method should be overriden by a project's subclass. """
+		pass
 
 	def scrape_vulnerabilities_from_cve_details(self) -> Iterator[Cve]:
 		""" Scrapes any vulnerabilities related to this project from the CVE Details website. """
@@ -1055,7 +1287,6 @@ class Project:
 		page_div = main_soup.find('div', id='pagingb')
 		page_a_list = page_div.find_all('a', title=PAGE_TITLE_REGEX)
 		page_url_list = ['https://www.cvedetails.com' + page_a['href'] for page_a in page_a_list]
-		page_url_list[::-1]
 
 		if DEBUG_ENABLED:
 			previous_len = len(page_url_list)
@@ -1063,6 +1294,12 @@ class Project:
 				page_url_list = page_url_list[::DEBUG_OPTIONS['hub_page_step']]
 			
 			log.debug(f'Reduced the number of hub pages from {previous_len} to {len(page_url_list)}.')
+
+		else:
+			first_page = SCRAPING_CONFIG.get('start_at_cve_hub_page')
+			if first_page is not None:
+				log.info(f'Starting at hub page {first_page} at the user''s request.')
+				page_url_list = page_url_list[first_page-1:]
 
 		for i, page_url in enumerate(page_url_list):
 
@@ -1109,8 +1346,6 @@ class Project:
 					log.error(f'Failed to download the page for {cve}.')
 
 				yield cve
-
-	####################################################################################################
 
 	def collect_and_save_vulnerabilities_to_csv_file(self):
 		""" Collects any vulnerabilities related to this project and saves them to a CSV file. """
@@ -1163,130 +1398,389 @@ class Project:
 
 				csv_writer.writerow(csv_row)
 
+		log.info(f'Finished running for the project "{self}".')
+
+	####################################################################################################
+
+	"""
+		Methods used to find any files, functions, and classes affected by a project's vulnerabilities.
+	"""
+
+	def find_code_units_in_file(self, file_path: str) -> Tuple[ List[dict], List[dict] ]:
+		""" Lists any functions and classes in a source file in the project's repository. """
+
+		function_list: List[dict] = []
+		class_list: List[dict] = []
+
+		source_file_path = self.get_absolute_path_in_repository(file_path)
+		source_file_name = os.path.basename(source_file_path)
+
+		try:
+			with open(source_file_path, 'r', encoding='utf-8', errors='replace') as source_file:
+				source_contents = source_file.read()
+				if self.language == 'c++':
+					# @Hack: This is a hacky way of getting clang to report C++ methods that belong to a class
+					# that is not defined in the file that we're processing. Although we tell clang where to
+					# look for the header files that define these classes, this wouldn't work for the Mozilla's
+					# repository structure. By removing the "<Class Name>::" pattern from a function's definition,
+					# we're essentially telling clang to consider them regular C-style functions. This works for
+					# our purposes since we only care about a function's name and its beginning and ending line
+					# numbers.
+					source_contents = re.sub(r'\S+::', '', source_contents)
+
+		except Exception as error:
+			log.error(f'Failed to read the source file "{source_file_path}" with the error: {repr(error)}')
+			return (function_list, class_list)
+
+		from clang.cindex import CursorKind, TranslationUnitLoadError
+
+		try:
+			clang_arguments = ['--language', self.language]
+			
+			if self.include_directory_path is not None:
+				clang_arguments.extend(['--include-directory', self.include_directory_path])
+
+			global CLANG_INDEX
+			tu = CLANG_INDEX.parse(source_file_name, args=clang_arguments, unsaved_files=[ (source_file_name, source_contents) ])
+			
+			for diagnostic in tu.diagnostics:
+				log.info(f'Diagnostic: {diagnostic}')
+
+			FUNCTION_KINDS = [	CursorKind.FUNCTION_DECL, CursorKind.CXX_METHOD, CursorKind.CONSTRUCTOR, CursorKind.DESTRUCTOR,
+								CursorKind.CONVERSION_FUNCTION, CursorKind.FUNCTION_TEMPLATE]
+
+			CLASS_KINDS = [CursorKind.STRUCT_DECL, CursorKind.UNION_DECL, CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE]
+
+			KINDS_TO_NAME = {CursorKind.STRUCT_DECL: 'Struct', CursorKind.UNION_DECL: 'Union', CursorKind.CLASS_DECL: 'Class', CursorKind.CLASS_TEMPLATE: 'Class'}
+
+			for node in tu.cursor.walk_preorder():
+
+				# This should have the same behavior as clang_Location_isFromMainFile().
+				if node.location.file is not None and node.location.file.name == source_file_name and node.is_definition():
+
+					def add_to_list(code_unit_list: List[dict]):
+						""" Helper method that adds the code unit's properties to the resulting list. """						
+						
+						unit_lines = [node.extent.start.line, node.extent.end.line]
+						code_unit_info = {'Name': node.spelling, 'Signature': node.displayname, 'Lines': unit_lines}
+
+						kind_name = KINDS_TO_NAME.get(node.kind)
+						if kind_name is not None:
+							code_unit_info.update({'Kind': kind_name})
+
+						code_unit_list.append(code_unit_info)
+
+					if node.kind in FUNCTION_KINDS:
+						add_to_list(function_list)
+					elif node.kind in CLASS_KINDS:
+						add_to_list(class_list)
+
+		except TranslationUnitLoadError as error:
+			log.error(f'Failed to parse the source file "{source_file_path}" with the error: {repr(error)}')
+
+		return (function_list, class_list)
+
 	def find_and_save_affected_files_to_csv_file(self):
 		""" Finds any files affected by this project's vulnerabilities and saves them to a CSV file. """
 
-		for csv_path in self.find_output_csv_files('cve'):
+		WRITE_CSV_FREQUENCY = 10
+
+		for csv_path in self.iterate_over_output_csv_files('cve'):
+
+			affected_files_csv_path = replace_in_filename(csv_path, 'cve', 'affected-files')
 
 			log.info(f'Finding affected files for the project "{self}" using the information in "{csv_path}".')
-
-			cves = pd.read_csv(csv_path, usecols=['CVE', 'Git Commit Hashes'])
+			
+			cves = pd.read_csv(csv_path, usecols=['CVE', 'Git Commit Hashes'], dtype=str)
 			cves = cves.dropna()
 			cves['Git Commit Hashes'] = cves['Git Commit Hashes'].map(deserialize_json_container)
 
 			git_commit_hashes = cves['Git Commit Hashes'].tolist()
-			hash_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
-			hash_list = self.sort_git_commit_hashes_topologically(hash_list)
+			neutral_commit_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
+			neutral_commit_list = self.sort_git_commit_hashes_topologically(neutral_commit_list)
 			
-			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index', 'Neutral Git Commit Hash',
-													'Vulnerable Git Commit Hash', 'CVEs'])
+			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index', 'Parent Count',
+													
+													'Vulnerable Commit Hash', 'Vulnerable Tag Name', 'Vulnerable Author Date',
+													'Vulnerable Changed Lines', 'Vulnerable File Functions', 'Vulnerable File Classes',
+
+													'Neutral Commit Hash', 'Neutral Tag Name', 'Neutral Author Date',
+													'Neutral Changed Lines', 'Neutral File Functions', 'Neutral File Classes',
+													
+													'CVEs', 'Last Change Commit Hashes'])
 
 			topological_index = 0
-			for commit_hash in hash_list:
+			for neutral_commit_hash in neutral_commit_list:
 
-				changed_file_list = self.find_changed_files_in_git_commit(commit_hash, SOURCE_FILE_EXTENSIONS)
+				vulnerable_commit_list = self.find_parent_git_commit_hashes(neutral_commit_hash)
+				vulnerable_commit_list = self.sort_git_commit_hashes_topologically(vulnerable_commit_list)
+
+				neutral_tag_name = self.find_tag_name_from_git_commit_hash(neutral_commit_hash)
+				neutral_commit_date = self.find_author_date_from_git_commit_hash(neutral_commit_hash)
+
+				is_neutral_commit = cves['Git Commit Hashes'].map(lambda hash_list: neutral_commit_hash in hash_list)
+				cve_list = cves.loc[is_neutral_commit, 'CVE'].tolist()
+				cve_list = serialize_json_container(cve_list)
 
 				has_source_file = False
-				for file_path in changed_file_list:
+				for file_path, vulnerable_changed_lines, neutral_changed_lines in self.find_changed_files_and_lines_in_parent_git_commit(neutral_commit_hash):
 
 					has_source_file = True
 
-					parent_commit_hash = self.find_parent_git_commit_hash_for_changed_file(commit_hash, file_path)
+					vulnerable_changed_lines = serialize_json_container(vulnerable_changed_lines)
+					neutral_changed_lines = serialize_json_container(neutral_changed_lines)
 
-					is_commit = cves['Git Commit Hashes'].map(lambda hash_list: commit_hash in hash_list)
-					cve_list = cves.loc[is_commit, 'CVE'].tolist()
-					cve_list = serialize_json_container(cve_list)
+					last_change_commit_list = self.find_last_changed_git_commit_hashes(neutral_commit_hash, file_path)
+					last_change_commit_list = serialize_json_container(last_change_commit_list)
 
-					row = {
-							'File Path': file_path,
-							'Topological Index': topological_index,
-							'Neutral Git Commit Hash': commit_hash,
-							'Vulnerable Git Commit Hash': parent_commit_hash,
-							'CVEs': cve_list
-					}
+					for vulnerable_commit_hash in vulnerable_commit_list:
 
-					affected_files = affected_files.append(row, ignore_index=True)		
+						parent_count = len(vulnerable_commit_list)
+						vulnerable_tag_name = self.find_tag_name_from_git_commit_hash(vulnerable_commit_hash)
+						vulnerable_commit_date = self.find_author_date_from_git_commit_hash(vulnerable_commit_hash)
+
+						row = {
+								'File Path': file_path,
+								'Topological Index': topological_index,
+								'Parent Count': parent_count,
+
+								'Vulnerable Commit Hash': vulnerable_commit_hash,
+								'Vulnerable Tag Name': vulnerable_tag_name,
+								'Vulnerable Author Date': vulnerable_commit_date,
+								'Vulnerable Changed Lines': vulnerable_changed_lines,
+
+								'Neutral Commit Hash': neutral_commit_hash,
+								'Neutral Tag Name': neutral_tag_name,
+								'Neutral Author Date': neutral_commit_date,
+								'Neutral Changed Lines': neutral_changed_lines,
+
+								'CVEs': cve_list,
+								'Last Change Commit Hashes': last_change_commit_list
+						}
+
+						affected_files = affected_files.append(row, ignore_index=True)
 
 				if has_source_file:
+
+					# Update the results on disk periodically.
+					if topological_index % WRITE_CSV_FREQUENCY == 0:
+						log.info(f'Updating the results with basic commit information for topological index {topological_index}...')
+						affected_files.to_csv(affected_files_csv_path, index=False)
+
 					topological_index += 1
 
-			csv_file_path = replace_in_filename(csv_path, 'cve', 'affected-files')
+			# Since we need to parse the vulnerable and neutral version of each file, it's more convenient to perform
+			# the Git checkouts after iterating over every commit.
+			grouped_files = affected_files.groupby(by=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'])
+			for (topological_index, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
 
-			affected_files.to_csv(csv_file_path, index=False)
+				def checkout_affected_files_and_find_code_units(commit_hash: str, is_commit_vulnerable: bool) -> None:
+					""" A helper method that performs the checkout and finds any affected functions and classes."""
+
+					status = 'Vulnerable' if is_commit_vulnerable else 'Neutral'
+
+					checkout_success = self.checkout_entire_git_commit(commit_hash)
+					if checkout_success:
+
+						for row in group_df.itertuples():
+
+							file_path = row[1]
+							function_list, class_list = self.find_code_units_in_file(file_path)
+
+							changed_lines = row[7] if is_commit_vulnerable else row[13]
+							changed_lines = deserialize_json_container(changed_lines, [])
+
+							# Check whether the code units are actually vulnerable. A file in a vulnerable commit might
+							# have five functions, but only one could be vulnerable.
+							for unit in function_list + class_list:
+								was_unit_changed = any(check_range_overlap(unit['Lines'], line_range) for line_range in changed_lines)
+								unit_status = 'Yes' if was_unit_changed else 'No' if is_commit_vulnerable else 'No'
+								unit.update({'Vulnerable': unit_status})
+
+							affected_files.at[row.Index, f'{status} File Functions'] = serialize_json_container(function_list)
+							affected_files.at[row.Index, f'{status} File Classes'] = serialize_json_container(class_list)
+					else:
+						log.error(f'Failed to checkout the commit {commit_hash} ({status}).')
+
+				checkout_affected_files_and_find_code_units(vulnerable_commit_hash, True)
+				checkout_affected_files_and_find_code_units(neutral_commit_hash, False)
+
+				# Update the results on disk periodically.
+				if topological_index % WRITE_CSV_FREQUENCY == 0:
+					log.info(f'Updating the results with function and class information for topological index {topological_index}...')
+					affected_files.to_csv(affected_files_csv_path, index=False)
+
+			affected_files.to_csv(affected_files_csv_path, index=False)
+			self.hard_reset_git_head()
+
+		log.info(f'Finished running for the project "{self}".')
+
+	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list, list, dict, dict] ]:
+		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities.
+		
+		For each neutral-vulnerable commit pair, the commit hash and vulnerability status are different, but the file list is the same
+		since it only uses the information relative to the neutral commit, even for the vulnerable one."""
+
+		affected_files = pd.read_csv(csv_file_path, usecols=[	'File Path', 'Topological Index',
+																'Vulnerable Commit Hash', 'Vulnerable File Functions', 'Vulnerable File Classes',
+																'Neutral Commit Hash', 'Neutral File Functions', 'Neutral File Classes'], dtype=str)
+		
+		grouped_files = affected_files.groupby(by=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'])
+		for (_, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
+
+			def checkout_affected_files(commit_hash: str, is_vulnerable: bool,
+										full_file_path_list: list, relative_file_path_list: list,
+										function_list: list, class_list: list) -> Iterator[ Tuple[str, bool, list, list, dict, dict] ]:
+				""" A helper method that performs the checkout and yields the result. """
+
+				checkout_success = self.checkout_entire_git_commit(commit_hash)
+				if checkout_success:
+
+					def map_file_paths_to_code_units(code_unit_list: list) -> dict:
+						""" Maps the relative file paths in the repository to their code units. """
+
+						# It's possible that the SATs generate metrics or alerts related to files that we're not currently
+						# iterating over (e.g. the header files of the current C/C++ source file). In those cases, we won't
+						# have a list of code units.
+						file_path_to_code_units = defaultdict(lambda: [])
+						for file_path, units in zip(relative_file_path_list, code_unit_list):
+
+							file_path = self.get_relative_path_in_repository(file_path)
+							file_path_to_code_units[file_path] = units if units is not None else []
+
+						return file_path_to_code_units
+
+					file_path_to_functions = map_file_paths_to_code_units(function_list)
+					file_path_to_classes = map_file_paths_to_code_units(class_list)
+
+					yield (commit_hash, is_vulnerable, full_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes)
+				else:
+					status = 'Vulnerable' if is_vulnerable else 'Neutral'
+					log.error(f'Failed to checkout the commit {commit_hash} ({status}).')
+
+			group_df = group_df.replace({np.nan: None})
+
+			relative_file_path_list = group_df['File Path'].tolist()
+			full_file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in relative_file_path_list]
+
+			vulnerable_function_list = group_df['Vulnerable File Functions'].tolist()
+			vulnerable_function_list = [deserialize_json_container(function_list) for function_list in vulnerable_function_list]
+
+			vulnerable_class_list = group_df['Vulnerable File Classes'].tolist()
+			vulnerable_class_list = [deserialize_json_container(class_list) for class_list in vulnerable_class_list]
+
+			neutral_function_list = group_df['Neutral File Functions'].tolist()
+			neutral_function_list = [deserialize_json_container(function_list) for function_list in neutral_function_list]
+
+			neutral_class_list = group_df['Neutral File Classes'].tolist()
+			neutral_class_list = [deserialize_json_container(class_list) for class_list in neutral_class_list]
+			
+			yield from checkout_affected_files(vulnerable_commit_hash, True, full_file_path_list, relative_file_path_list, vulnerable_function_list, vulnerable_class_list)
+			yield from checkout_affected_files(neutral_commit_hash, False, full_file_path_list, relative_file_path_list, neutral_function_list, neutral_class_list)
+			
+		self.hard_reset_git_head()
+
+	####################################################################################################
+
+	"""
+		Methods used to generate software metrics using any files affected by a project's vulnerabilities.
+	"""
 
 	def generate_and_save_metrics_to_csv_file(self):
 		""" Generates the software metrics of any files affected by this project's vulnerabilities and saves them to a CSV file. """
 
 		understand = UnderstandSat(self)
 	
-		for csv_path in self.find_output_csv_files('affected-files'):
+		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
 
-			log.info(f'Generating metrics for the project "{self}" using the information in "{csv_path}".')
+			log.info(f'Generating metrics for the project "{self}" using the information in "{affected_csv_path}".')
 
-			affected_files = pd.read_csv(csv_path, usecols=['File Path', 'Topological Index', 'Neutral Git Commit Hash', 'Vulnerable Git Commit Hash'])
-			grouped_files = affected_files.groupby(by=['Topological Index', 'Neutral Git Commit Hash'])
-			
-			final_csv_file_path = replace_in_filename(csv_path, 'affected-files', 'metrics')
-			temp_csv_file_path = replace_in_filename(csv_path, 'affected-files', 'temp-metrics')
-
-			delete_file(final_csv_file_path)
-
-			for (topological_index, neutral_commit_hash), group_df in grouped_files:
-				
-				def run_understand_on_affected_files(commit_hash: str, file_path_list: list, is_vulnerable: bool):
-					
-					if commit_hash is None:
-						return
-
-					understand.create_project_database(temp_csv_file_path)	
-					understand.add_files_to_project_database(file_path_list)
-
-					checkout_success = self.checkout_files_in_git_commit(commit_hash, file_path_list)
-
-					if not checkout_success:
-						log.error(f'Failed to checkout commit {commit_hash} (vulnerable = {is_vulnerable}) for the files: {file_path_list}')
-
-					understand.generate_project_metrics()
-					self.hard_reset_git_head()
-
-					temp_df = pd.read_csv(temp_csv_file_path)
-
-					temp_df.insert(0, 'Vulnerable', None)
-					temp_df.insert(1, 'Git Commit Hash', None)
-
-					temp_df['Vulnerable'] = 'Yes' if is_vulnerable else 'No'
-					temp_df['Git Commit Hash'] = commit_hash
-					temp_df['File'].map(lambda x: x.replace('\\', '/') if pd.notna(x) else x)
-
-					append_to_csv(temp_df, final_csv_file_path, index=False)
-
-				##########
-
-				group_df = group_df.replace({np.nan: None})
-
-				file_path_list = group_df['File Path'].tolist()
-				file_path_list = [os.path.join(self.repository_path, file_path) for file_path in file_path_list]
-				file_path_list = [os.path.normpath(file_path) for file_path in file_path_list]
-				
-				run_understand_on_affected_files(neutral_commit_hash, file_path_list, False)
-
-				vulnerable_commit_hash_list = group_df['Vulnerable Git Commit Hash'].tolist()
-
-				for file_path, vulnerable_commit_hash in zip(file_path_list, vulnerable_commit_hash_list):						
-					run_understand_on_affected_files(vulnerable_commit_hash, [file_path], True)
-
-			##########
+			final_csv_file_path = replace_in_filename(affected_csv_path, 'affected-files', 'metrics')
+			temp_csv_file_path = replace_in_filename(affected_csv_path, 'affected-files', 'temp-metrics')
 
 			delete_file(temp_csv_file_path)
-		
-		##########
+			delete_file(final_csv_file_path)
 
-		understand.delete_project_database()
+			for (commit_hash, is_commit_vulnerable, full_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
+
+				success = understand.generate_project_metrics(full_file_path_list, temp_csv_file_path)
+
+				if success:
+
+					metrics = pd.read_csv(temp_csv_file_path, dtype=str)
+
+					metrics.insert(0, 'Vulnerable Commit', None)
+					metrics.insert(1, 'Commit Hash', None)
+					metrics.insert(2, 'Vulnerable Code Unit', None)
+					metrics.insert(3, 'Code Unit Lines', None)
+
+					metrics['Vulnerable Commit'] = 'Yes' if is_commit_vulnerable else 'No'
+					metrics['Commit Hash'] = commit_hash
+					
+					# This will exclude functions and classes without a file which are sometimes generated by Understand.
+					grouped_files = metrics.groupby(by=['Commit Hash', 'File'])
+					for (_, file_path), group_df in grouped_files:
+
+						function_list = file_path_to_functions[file_path]
+						class_list = file_path_to_classes[file_path]
+
+						def get_code_unit_status(signature: str, code_unit_list: list) -> Tuple[str, list]:
+							""" Checks if a code unit is vulnerable given its name/signature and retrieves its line numbers. """
+							status = 'No'
+							lines = []
+
+							# E.g. "EventStateManager::SetPointerLock(nsIWidget *,nsIContent *)" -> "setpointerlock".
+							# E.g. "Action::~Action()" -> "~action".
+							# The function names in the function list don't have the "::" operator, but the destructors
+							# do start with "~".
+							name = signature.lower().split('(', 1)[0]
+							name = name.rsplit('::', 1)[-1]
+
+							for unit in code_unit_list:
+								if name == unit['Name'].lower():
+									status = unit['Vulnerable']
+									lines = unit['Lines']
+									break
+
+							return (status, lines)
+
+						for row in group_df.itertuples():
+
+							# Exclude any code units that are associated with a file that was not changed in this commit.
+							if row.File not in relative_file_path_list:
+								continue
+
+							kind = row.Kind
+
+							if kind == 'File':
+
+								metrics.at[row.Index, 'Vulnerable Code Unit'] = row[1]
+
+							elif 'Function' in kind:
+
+								status, lines = get_code_unit_status(row.Name, function_list)									
+								metrics.at[row.Index, 'Vulnerable Code Unit'] = status
+								metrics.at[row.Index, 'Code Unit Lines'] = serialize_json_container(lines)
+
+							elif 'Class' in kind or 'Struct' in kind or 'Union' in kind:
+								
+								status, lines = get_code_unit_status(row.Name, class_list)									
+								metrics.at[row.Index, 'Vulnerable Code Unit'] = status
+								metrics.at[row.Index, 'Code Unit Lines'] = serialize_json_container(lines)
+
+							else:
+								assert False, f'Unhandled code unit kind "{kind}".'
+
+					append_dataframe_to_csv(metrics, final_csv_file_path)
+
+				delete_file(temp_csv_file_path)
+
+		log.info(f'Finished running for the project "{self}".')
 
 	def split_and_update_metrics_in_csv_files(self):
 		""" Splits the metrics of any files affected by this project's vulnerabilities, updates them with new metrics, and saves them to a CSV file. """
 
-		for csv_path in self.find_output_csv_files('metrics'):
+		for csv_path in self.iterate_over_output_csv_files('metrics'):
 
 			log.info(f'Splitting and updating metrics for the project "{self}" using the information in "{csv_path}".')
 
@@ -1365,7 +1859,7 @@ class Project:
 							elif aggregation_type == 'Max':
 								result = metrics_in_column.max()
 							else:
-								assert False
+								assert False, f'Unhandled aggregation function "{aggregation_type}".'
 
 							# Every value in the output file must be an integer.
 							result = round(result)
@@ -1398,7 +1892,7 @@ class Project:
 				elif 'Class' in kind or 'Struct' in kind or 'Union' in kind:
 					pass
 				else:
-					assert False
+					assert False, f'Unhandled code unit kind "{kind}".'
 
 			##########
 
@@ -1413,10 +1907,83 @@ class Project:
 
 				code_unit_metrics.to_csv(csv_file_path, index=False)
 
-			write_code_unit_csv('File', 'file-metrics')
-			write_code_unit_csv('Function', 'function-metrics')
-			write_code_unit_csv('Class|Struct|Union', 'class-metrics')
-			
+			write_code_unit_csv(r'File', 'file-metrics')
+			write_code_unit_csv(r'Function', 'function-metrics')
+			write_code_unit_csv(r'Class|Struct|Union', 'class-metrics')
+
+		log.info(f'Finished running for the project "{self}".')
+
+	####################################################################################################
+	
+	"""
+		Methods used to generate security alerts using any files affected by a project's vulnerabilities.
+	"""
+
+	def generate_and_save_alerts_to_csv_file(self):
+		""" Generates the security alerts of any files affected by this project's vulnerabilities and saves them to a CSV file. """
+
+		cppcheck = CppcheckSat(self)
+
+		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
+
+			log.info(f'Generating the alerts for the project "{self}" using the information in "{affected_csv_path}".')
+
+			temp_csv_path = replace_in_filename(affected_csv_path, 'affected-files', 'temp-cppcheck')
+			final_csv_path = replace_in_filename(affected_csv_path, 'affected-files', 'alerts-cppcheck')
+
+			delete_file(temp_csv_path)
+			delete_file(final_csv_path)
+
+			for (commit_hash, is_commit_vulnerable, full_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
+
+				cppcheck_success = cppcheck.generate_project_alerts(full_file_path_list, temp_csv_path)
+
+				if cppcheck_success:
+					alerts = pd.read_csv(temp_csv_path, dtype=str)
+
+					alerts.insert(0, 'Vulnerable Commit', None)
+					alerts.insert(1, 'Commit Hash', None)
+					alerts.insert(2, 'Affected Functions', None)
+					alerts.insert(3, 'Affected Classes', None)
+					alerts.insert(4, 'Vulnerable File', None)
+
+					alerts['Vulnerable Commit'] = 'Yes' if is_commit_vulnerable else 'No'
+					alerts['Commit Hash'] = commit_hash
+					
+					for row in alerts.itertuples():
+						
+						if pd.isna(row.File) or pd.isna(row.Line):
+							log.warning('The following alert is missing its file or line number: ' + row)
+							continue
+						# Exclude any code units that are associated with a file that was not changed in this commit.
+						elif row.File not in relative_file_path_list:
+							continue
+
+						function_list = file_path_to_functions[row.File]
+						class_list = file_path_to_classes[row.File]
+						alert_lines = [int(row.Line), int(row.Line)]
+
+						affected_function_list = []
+						affected_class_list = []
+
+						for unit in function_list:
+							if check_range_overlap(unit['Lines'], alert_lines):
+								affected_function_list.append(unit)
+
+						for unit in class_list:
+							if check_range_overlap(unit['Lines'], alert_lines):
+								affected_class_list.append(unit)
+
+						alerts.at[row.Index, 'Affected Functions'] = serialize_json_container(affected_function_list)
+						alerts.at[row.Index, 'Affected Classes'] = serialize_json_container(affected_class_list)
+						alerts.at[row.Index, 'Vulnerable File'] = row[1]
+
+					append_dataframe_to_csv(alerts, final_csv_path)
+
+				delete_file(temp_csv_path)
+
+		log.info(f'Finished running for the project "{self}".')
+
 ####################################################################################################
 
 class MozillaProject(Project):
@@ -1517,7 +2084,7 @@ class MozillaProject(Project):
 
 					# Change the format of specific fields so they're consistent with the rest of the CSV file.
 					if key == 'Announced':
-						value = change_datetime_string_format(value, '%B %d, %Y', '%Y-%m-%d', 'en_US')
+						value = change_datetime_string_format(value, '%B %d, %Y', '%Y-%m-%d', 'en_US.UTF-8')
 					elif key == 'Impact':
 						value = value.title()
 					elif key == 'Products':
@@ -1768,113 +2335,196 @@ class GlibcProject(Project):
 class Sat():
 	""" Represents a third-party static analysis tool (SAT) and allows the execution of its commands. """
 
+	config: dict
+
 	name: str
 	executable_path: str
 	version: Optional[str]
 
-	SAT_CONFIG: dict = SCRAPING_CONFIG['sats']
+	project: Project
 
-	def __init__(self, name: str, executable_path: Optional[str] = None):
+	def __init__(self, name: str, project: Project):
+
+		self.config = SCRAPING_CONFIG['sats'][name]
 		self.name = name
-		self.executable_path = executable_path or Sat.SAT_CONFIG[name]['executable_path']
+		self.executable_path = self.config['executable_path']
 		self.version = None
+		self.project = project
 
 	def __str__(self):
 		return self.name
+
+	def get_version(self) -> str:
+		""" Gets the tool's version number. """
+		return self.version or 'Unknown'
 
 	def run(self, *args) -> Tuple[bool, str]:
 		""" Runs the tool with a series of command line arguments. """
 
 		arguments = [self.executable_path] + [arg for arg in args]
 		result = subprocess.run(arguments, capture_output=True, text=True)
+		success = result.returncode == 0
 
-		return (result.stdout != '', result.stdout)
+		if not success:
+			command_linesuments = ' '.join(arguments)
+			error_message = result.stderr or result.stdout
+			log.error(f'Failed to run the command "{command_linesuments}" with the error code {result.returncode} and the error message "{error_message}".')
 
-	def get_version(self) -> str:
-		""" Gets the tool's version number. """
-		return self.version or 'Unknown'
+		return (success, result.stdout)
 
 ####################################################################################################
 
 class UnderstandSat(Sat):
 	""" Represents the Understand tool, which is used to generate software metrics given a project's source files. """
 
-	project: Project
-	database_path: Optional[str]
-
-	def __init__(self, project: Project, executable_path: Optional[str] = None):
-		super().__init__('Understand', executable_path)
+	def __init__(self, project: Project):
+		super().__init__('Understand', project)
 		
 		version_success, build_number = self.run('version')
 		if version_success:
 			build_number = re.findall(r'\d+', build_number)[0]
 			self.version = build_number
 
-		self.project = project
-		self.database_path = None
+	def generate_project_metrics(self, file_path_list: list, output_csv_path: str) -> bool:
+		""" Generates the project's metrics using the files and any other options defined in the database directory. """
+	
+		"""
+			Understand Metrics Settings:
+			- WriteColumnTitles				on/off (default on)
+			- ShowFunctionParameterTypes	on/off (default off)
+			- ShowDeclaredInFile			on/off (default off)
+			- FileNameDisplayMode			NoPath/FullPath/RelativePath (default NoPath)
+			- DeclaredInFileDisplayMode		NoPath/FullPath/RelativePath (default NoPath)
+			- OutputFile					<CSV File Path> (default "<Database Name>.csv")
+			
+			These were listed using the command: und list -all settings <Database Name>
+		"""
 
-	"""
-		Understand Metrics Settings:
-		- WriteColumnTitles				on/off (default on)
-		- ShowFunctionParameterTypes	on/off (default off)
-		- ShowDeclaredInFile			on/off (default off)
-		- FileNameDisplayMode			NoPath/FullPath/RelativePath (default NoPath)
-		- DeclaredInFileDisplayMode		NoPath/FullPath/RelativePath (default NoPath)
-		- OutputFile					<CSV File Path> (default "<Database Name>.csv")
-		
-		These were listed using the command: und list -all settings <Database Name>
-	"""
-
-	def create_project_database(self, output_csv_path: str) -> bool:
-		""" Creates the tool's project database directory with a set of execution options. """
-
-		self.database_path = os.path.join(self.project.output_directory_path, self.project.short_name + '.und')
+		database_path = os.path.join(self.project.output_directory_path, self.project.short_name + '.und')
 
 		success, _ = self.run	(
-									'-quiet', '-db', self.database_path,
-									'create', '-languages', 'c++',
+									'-quiet', '-db', database_path,
+									'create', '-languages', 'c++', # This value cannot be self.project.language since only "c++" is accepted.
 									'settings', '-metrics', 'all',
 												'-metricsWriteColumnTitles', 'on',
 												'-metricsShowFunctionParameterTypes', 'on',
 												'-metricsShowDeclaredInFile', 'on',
 												'-metricsFileNameDisplayMode', 'NoPath',
-												'-metricsDeclaredInFileDisplayMode', 'RelativePath',
-												'-metricsOutputFile', output_csv_path
-								)
+												'-metricsDeclaredInFileDisplayMode', 'FullPath', # See below.
+												'-metricsOutputFile', output_csv_path,
 
-		return success
-
-	def add_files_to_project_database(self, file_path_list: list) -> bool:
-		""" Adds a list of files to the project's database directory. """
-
-		success, _ = self.run	(
-									'-quiet', '-db', self.database_path,
-									'add', *file_path_list
-								)
-
-		return success
-
-	def generate_project_metrics(self) -> bool:
-		""" Generates the project's metrics using the files and any other options defined in the database directory. """
-				
-		success, _ = self.run	(
-									'-quiet', '-db', self.database_path,
+									'add', *file_path_list,
 									'analyze',
 									'metrics'
 								)
 
-		return success
+		if success:
+			
+			metrics = pd.read_csv(output_csv_path, dtype=str)
 
-	def delete_project_database(self) -> bool:
-		""" Deletes the tool's project database directory. """
+			# Ideally, we'd just set the "DeclaredInFileDisplayMode" option to "RelativePath" and skip this step. However, doing that would
+			# lead to a few cases where the relative path to the file in the repository was incorrect.
+			metrics['File'] = metrics['File'].map(lambda x: self.project.get_relative_path_in_repository(x) if pd.notna(x) else x)
 
-		success = False
-		if self.database_path is not None:
-			success = delete_directory(self.database_path)
-			self.database_path = None
+			metrics.to_csv(output_csv_path, index=False)
+
+		delete_directory(database_path)
+
 		return success
 
 ####################################################################################################
 
+class CppcheckSat(Sat):
+	""" Represents the Cppcheck tool, which is used to generate security alerts given a project's source files. """
+
+	RULE_TO_CWE: dict = {}
+	mapped_rules_to_cwes: bool = False
+
+	def __init__(self, project: Project):
+		super().__init__('Cppcheck', project)
+
+		version_success, version_number = self.run('--version')
+		if version_success:
+			version_number = re.findall(r'\d+\.\d+', version_number)[0]
+			self.version = version_number
+
+		if not CppcheckSat.mapped_rules_to_cwes:
+			CppcheckSat.mapped_rules_to_cwes = True
+
+			with open('cppcheck_error_list.xml') as xml_file:
+				error_soup = bs4.BeautifulSoup(xml_file, 'xml')
+
+			if error_soup is not None:
+				error_list = error_soup.find_all('error', id=True, cwe=True)				
+				CppcheckSat.RULE_TO_CWE = {error['id']: error['cwe'] for error in error_list}
+			else:
+				log.error(f'Failed to map a list of SAT rules to their CWE values.')
+
+	def generate_project_alerts(self, file_path_list: list, output_csv_path: str) -> bool:
+		""" Generates the project's alerts given list of files. """
+
+		if self.project.include_directory_path is not None:
+			include_arguments = ['-I', self.project.include_directory_path]
+		else:
+			include_arguments = ['--suppress=missingInclude']
+
+		# The argument "--enable=error" is not necessary since it's enabled by default.
+		# @Future: Should "--force" be used? If so, remove "--suppress=toomanyconfigs".
+		success, _ = self.run	(
+									'--quiet',
+									'--enable=warning,portability', '--inconclusive',
+									f'--language={self.project.language}', *include_arguments,
+									'--suppress=toomanyconfigs', '--suppress=unknownMacro', '--suppress=unmatchedSuppression',
+									
+									'--template="{file}","{line}","{column}","{severity}","{id}","{cwe}","{message}"',
+									f'--output-file={output_csv_path}',
+									*file_path_list
+								)
+
+		if success:
+			alerts = pd.read_csv(output_csv_path, header=None, names=['File', 'Line', 'Column', 'Severity', 'Rule', 'CWE', 'Message'], dtype=str)
+
+			alerts['File'] = alerts['File'].map(lambda x: None if x == 'nofile' else self.project.get_relative_path_in_repository(x))
+			alerts['Line'] = alerts['Line'].replace({'0': None})
+			alerts['Column'] = alerts['Column'].replace({'0': None})
+			alerts['CWE'] = alerts['CWE'].replace({'0': None})
+
+			alerts.to_csv(output_csv_path, index=False)
+
+		return success
+
+	def read_and_convert_output_csv_in_default_format(self, csv_path: str) -> pd.DataFrame:
+		""" Reads a CSV file generated using Cppcheck's default output parameters and converts it to a more convenient format. """
+
+		# The default CSV files generated by Cppcheck don't quote values with commas correctly.
+		# This means that pd.read_csv() would fail because some lines have more columns than others.
+		# We'll read each line ourselves and interpret anything after the fourth column as being part
+		# of the "Message" column.
+		dictionary_list = []
+		with open(csv_path, 'r') as csv_file:
+			
+			for line in csv_file:
+				filepath_and_line, severity, rule, message = line.split(',', 3)
+				file_path, line = filepath_and_line.rsplit(':', 1)
+				message = message.rstrip()
+
+				dictionary_list.append({'File': file_path, 'Line': line, 'Severity': severity, 'Rule': rule, 'Message': message})
+
+		alerts = pd.DataFrame.from_dict(dictionary_list, dtype=str)
+
+		alerts['File'] = alerts['File'].map(lambda x: None if x == 'nofile' else self.project.get_relative_path_in_repository(x))
+		alerts['CWE'] = alerts['Rule'].map(lambda x: CppcheckSat.RULE_TO_CWE.get(x, ''))
+		
+		return alerts
+
+
+####################################################################################################
+
 if __name__ == '__main__':
-	pass
+	project_list = Project.get_project_list_from_config()
+
+	Project.debug_ensure_all_project_repositories_were_loaded(project_list)
+
+	for project in project_list:
+		if project.short_name == 'kernel':
+			project.find_and_save_affected_files_to_csv_file()

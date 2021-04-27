@@ -8,7 +8,9 @@
 			"vendor_id": 72,
 			"product_id": 767,
 			"url_pattern": "sourceware",
-			"master_branch": "master"
+			"master_branch": "master",
+			"language": "c",
+			"include_directory_path": "include"
 		},
 
 		"Apache HTTP Server":
@@ -18,7 +20,9 @@
 			"vendor_id": 45,
 			"product_id": 66,
 			"url_pattern": "apache",
-			"master_branch": "trunk"
+			"master_branch": "trunk",
+			"language": "c",
+			"include_directory_path": "include"
 		},
 
 		"Xen":
@@ -28,7 +32,9 @@
 			"vendor_id": 6276,
 			"product_id": null,
 			"url_pattern": "xen",
-			"master_branch": "master"
+			"master_branch": "master",
+			"language": "c",
+			"include_directory_path": "xen/include"
 		},
 
 		"Linux Kernel":
@@ -38,7 +44,9 @@
 			"vendor_id": 33,
 			"product_id": 47,
 			"url_pattern": "linux|kernel|redhat",
-			"master_branch": "master"
+			"master_branch": "master",
+			"language": "c",
+			"include_directory_path": "include"
 		},
 
 		"Mozilla":
@@ -48,7 +56,9 @@
 			"vendor_id": 452,
 			"product_id": null,
 			"url_pattern": "mozilla",
-			"master_branch": "master"
+			"master_branch": "master",
+			"language": "c++",
+			"include_directory_path": null
 		}
 	},
 

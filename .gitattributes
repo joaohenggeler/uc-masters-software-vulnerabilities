@@ -3,12 +3,14 @@
 *.py text
 *.sql text
 
+*.txt text
 *.csv text
-
-*.config text
+*.xml text
+*.json text
 
 *.bat text eol=crlf
 *.sh text eol=lf
 
 *.jpg binary
 *.png binary
+*.svg binary
