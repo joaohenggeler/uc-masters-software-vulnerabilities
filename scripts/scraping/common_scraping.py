@@ -20,6 +20,7 @@ import time
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime, timezone
+from math import ceil
 from string import Template
 from typing import Any, Callable, Iterator, List, Optional, Pattern, Tuple, Union
 from urllib.parse import urlsplit, parse_qsl
@@ -33,10 +34,16 @@ import requests
 
 ####################################################################################################
 
+def get_current_timestamp() -> str:
+	""" Gets the current timestamp as a string using the format "YYYYMMDDhhmmss". """
+	return datetime.now(tz=timezone.utc).strftime('%Y%m%d%H%M%S')
+
+CURRENT_TIMESTAMP = get_current_timestamp()
+
 def add_log_file_handler(log: logging.Logger):
 	""" Creates and adds a handle for logging information to a file. """
 
-	handler = logging.FileHandler('scraping.log', 'w', 'utf-8')
+	handler = logging.FileHandler(f'scraping-{CURRENT_TIMESTAMP}.log', 'w', 'utf-8')
 	handler.setLevel(logging.DEBUG)
 	formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(funcName)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 	handler.setFormatter(formatter)
@@ -127,10 +134,6 @@ except Exception as error:
 	log.error(f'Failed to load libclang with the error: {repr(error)}')
 
 ####################################################################################################
-
-def get_current_timestamp() -> str:
-	""" Gets the current timestamp as a string using the format "YYYYMMDDhhmmss". """
-	return datetime.now(tz=timezone.utc).strftime('%Y%m%d%H%M%S')
 
 def format_unix_timestamp(timestamp: str) -> Optional[str]:
 	""" Formats a Unix timestamp using the format "YYYY-MM-DD hh:mm:ss". """
@@ -834,8 +837,6 @@ class Cve:
 class Project:
 	""" Represents a software project, its repository, and the vulnerabilities it's affected by. """
 
-	TIMESTAMP: str = get_current_timestamp()
-
 	full_name: str
 	short_name: str
 	database_id: int
@@ -849,6 +850,7 @@ class Project:
 	include_directory_path: Optional[str]
 
 	SOURCE_FILE_EXTENSIONS: list = ['c', 'cpp', 'cc', 'cxx', 'c++', 'cp', 'h', 'hpp', 'hh', 'hxx']
+	SOURCE_FILE_EXTENSIONS_WITH_WILDCARDS: list = ['*.' + extension for extension in SOURCE_FILE_EXTENSIONS] 
 
 	repository: git.Repo
 
@@ -884,7 +886,7 @@ class Project:
 
 		used_branches = 'all-branches' if self.scrape_all_branches else 'master-branch'
 
-		csv_file_path = csv_prefix + f'{self.short_name}-{used_branches}-{Project.TIMESTAMP}.csv'
+		csv_file_path = csv_prefix + f'{self.short_name}-{used_branches}-{CURRENT_TIMESTAMP}.csv'
 		self.csv_file_path_template = Template(csv_file_path)
 
 	def __str__(self):
@@ -993,15 +995,14 @@ class Project:
 		if self.repository is None:
 			return []
 
-		hash_list = []
-
-		# git log --all --format=oneline --grep="[REGEX]" --regexp-ignore-case --extended-regexp
-		# The --extended-regexp option enables the following special characters: ? + { | ( )
-		log_result = self.repository.git.log(all=True, format='oneline', grep=grep_pattern, regexp_ignore_case=True, extended_regexp=True)
-		
-		for line in log_result.splitlines():
-			hash, title = line.split(maxsplit=1)
-			hash_list.append(hash)
+		try:
+			# git log --all --format="%H" --grep="[REGEX]" --regexp-ignore-case --extended-regexp
+			# The --extended-regexp option enables the following special characters: ? + { | ( )
+			log_result = self.repository.git.log(all=True, format='%H', grep=grep_pattern, regexp_ignore_case=True, extended_regexp=True)
+			hash_list = log_result.splitlines()
+		except git.exc.GitCommandError as error:
+			hash_list = []
+			log.error(f'Failed to find commit hashes using the pattern "{grep_pattern}" with the error: {repr(error)}')
 
 		return hash_list
 
@@ -1053,7 +1054,7 @@ class Project:
 			cve.git_commit_hashes = [hash for hash in cve.git_commit_hashes if self.is_git_commit_hash_in_master_branch(hash)]
 
 	def sort_git_commit_hashes_topologically(self, hash_list: List[str]) -> List[str]:
-		""" Sorts a list of Git commit hashes topologically. """
+		""" Sorts a list of Git commit hashes topologically from oldest to newest. """
 
 		if self.repository is None:
 			return []
@@ -1062,32 +1063,49 @@ class Project:
 			return hash_list
 
 		try:
-			# git rev-list --topo-order --reverse --no-walk=sorted [HASH 1] [HASH 2] [...] [HASH N]
+			# git rev-list --topo-order --reverse --no-walk=sorted [HASH 1] [...] [HASH N]
 			rev_list_result = self.repository.git.rev_list(*hash_list, topo_order=True, reverse=True, no_walk='sorted')
-			sorted_hash_list = [commit_hash for commit_hash in rev_list_result.splitlines()]
+			hash_list = rev_list_result.splitlines()
 
 		except git.exc.GitCommandError as error:
 			# If there's no such commit in the repository.
 			log.error(f'Found one or more invalid commits while trying to sort the commit hashes topologically with the error: {repr(error)}')
-			sorted_hash_list = []
+			hash_list = []
 
-		return sorted_hash_list
+		return hash_list
+
+	def filter_git_commit_hashes_by_source_file_extensions(self, hash_list: List[str]) -> List[str]:
+		""" Filters a list of Git commit hashes so that only commits related to C/C++ files remain."""
+
+		if self.repository is None:
+			return []
+
+		try:
+			# git rev-list [HASH 1] [...] [HASH N] -- [FILE EXTENSION 1] [...] [FILE EXTENSION N]
+			rev_list_result = self.repository.git.rev_list(*hash_list, '--', *Project.SOURCE_FILE_EXTENSIONS_WITH_WILDCARDS, no_walk='unsorted')
+			hash_list = rev_list_result.splitlines()
+
+		except git.exc.GitCommandError as error:
+			hash_list = []
+			log.error(f'Failed to filter the commit hashes with the error: {repr(error)}')
+			
+		return hash_list
 
 	GIT_DIFF_LINE_NUMBERS_REGEX: Pattern = re.compile(r'^@@ -(?P<from_begin>\d+)(,(?P<from_total>\d+))? \+(?P<to_begin>\d+)(,(?P<to_total>\d+))? @@.*')
 
-	def find_changed_files_and_lines_in_parent_git_commit(self, commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
+	def find_changed_source_files_and_lines_in_parent_git_commit(self, commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
 		""" Finds the paths and modified lines of any C/C++ source files that were changed since the previous commit."""
 
 		if self.repository is None:
 			return
 
 		try:
-			# git diff --unified=0 [HASH FROM] [HASH TO] --
-			# For the parent commit: git diff --unified=0 [HASH]^ [HASH] --
-			diff_result = self.repository.git.diff(commit_hash + '^', commit_hash, '--', unified=0)
+			# git diff --unified=0 [HASH FROM] [HASH TO] -- [FILE EXTENSION 1] [...] [FILE EXTENSION N]
+			# For the parent commit: git diff --unified=0 [HASH]^ [HASH] -- [FILE EXTENSION 1] [...] [FILE EXTENSION N]
+			diff_result = self.repository.git.diff(commit_hash + '^', commit_hash, '--', *Project.SOURCE_FILE_EXTENSIONS_WITH_WILDCARDS, unified=0)
 
 		except git.exc.GitCommandError as error:
-			log.error(f'Failed to find the changes from the commit "{commit_hash}" with the error: {repr(error)}')
+			log.error(f'Failed to find the changed sources files and lines from the commit "{commit_hash}" with the error: {repr(error)}')
 			return
 
 		last_file_path: Optional[str] = None
@@ -1111,12 +1129,7 @@ class Project:
 			if line.startswith('+++ '):
 
 				yield from yield_last_file_if_it_exists()
-
 				_, last_file_path = line.split('/', 1)
-				is_source_file = any(has_file_extension(last_file_path, file_extension) for file_extension in Project.SOURCE_FILE_EXTENSIONS) # type: ignore[arg-type]
-
-				if not is_source_file:
-					last_file_path = None
 				
 			# E.g. "@@ -451,2 +428,2 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,"
 			# E.g. "@@ -263 +255,0 @@ do_test (int argc, char *argv[])"
@@ -1169,6 +1182,44 @@ class Project:
 			+  NS_NAMED_LITERAL_STRING(proxyText, "EnterUserPasswordForProxy");
 			+  NS_NAMED_LITERAL_STRING(originText, "EnterUserPasswordForRealm");
 		"""
+
+	def find_changed_source_files_in_parent_git_commit(self, commit_hash: str) -> Iterator[str]:
+		"""" Finds the paths of any C/C++ source files that were changed since the previous commit."""
+
+		if self.repository is None:
+			return
+
+		try:
+			# git diff --name-only [HASH]^ [HASH] -- [FILE EXTENSION 1] [...] [FILE EXTENSION N]
+			diff_result = self.repository.git.diff(commit_hash + '^', commit_hash, '--', *Project.SOURCE_FILE_EXTENSIONS_WITH_WILDCARDS, name_only=True)
+			
+			for file_path in diff_result.splitlines():
+				yield file_path
+
+		except git.exc.GitCommandError as error:
+			log.error(f'Failed to find the changed sources files from the commit "{commit_hash}" with the error: {repr(error)}')
+			return
+
+	def list_all_source_file_git_commit_hashes(self) -> List[str]:
+		""" Lists all Git commit hashes between two dates where at least one C/C++ file was changed. This list is ordered topologically from oldest to newest. """
+
+		if self.repository is None:
+			return []
+
+		after_date = SCRAPING_CONFIG['neutral_files_after_commit_date']
+		before_date = SCRAPING_CONFIG['neutral_files_before_commit_date']
+
+		try:
+			# git log --topo-order --reverse --do-walk --after=[DATE 1] --before=[DATE 2] --format="%H" -- [FILE EXTENSION 1] [...] [FILE EXTENSION N]
+			log_result = self.repository.git.log(	'--', *Project.SOURCE_FILE_EXTENSIONS_WITH_WILDCARDS,
+													topo_order=True, reverse=True, do_walk=True, after=after_date, before=before_date, format='%H')
+			hash_list = log_result.splitlines()
+
+		except git.exc.GitCommandError as error:
+			hash_list = []
+			log.error(f'Failed to list all commit hashes between "{after_date}" and "{before_date}" with the error: {repr(error)}')
+
+		return hash_list
 
 	def find_last_changed_git_commit_hashes(self, commit_hash: str, file_path: str) -> List[str]:
 		""" Finds any previous Git commit hashes where a given file was last changed. """
@@ -1480,10 +1531,10 @@ class Project:
 
 		return (function_list, class_list)
 
-	def find_and_save_affected_files_to_csv_file(self):
+	def find_and_save_affected_files_to_csv_file(self) -> None:
 		""" Finds any files affected by this project's vulnerabilities and saves them to a CSV file. """
 
-		WRITE_CSV_FREQUENCY = 10
+		CSV_WRITE__FREQUENCY = SCRAPING_CONFIG['affected_files_csv_write_frequency']
 
 		for csv_path in self.iterate_over_output_csv_files('cve'):
 
@@ -1497,8 +1548,12 @@ class Project:
 
 			git_commit_hashes = cves['Git Commit Hashes'].tolist()
 			neutral_commit_list = [commit_hash for hash_list in git_commit_hashes for commit_hash in hash_list]
+			log.info(f'Found {len(neutral_commit_list)} total neutral commits.')
+
+			neutral_commit_list = self.filter_git_commit_hashes_by_source_file_extensions(neutral_commit_list)
 			neutral_commit_list = self.sort_git_commit_hashes_topologically(neutral_commit_list)
-			
+			log.info(f'Processing {len(neutral_commit_list)} neutral commits after filtering and sorting.')
+
 			affected_files = pd.DataFrame(columns=[	'File Path', 'Topological Index', 'Parent Count',
 													
 													'Vulnerable Commit Hash', 'Vulnerable Tag Name', 'Vulnerable Author Date',
@@ -1509,27 +1564,26 @@ class Project:
 													
 													'CVEs', 'Last Change Commit Hashes'])
 
-			topological_index = 0
-			for neutral_commit_hash in neutral_commit_list:
+			for topological_index, neutral_commit_hash in enumerate(neutral_commit_list):
 
 				vulnerable_commit_list = self.find_parent_git_commit_hashes(neutral_commit_hash)
 				vulnerable_commit_list = self.sort_git_commit_hashes_topologically(vulnerable_commit_list)
 
 				neutral_tag_name = self.find_tag_name_from_git_commit_hash(neutral_commit_hash)
-				neutral_commit_date = self.find_author_date_from_git_commit_hash(neutral_commit_hash)
+				neutral_author_date = self.find_author_date_from_git_commit_hash(neutral_commit_hash)
 
 				is_neutral_commit = cves['Git Commit Hashes'].map(lambda hash_list: neutral_commit_hash in hash_list)
 				cve_list = cves.loc[is_neutral_commit, 'CVE'].tolist()
 				cve_list = serialize_json_container(cve_list)
 
-				has_source_file = False
-				for file_path, vulnerable_changed_lines, neutral_changed_lines in self.find_changed_files_and_lines_in_parent_git_commit(neutral_commit_hash):
-
-					has_source_file = True
+				vulnerable_changed_lines: Any
+				neutral_changed_lines: Any
+				for file_path, vulnerable_changed_lines, neutral_changed_lines in self.find_changed_source_files_and_lines_in_parent_git_commit(neutral_commit_hash):
 
 					vulnerable_changed_lines = serialize_json_container(vulnerable_changed_lines)
 					neutral_changed_lines = serialize_json_container(neutral_changed_lines)
 
+					last_change_commit_list: Any
 					last_change_commit_list = self.find_last_changed_git_commit_hashes(neutral_commit_hash, file_path)
 					last_change_commit_list = serialize_json_container(last_change_commit_list)
 
@@ -1537,7 +1591,7 @@ class Project:
 
 						parent_count = len(vulnerable_commit_list)
 						vulnerable_tag_name = self.find_tag_name_from_git_commit_hash(vulnerable_commit_hash)
-						vulnerable_commit_date = self.find_author_date_from_git_commit_hash(vulnerable_commit_hash)
+						vulnerable_author_date = self.find_author_date_from_git_commit_hash(vulnerable_commit_hash)
 
 						row = {
 								'File Path': file_path,
@@ -1546,12 +1600,12 @@ class Project:
 
 								'Vulnerable Commit Hash': vulnerable_commit_hash,
 								'Vulnerable Tag Name': vulnerable_tag_name,
-								'Vulnerable Author Date': vulnerable_commit_date,
+								'Vulnerable Author Date': vulnerable_author_date,
 								'Vulnerable Changed Lines': vulnerable_changed_lines,
 
 								'Neutral Commit Hash': neutral_commit_hash,
 								'Neutral Tag Name': neutral_tag_name,
-								'Neutral Author Date': neutral_commit_date,
+								'Neutral Author Date': neutral_author_date,
 								'Neutral Changed Lines': neutral_changed_lines,
 
 								'CVEs': cve_list,
@@ -1560,14 +1614,10 @@ class Project:
 
 						affected_files = affected_files.append(row, ignore_index=True)
 
-				if has_source_file:
-
-					# Update the results on disk periodically.
-					if topological_index % WRITE_CSV_FREQUENCY == 0:
-						log.info(f'Updating the results with basic commit information for topological index {topological_index}...')
-						affected_files.to_csv(affected_files_csv_path, index=False)
-
-					topological_index += 1
+				# Update the results on disk periodically.
+				if topological_index % CSV_WRITE__FREQUENCY == 0:
+					log.info(f'Updating the results with basic commit information for topological index {topological_index}...')
+					affected_files.to_csv(affected_files_csv_path, index=False)
 
 			# Since we need to parse the vulnerable and neutral version of each file, it's more convenient to perform
 			# the Git checkouts after iterating over every commit.
@@ -1606,11 +1656,83 @@ class Project:
 				checkout_affected_files_and_find_code_units(neutral_commit_hash, False)
 
 				# Update the results on disk periodically.
-				if topological_index % WRITE_CSV_FREQUENCY == 0:
+				if topological_index % CSV_WRITE__FREQUENCY == 0:
 					log.info(f'Updating the results with function and class information for topological index {topological_index}...')
 					affected_files.to_csv(affected_files_csv_path, index=False)
 
 			affected_files.to_csv(affected_files_csv_path, index=False)
+			self.hard_reset_git_head()
+
+		log.info(f'Finished running for the project "{self}".')
+
+	def find_and_save_neutral_files_to_csv_file(self) -> None:
+		""" Finds any files that are not affected by this project's vulnerabilities and saves them to a CSV file. """
+
+		CSV_WRITE__FREQUENCY = SCRAPING_CONFIG['neutral_files_csv_write_frequency']
+
+		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
+
+			neutral_files_csv_path = replace_in_filename(affected_csv_path, 'affected-files', f'neutral-files')
+
+			log.info(f'Finding affected neutral files for the project "{self}" using the information in "{affected_csv_path}".')
+			
+			affected_commits = pd.read_csv(affected_csv_path, usecols=['Neutral Commit Hash'], dtype=str)
+			affected_commits.drop_duplicates(inplace=True)
+
+			commit_list = self.list_all_source_file_git_commit_hashes()
+			log.info(f'Found {len(commit_list)} total commits.')
+			
+			commit_list = [commit_hash for commit_hash in commit_list if commit_hash not in affected_commits]
+			log.info(f'Processing {len(commit_list)} neutral commits.')
+
+			neutral_files = pd.DataFrame(columns=[	'File Path', 'Topological Index',
+													'Neutral Commit Hash', 'Neutral Tag Name', 'Neutral Author Date',
+													'Neutral Changed Lines', 'Neutral File Functions', 'Neutral File Classes'])
+			
+			for topological_index, commit_hash in enumerate(commit_list):
+	
+				tag_name = self.find_tag_name_from_git_commit_hash(commit_hash)
+				author_date = self.find_author_date_from_git_commit_hash(commit_hash)
+
+				checkout_success = self.checkout_entire_git_commit(commit_hash)
+				if not checkout_success:
+					log.error(f'Failed to checkout the commit {commit_hash}.')
+
+				changed_lines: Any
+				for file_path, _, changed_lines in self.find_changed_source_files_and_lines_in_parent_git_commit(commit_hash):
+
+					function_list: Any = []
+					class_list: Any = []
+
+					if checkout_success:
+						function_list, class_list = self.find_code_units_in_file(file_path)
+
+						for unit in function_list + class_list:
+							was_unit_changed = any(check_range_overlap(unit['Lines'], line_range) for line_range in changed_lines)
+							unit.update({'Changed': 'Yes' if was_unit_changed else 'No'})
+
+					changed_lines = serialize_json_container(changed_lines)
+					function_list = serialize_json_container(function_list)
+					class_list = serialize_json_container(class_list)
+
+					row = {
+								'File Path': file_path,
+								'Topological Index': topological_index,
+								'Neutral Commit Hash': commit_hash,
+								'Neutral Tag Name': tag_name,
+								'Neutral Author Date': author_date,
+								'Neutral Changed Lines': changed_lines,
+								'Neutral File Functions': function_list,
+								'Neutral File Classes': class_list
+					}
+
+					neutral_files = neutral_files.append(row, ignore_index=True)
+
+				if topological_index % CSV_WRITE__FREQUENCY == 0:
+					log.info(f'Updating the results for topological index {topological_index} in "{neutral_files_csv_path}"...')
+					neutral_files.to_csv(neutral_files_csv_path, index=False)
+
+			neutral_files.to_csv(neutral_files_csv_path, index=False)
 			self.hard_reset_git_head()
 
 		log.info(f'Finished running for the project "{self}".')
@@ -1721,7 +1843,7 @@ class Project:
 
 			for (commit_hash, is_commit_vulnerable, full_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
 
-				success = understand.generate_project_metrics(full_file_path_list, temp_csv_file_path)
+				success = understand.generate_project_metrics(True, temp_csv_file_path)
 
 				if success:
 
@@ -1954,7 +2076,7 @@ class Project:
 
 			for (commit_hash, is_commit_vulnerable, full_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes) in self.iterate_and_checkout_affected_files_in_repository(affected_csv_path):
 
-				cppcheck_success = cppcheck.generate_project_alerts(full_file_path_list, temp_csv_path)
+				cppcheck_success = cppcheck.generate_project_alerts(True, temp_csv_path)
 
 				if cppcheck_success:
 					alerts = pd.read_csv(temp_csv_path, dtype=str)
@@ -2395,15 +2517,22 @@ class Sat():
 class UnderstandSat(Sat):
 	""" Represents the Understand tool, which is used to generate software metrics given a project's source files. """
 
+	use_new_database_format: bool
+	database_extension: str
+
 	def __init__(self, project: Project):
 		super().__init__('Understand', project)
 		
 		version_success, build_number = self.run('version')
 		if version_success:
+			
 			build_number = re.findall(r'\d+', build_number)[0]
 			self.version = build_number
+			
+			self.use_new_database_format = int(build_number) >= 1039 # Understand 6.0 or later.
+			self.database_extension = '.und' if self.use_new_database_format else '.udb'
 
-	def generate_project_metrics(self, file_path_list: list, output_csv_path: str) -> bool:
+	def generate_project_metrics(self, file_path_list: Union[list, bool], output_csv_path: str) -> bool:
 		""" Generates the project's metrics using the files and any other options defined in the database directory. """
 	
 		"""
@@ -2418,7 +2547,10 @@ class UnderstandSat(Sat):
 			These were listed using the command: und list -all settings <Database Name>
 		"""
 
-		database_path = os.path.join(self.project.output_directory_path, self.project.short_name + '.und')
+		database_path = os.path.join(self.project.output_directory_path, self.project.short_name + self.database_extension)
+
+		if isinstance(file_path_list, bool):
+			file_path_list = [self.project.repository_path]
 
 		success, _ = self.run	(
 									'-quiet', '-db', database_path,
@@ -2446,7 +2578,10 @@ class UnderstandSat(Sat):
 
 			metrics.to_csv(output_csv_path, index=False)
 
-		delete_directory(database_path)
+		if self.use_new_database_format:
+			delete_directory(database_path)
+		else:
+			delete_file(database_path)
 
 		return success
 
@@ -2478,13 +2613,16 @@ class CppcheckSat(Sat):
 			else:
 				log.error(f'Failed to map a list of SAT rules to their CWE values.')
 
-	def generate_project_alerts(self, file_path_list: list, output_csv_path: str) -> bool:
+	def generate_project_alerts(self, file_path_list: Union[list, bool], output_csv_path: str) -> bool:
 		""" Generates the project's alerts given list of files. """
 
 		if self.project.include_directory_path is not None:
 			include_arguments = ['-I', self.project.include_directory_path]
 		else:
 			include_arguments = ['--suppress=missingInclude']
+
+		if isinstance(file_path_list, bool):
+			file_path_list = [self.project.repository_path]
 
 		# The argument "--enable=error" is not necessary since it's enabled by default.
 		# @Future: Should "--force" be used? If so, remove "--suppress=toomanyconfigs".
@@ -2544,5 +2682,4 @@ if __name__ == '__main__':
 	Project.debug_ensure_all_project_repositories_were_loaded(project_list)
 
 	for project in project_list:
-		if project.short_name == 'kernel':
-			project.find_and_save_affected_files_to_csv_file()
+		project.find_and_save_neutral_files_to_csv_file()

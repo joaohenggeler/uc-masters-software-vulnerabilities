@@ -10,10 +10,16 @@
 	},
 
 	"ignored_projects": ["<Put zero or more project short names from the static config here>"],
-	"start_at_cve_hub_page": null,
 
 	"output_directory_path": "output",
+
+	"start_at_cve_hub_page": null,
 	"scrape_all_branches": false,
+
+	"affected_files_csv_write_frequency": 10,
+	"neutral_files_csv_write_frequency": 50,
+	"neutral_files_after_commit_date": "<YYYY-MM-DD>",
+	"neutral_files_before_commit_date": "<YYYY-MM-DD>",
 
 	"clang_lib_path": "<Replace with path>",
 
