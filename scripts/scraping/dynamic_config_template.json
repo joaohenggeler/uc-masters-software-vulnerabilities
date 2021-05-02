@@ -9,6 +9,8 @@
 		"use_random_sampling": true
 	},
 
+	"recursion_limit": null,
+
 	"ignored_projects": ["<Put zero or more project short names from the static config here>"],
 
 	"output_directory_path": "output",

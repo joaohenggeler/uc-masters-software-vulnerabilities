@@ -117,6 +117,11 @@ if DEBUG_ENABLED:
 	log.setLevel(logging.DEBUG)
 	log.debug(f'Debug mode is enabled with the following options: {DEBUG_OPTIONS}')
 
+if SCRAPING_CONFIG['recursion_limit'] is not None:
+	recursion_limit = SCRAPING_CONFIG['recursion_limit']
+	log.info(f'Changing the recursion limit from {sys.getrecursionlimit()} to {recursion_limit} at the user\'s request.')
+	sys.setrecursionlimit(recursion_limit)
+
 try:
 	clang_lib_path = SCRAPING_CONFIG['clang_lib_path']
 	log.info(f'Loading libclang from "{clang_lib_path}".')
@@ -1349,7 +1354,7 @@ class Project:
 		else:
 			first_page = SCRAPING_CONFIG.get('start_at_cve_hub_page')
 			if first_page is not None:
-				log.info(f'Starting at hub page {first_page} at the user''s request.')
+				log.info(f'Starting at hub page {first_page} at the user\'s request.')
 				page_url_list = page_url_list[first_page-1:]
 
 		for i, page_url in enumerate(page_url_list):
