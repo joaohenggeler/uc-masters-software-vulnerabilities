@@ -1213,15 +1213,22 @@ class Project:
 
 		after_date = SCRAPING_CONFIG['neutral_files_after_commit_date']
 		before_date = SCRAPING_CONFIG['neutral_files_before_commit_date']
+		
+		hash_list = []
 
 		try:
-			# git log --topo-order --reverse --do-walk --after=[DATE 1] --before=[DATE 2] --format="%H" -- [FILE EXTENSION 1] [...] [FILE EXTENSION N]
-			log_result = self.repository.git.log(	'--', *Project.SOURCE_FILE_EXTENSIONS_WITH_WILDCARDS,
-													topo_order=True, reverse=True, do_walk=True, after=after_date, before=before_date, format='%H')
-			hash_list = log_result.splitlines()
+			# git log --topo-order --reverse --do-walk --format="%H %as" -- [FILE EXTENSION 1] [...] [FILE EXTENSION N]
+			log_result = self.repository.git.log('--', *Project.SOURCE_FILE_EXTENSIONS_WITH_WILDCARDS, topo_order=True, reverse=True, do_walk=True, format='%H %as')
+			
+			for line in log_result.splitlines():
+				
+				# We have to do this manually instead of using the --after and --before options since those use
+				# the commit date, and not the author date. The dates we compare use the YYYY-MM-DD format.
+				commit_hash, date = line.split(maxsplit=1)
+				if after_date <= date <= before_date:
+					hash_list.append(commit_hash)
 
 		except git.exc.GitCommandError as error:
-			hash_list = []
 			log.error(f'Failed to list all commit hashes between "{after_date}" and "{before_date}" with the error: {repr(error)}')
 
 		return hash_list
@@ -1687,7 +1694,9 @@ class Project:
 			commit_list = self.list_all_source_file_git_commit_hashes()
 			log.info(f'Found {len(commit_list)} total commits.')
 			
-			commit_list = [commit_hash for commit_hash in commit_list if commit_hash not in affected_commits]
+			commit_series = pd.Series(commit_list)
+			is_neutral_commit = ~commit_series.isin(affected_commits['Neutral Commit Hash'])
+			commit_list = commit_series[is_neutral_commit].tolist()
 			log.info(f'Processing {len(commit_list)} neutral commits.')
 
 			neutral_files = pd.DataFrame(columns=[	'File Path', 'Topological Index',
