@@ -1,0 +1,3 @@
+Vulnerable Commit,Commit Hash,Affected Functions,Affected Classes,Vulnerable File,File,Line,Column,Severity,Rule,CWE,Message
+Yes,84c3d55cc474f9c234c023c92e2769f940d5548c,,,Yes,include/linux/uio.h,50,35,portability,arithOperationsOnVoidPointer,467,"'iter->iov->iov_base' is of type 'const void *'. When using void pointers in calculations, the behaviour is undefined."
+No,f0d1bec9d58d4c038d0ac958c9af82be6eb18045,,,No,include/linux/uio.h,50,35,portability,arithOperationsOnVoidPointer,467,"'iter->iov->iov_base' is of type 'const void *'. When using void pointers in calculations, the behaviour is undefined."
