@@ -11,7 +11,7 @@ from typing import Iterator, Optional, Tuple, Union
 from mysql.connector import MySQLConnection, Error as MySQLError # type: ignore
 from mysql.connector.cursor import MySQLCursor # type: ignore
 
-from .common import log, GLOBAL_CONFIG
+from .common import log, GLOBAL_CONFIG, DATABASE_CONFIG
 
 class Database:
 	""" Represents a connection to the software vulnerability MySQL database. """
@@ -21,12 +21,14 @@ class Database:
 
 	input_directory_path: str
 
-	def __init__(self, config: dict = GLOBAL_CONFIG['database']):
+	def __init__(self, config: dict = DATABASE_CONFIG, **kwargs):
 
 		try:
 			log.info(f'Connecting to the database with the following configurations: {config}')
 			self.connection = MySQLConnection(**config)
-			self.cursor = self.connection.cursor(dictionary=True)
+			self.cursor = self.connection.cursor(dictionary=True, **kwargs)
+
+			log.info(f'Autocommit is {self.connection.autocommit}.')
 
 			self.input_directory_path = os.path.abspath(GLOBAL_CONFIG['output_directory_path'])
 

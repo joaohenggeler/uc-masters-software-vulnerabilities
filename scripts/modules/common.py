@@ -122,6 +122,7 @@ if not GLOBAL_CONFIG:
 
 DEBUG_CONFIG = GLOBAL_CONFIG['debug']
 DEBUG_ENABLED = DEBUG_CONFIG['enabled']
+DATABASE_CONFIG = GLOBAL_CONFIG['database']
 
 if DEBUG_ENABLED:
 	log.setLevel(logging.DEBUG)
