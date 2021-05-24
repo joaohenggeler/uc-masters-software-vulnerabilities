@@ -68,7 +68,7 @@ for project in project_list:
 
 			vulnerable_changed_lines: Any
 			neutral_changed_lines: Any
-			for file_path, vulnerable_changed_lines, neutral_changed_lines in project.find_changed_source_files_and_lines_in_parent_git_commit(neutral_commit_hash):
+			for file_path, vulnerable_changed_lines, neutral_changed_lines in project.find_changed_source_files_and_lines_since_parent_git_commit(neutral_commit_hash):
 
 				vulnerable_changed_lines = serialize_json_container(vulnerable_changed_lines)
 				neutral_changed_lines = serialize_json_container(neutral_changed_lines)

@@ -56,7 +56,7 @@ for project in project_list:
 				log.error(f'Failed to checkout the commit {commit_hash}.')
 
 			changed_lines: Any
-			for file_path, _, changed_lines in project.find_changed_source_files_and_lines_in_parent_git_commit(commit_hash):
+			for file_path, _, changed_lines in project.find_changed_source_files_and_lines_since_parent_git_commit(commit_hash):
 
 				function_list: Any = []
 				class_list: Any = []

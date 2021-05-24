@@ -304,8 +304,8 @@ class Project:
 			
 		return hash_list
 
-	def find_changed_source_files_and_lines_in_parent_git_commit(self, commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
-		""" Finds the paths and modified lines of any C/C++ source files that were changed since the previous commit."""
+	def find_changed_source_files_and_lines_between_git_commits(self, from_commit: str, to_commit: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
+		""" Finds the paths and modified lines of any C/C++ source files that were changed between two commits."""
 
 		if self.repository is None:
 			return
@@ -313,10 +313,10 @@ class Project:
 		try:
 			# git diff --unified=0 [HASH FROM] [HASH TO] -- [FILE EXTENSION 1] [...] [FILE EXTENSION N]
 			# For the parent commit: git diff --unified=0 [HASH]^ [HASH] -- [FILE EXTENSION 1] [...] [FILE EXTENSION N]
-			diff_result = self.repository.git.diff(commit_hash + '^', commit_hash, '--', *Project.SOURCE_FILE_EXTENSIONS_WITH_WILDCARDS, unified=0)
+			diff_result = self.repository.git.diff(from_commit, to_commit, '--', *Project.SOURCE_FILE_EXTENSIONS_WITH_WILDCARDS, unified=0)
 
 		except git.exc.GitCommandError as error:
-			log.error(f'Failed to find the changed sources files and lines from the commit "{commit_hash}" with the error: {repr(error)}')
+			log.error(f'Failed to find the changed sources files and lines from the commit {from_commit} to {to_commit} with the error: {repr(error)}')
 			return
 
 		last_file_path: Optional[str] = None
@@ -341,6 +341,9 @@ class Project:
 
 				yield from yield_last_file_if_it_exists()
 				_, last_file_path = line.split('/', 1)
+
+				if last_file_path == 'dev/null':
+					last_file_path = None
 				
 			# E.g. "@@ -451,2 +428,2 @@ MakeDialogText(nsIChannel* aChannel, nsIAuthInformation* aAuthInfo,"
 			# E.g. "@@ -263 +255,0 @@ do_test (int argc, char *argv[])"
@@ -367,7 +370,7 @@ class Project:
 					append_line_numbers(last_to_lines_list, 'to_begin', 'to_total')
 
 				else:
-					log.error(f'Could not find the line number information for the file "{last_file_path}" ({commit_hash}) in the diff line: "{line}".')
+					log.error(f'Could not find the line number information for the file "{last_file_path}" (from {from_commit} to {to_commit}) in the diff line: "{line}".')
 
 		yield from yield_last_file_if_it_exists()
 
@@ -393,6 +396,10 @@ class Project:
 			+  NS_NAMED_LITERAL_STRING(proxyText, "EnterUserPasswordForProxy");
 			+  NS_NAMED_LITERAL_STRING(originText, "EnterUserPasswordForRealm");
 		"""
+
+	def find_changed_source_files_and_lines_since_parent_git_commit(self, commit_hash: str) -> Iterator[ Tuple[str, List[List[int]], List[List[int]]] ]:
+		""" Finds the paths and modified lines of any C/C++ source files that were changed since the previous commit."""
+		yield from self.find_changed_source_files_and_lines_between_git_commits(commit_hash + '^', commit_hash)
 
 	def find_changed_source_files_in_parent_git_commit(self, commit_hash: str) -> Iterator[str]:
 		"""" Finds the paths of any C/C++ source files that were changed since the previous commit."""
@@ -438,6 +445,22 @@ class Project:
 			log.error(f'Failed to list all commit hashes between "{after_date}" and "{before_date}" with the error: {repr(error)}')
 
 		return hash_list
+
+	def find_first_git_commit_hash(self) -> Optional[str]:
+		""" Finds the first Git commit hash in a repository. """
+
+		if self.repository is None:
+			return None
+
+		try:
+			# git log --topo-order --reverse --do-walk --format="%H" --
+			log_result = self.repository.git.log('--', topo_order=True, reverse=True, do_walk=True, format='%H')
+			commit_hash = log_result.splitlines()[0]
+		except git.exc.GitCommandError as error:
+			commit_hash = None
+			log.error(f'Failed to find the first commit hash with the error: {repr(error)}')
+
+		return commit_hash
 
 	def find_last_changed_git_commit_hashes(self, commit_hash: str, file_path: str) -> List[str]:
 		""" Finds any previous Git commit hashes where a given file was last changed. """
