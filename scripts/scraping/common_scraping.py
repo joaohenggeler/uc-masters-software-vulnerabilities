@@ -951,10 +951,10 @@ class Project:
 					log.critical(f'The repository for project "{project}" was not loaded correctly.')
 					sys.exit(1)
 
-	def iterate_over_output_csv_files(self, prefix: str) -> Iterator[str]:
+	def find_output_csv_files(self, prefix: str) -> List[str]:
 		""" Finds the paths to any CSV files that belong to this project by looking at their prefix. """
 		csv_path = self.csv_prefix_template.substitute(prefix=prefix) + '*'
-		yield from glob.iglob(csv_path)
+		return glob.glob(csv_path)
 
 	####################################################################################################
 
@@ -1211,8 +1211,8 @@ class Project:
 		if self.repository is None:
 			return []
 
-		after_date = SCRAPING_CONFIG['neutral_files_after_commit_date']
-		before_date = SCRAPING_CONFIG['neutral_files_before_commit_date']
+		after_date = SCRAPING_CONFIG['neutral_after_author_date']
+		before_date = SCRAPING_CONFIG['neutral_before_author_date']
 		
 		hash_list = []
 
@@ -1548,7 +1548,7 @@ class Project:
 
 		CSV_WRITE__FREQUENCY = SCRAPING_CONFIG['affected_files_csv_write_frequency']
 
-		for csv_path in self.iterate_over_output_csv_files('cve'):
+		for csv_path in self.find_output_csv_files('cve'):
 
 			affected_files_csv_path = replace_in_filename(csv_path, 'cve', 'affected-files')
 
@@ -1682,7 +1682,7 @@ class Project:
 
 		CSV_WRITE__FREQUENCY = SCRAPING_CONFIG['neutral_files_csv_write_frequency']
 
-		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
+		for affected_csv_path in self.find_output_csv_files('affected-files'):
 
 			neutral_files_csv_path = replace_in_filename(affected_csv_path, 'affected-files', f'neutral-files')
 
@@ -1751,20 +1751,26 @@ class Project:
 
 		log.info(f'Finished running for the project "{self}".')
 
-	def list_and_save_neutral_commits_to_csv_file(self):
-		""" Lists any neutral commits associated with this project's vulnerabilities and saves them to a simple CSV file. """
+	def list_and_save_neutral_commits_to_csv_file(self) -> None:
+		""" Lists any neutral commits associated (or not) with this project's vulnerabilities and saves them to a simple CSV file. """
 
-		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
+		for csv_path in self.find_output_csv_files('affected-files') + self.find_output_csv_files('neutral-files'):
 
-			log.info(f'Finding affected neutral commits for the project "{self}" using the information in "{affected_csv_path}".')
+			log.info(f'Finding neutral commits for the project "{self}" using the information in "{csv_path}".')
 			
-			neutral_commits = pd.read_csv(affected_csv_path, usecols=['Neutral Commit Hash'], dtype=str)
-			neutral_commits.drop_duplicates(inplace=True)
+			neutral_commits = pd.read_csv(csv_path, usecols=['Neutral Commit Hash', 'Neutral Author Date'], dtype=str)
+			neutral_commits.drop_duplicates(subset='Neutral Commit Hash', inplace=True)
+			
+			after_date = SCRAPING_CONFIG['neutral_after_author_date']
+			before_date = SCRAPING_CONFIG['neutral_before_author_date']
+			is_between_dates = (after_date <= neutral_commits['Neutral Author Date']) & (neutral_commits['Neutral Author Date'] <= before_date)
+			neutral_commits = neutral_commits[is_between_dates]
 
 			neutral_commits.rename(columns={'Neutral Commit Hash': 'commit'}, inplace=True, errors='raise')
+			neutral_commits.drop(columns='Neutral Author Date', inplace=True)
 			neutral_commits.insert(1, 'status', 0)
 
-			neutral_commits_csv_path = replace_in_filename(affected_csv_path, 'affected-files', 'affected-neutral-commits')
+			neutral_commits_csv_path = replace_in_filename(csv_path, '-files', '-commits')
 			neutral_commits.to_csv(neutral_commits_csv_path, index=False)
 
 		log.info(f'Finished running for the project "{self}".')
@@ -1845,7 +1851,7 @@ class Project:
 
 		understand = UnderstandSat(self)
 	
-		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
+		for affected_csv_path in self.find_output_csv_files('affected-files'):
 
 			log.info(f'Generating metrics for the project "{self}" using the information in "{affected_csv_path}".')
 
@@ -1934,7 +1940,7 @@ class Project:
 	def split_and_update_metrics_in_csv_files(self):
 		""" Splits the metrics of any files affected by this project's vulnerabilities, updates them with new metrics, and saves them to a CSV file. """
 
-		for csv_path in self.iterate_over_output_csv_files('metrics'):
+		for csv_path in self.find_output_csv_files('metrics'):
 
 			log.info(f'Splitting and updating metrics for the project "{self}" using the information in "{csv_path}".')
 
@@ -2078,7 +2084,7 @@ class Project:
 
 		cppcheck = CppcheckSat(self)
 
-		for affected_csv_path in self.iterate_over_output_csv_files('affected-files'):
+		for affected_csv_path in self.find_output_csv_files('affected-files'):
 
 			log.info(f'Generating the alerts for the project "{self}" using the information in "{affected_csv_path}".')
 
