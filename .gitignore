@@ -11,11 +11,8 @@
 # The five C/C++ project repositories.
 repositories
 
-# The symlink to the dataset.
-dataset
-
 # Log files.
 scripts/modules/logs
 
 # Dynamic configuration files.
-dynamic_config.json
+**/dynamic_config.json
