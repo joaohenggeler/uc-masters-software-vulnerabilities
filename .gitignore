@@ -5,21 +5,17 @@
 *.udb
 *.und
 
-# Log files.
-*.log
-!scripts/scraping/archives/*
-
 # Windows shortcuts.
 *.lnk
-
-# The database configuration file.
-scripts/database.config
-
-# The symlink to the dataset.
-scripts/dataset
 
 # The five C/C++ project repositories.
 repositories
 
-# For the scraping scripts.
-scripts/scraping/dynamic_config.json
+# The symlink to the dataset.
+scripts/dataset
+
+# Log files.
+scripts/modules/logs
+
+# Dynamic configuration files.
+dynamic_config.json
