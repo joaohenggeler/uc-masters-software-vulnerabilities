@@ -12,7 +12,7 @@
 repositories
 
 # The symlink to the dataset.
-scripts/dataset
+dataset
 
 # Log files.
 scripts/modules/logs
