@@ -5,6 +5,7 @@
 """
 
 import os
+import subprocess
 import sys
 from typing import Iterator, Optional, Tuple, Union
 
@@ -16,6 +17,12 @@ from .common import log, GLOBAL_CONFIG, DATABASE_CONFIG
 class Database:
 	""" Represents a connection to the software vulnerability MySQL database. """
 
+	host: str
+	port: str
+	user: str
+	password: str
+	database: str
+
 	connection: MySQLConnection
 	cursor: MySQLCursor
 
@@ -25,6 +32,10 @@ class Database:
 
 		try:
 			log.info(f'Connecting to the database with the following configurations: {config}')
+			
+			for key, value in config.items():
+				setattr(self, key, value)
+			
 			self.connection = MySQLConnection(**config)
 			self.cursor = self.connection.cursor(dictionary=True, **kwargs)
 
@@ -77,19 +88,27 @@ class Database:
 
 		return success
 
-	'''
-	def load_csv_file_into_table(self, csv_file_path: str, table: str) -> bool:
-		""" @TODO """
+	def execute_script(self, script_path: str) -> Tuple[bool, str]:
+		""" Executes one or more SQL queries inside a file and returns the output of the MySQL command. """
 
-		self.execute_query(r"""
-								LOAD DATA INFILE %s
-								IGNORE
-								INTO TABLE %s 
-								FIELDS TERMINATED BY ',' 
-								OPTIONALLY ENCLOSED BY '"'
-								LINES TERMINATED BY '\n'
-								IGNORE 1 LINES
-								(V_ID, CVE, ID_ADVISORIES, V_CLASSIFICATION, V_IMPACT, VULNERABILITY_URL, PRODUCTS, Affects)
-							""",
-							(csv_file_path, table))
-	'''
+		arguments = ['mysql',
+					f'--host={self.host}', f'--port={self.port}', f'--user={self.user}', f'--password={self.password}',
+					'--default-character-set=utf8', '--comments', self.database]
+		
+		try:
+			script_file = open(script_path)
+			result = subprocess.run(arguments, stdin=script_file, capture_output=True, text=True)
+			success = result.returncode == 0
+			output = result.stdout
+
+			if not success:
+				command_line_arguments = ' '.join(arguments)
+				error_message = result.stderr or result.stdout
+				log.error(f'Failed to run the command "{command_line_arguments}" with the error code {result.returncode} and the error message "{error_message}".')
+
+		except Exception as error:
+			success = False
+			output = ''
+			log.error(f'Failed to execute the script "{script_path}" with the error: {repr(error)}')
+
+		return (success, output)

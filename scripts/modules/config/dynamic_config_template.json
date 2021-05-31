@@ -25,6 +25,8 @@
 
 	"clang_lib_path": "<Replace with path>",
 
+	"dataset_path": "<Replace with path>",
+
 	"projects":
 	{
 		"Glibc":

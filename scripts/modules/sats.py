@@ -51,9 +51,9 @@ class Sat():
 		success = result.returncode == 0
 
 		if not success:
-			command_linesuments = ' '.join(arguments)
+			command_line_arguments = ' '.join(arguments)
 			error_message = result.stderr or result.stdout
-			log.error(f'Failed to run the command "{command_linesuments}" with the error code {result.returncode} and the error message "{error_message}".')
+			log.error(f'Failed to run the command "{command_line_arguments}" with the error code {result.returncode} and the error message "{error_message}".')
 
 		return (success, result.stdout)
 

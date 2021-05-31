@@ -25,6 +25,8 @@
 
 	"clang_lib_path": "C:\\Program Files (x86)\\LLVM\\bin",
 
+	"dataset_path": "C:\\Work\\GitHub\\dissertacao-anual-2020-2021\\Trabalho\\Dados",
+
 	"projects":
 	{
 		"Glibc":
