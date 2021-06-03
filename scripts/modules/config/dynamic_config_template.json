@@ -27,6 +27,8 @@
 
 	"dataset_path": "<Replace with path>",
 
+	"extra_time_tables_to_import": ["files", "functions", "class"],
+
 	"projects":
 	{
 		"Glibc":
