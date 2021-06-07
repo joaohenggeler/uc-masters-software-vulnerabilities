@@ -241,6 +241,10 @@ def check_range_overlap(range_1: List[int], range_2: List[int]) -> bool:
 
 	return range_1[0] <= range_2[1] and range_2[0] <= range_1[1]
 
+def lists_have_elements_in_common(a: list, b: list) -> bool:
+	""" Checks if two lists have at least one element in common. """
+	return len( set(a).intersection(set(b)) ) > 0
+
 ####################################################################################################
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ from collections import namedtuple
 
 import pandas as pd # type: ignore
 
-from modules.common import log, GLOBAL_CONFIG, replace_in_filename, serialize_json_container
+from modules.common import log, deserialize_json_container, GLOBAL_CONFIG, lists_have_elements_in_common, replace_in_filename, serialize_json_container
 from modules.project import Project
 
 ####################################################################################################
@@ -35,7 +35,7 @@ for project in project_list:
 
 		assert len(vulnerable_commit_list) == len(neutral_commit_list), 'The number of vulnerable and neutral commits must be the same.'
 
-		Commit = namedtuple('Commit', ['TopologicalIndex', 'Vulnerable', 'CommitHash', 'TagName', 'AuthorDate'])
+		Commit = namedtuple('Commit', ['TopologicalIndex', 'Vulnerable', 'CommitHash', 'TagName', 'AuthorDate', 'Cves'])
 		topological_index = 0
 
 		def create_commit_tuple(commit_hash: str, vulnerable: bool) -> Commit:
@@ -43,13 +43,23 @@ for project in project_list:
 			tag_name = project.find_tag_name_from_git_commit_hash(commit_hash)
 			author_date = project.find_author_date_from_git_commit_hash(commit_hash)
 
+			status = 'Vulnerable' if vulnerable else 'Neutral'
+			is_affected = affected_files[f'{status} Commit Hash'] == commit_hash
+			
+			if is_affected.any():
+				file = affected_files[is_affected].iloc[0]
+				cves = file['CVEs']
+			else:
+				cves = None
+
 			global topological_index
-			commit = Commit(topological_index, vulnerable, commit_hash, tag_name, author_date)
+			commit = Commit(topological_index, vulnerable, commit_hash, tag_name, author_date, cves)
 			topological_index += 1
 
 			return commit
 
 		first_commit = project.find_first_git_commit_hash()
+		#first_commit = 'c7cabd1355e79b7e111904bb3985908cae185b73^'
 		commit_list = [create_commit_tuple(first_commit, False)]
 
 		for vulnerable_commit, neutral_commit in zip(vulnerable_commit_list, neutral_commit_list):
@@ -74,7 +84,10 @@ for project in project_list:
 
 					is_affected_file = (affected_files['File Path'] == file_path) & (affected_files['Vulnerable Commit Hash'] == to_commit.CommitHash)
 
+					# Skip any vulnerable files that are listed in the previous neutral commit. If we kept these files, we would classify the same file
+					# as being both neutral and vulnerable, when it's in fact the latter.
 					if is_affected_file.any():
+						log.info(f'Skipping the file "{file_path}" in the neutral commit {from_commit.CommitHash} since it will be vulnerable in the next commit {to_commit.CommitHash}.')
 						continue
 
 				first_row = {
@@ -86,6 +99,7 @@ for project in project_list:
 					'Tag Name': from_commit.TagName,
 					'Author Date': from_commit.AuthorDate,
 					'Changed Lines': serialize_json_container(from_changed_lines),
+					'CVEs': from_commit.Cves,
 				}
 
 				second_row = None
@@ -97,7 +111,6 @@ for project in project_list:
 
 					first_row['Affected Functions'] = file['Vulnerable File Functions']
 					first_row['Affected Classes'] = file['Vulnerable File Classes']
-					first_row['CVEs'] = file['CVEs']
 
 					second_row = {
 						'File Path': file_path,
@@ -110,7 +123,7 @@ for project in project_list:
 						'Changed Lines': serialize_json_container(to_changed_lines),
 						'Affected Functions': file['Neutral File Functions'],
 						'Affected Classes': file['Neutral File Classes'],
-						'CVEs': file['CVEs'],
+						'CVEs': to_commit.Cves,
 					}
 					
 				timeline = timeline.append(first_row, ignore_index=True)
@@ -122,6 +135,49 @@ for project in project_list:
 				timeline.to_csv(output_csv_path, index=False)
 
 		timeline.drop_duplicates(subset=['File Path', 'Topological Index', 'Affected'], inplace=True)
+
+		# Remove any vulnerable files that are listed in neutral commits which turned out to be vulnerable in the next index. We will only do this
+		# if both the neutral and vulnerable indexes are associated with the same vulnerability (CVE). If we kept these files, we would classify
+		# the same file as being both neutral and vulnerable, when it's in fact the latter.
+
+		log.info('Locating any consecutive commits.')
+
+		timeline['Next Commit Hash'] = timeline['Commit Hash'].shift(-1)
+		timeline['Next Vulnerable'] = timeline['Vulnerable'].shift(-1)
+
+		is_consecutive_commit = (timeline['Commit Hash'] == timeline['Next Commit Hash']) & (timeline['Vulnerable'] != timeline['Next Vulnerable'])
+		is_consecutive_commit |= is_consecutive_commit.shift(1)
+
+		consecutive_commits = timeline[is_consecutive_commit].iterrows()
+
+		for (neutral_index, neutral_row), (vulnerable_index, vulnerable_row) in zip(consecutive_commits, consecutive_commits):
+
+			commit_hash = neutral_row['Commit Hash']
+			assert commit_hash == vulnerable_row['Commit Hash']
+
+			neutral_topological_index = neutral_row['Topological Index']
+			vulnerable_topological_index = vulnerable_row['Topological Index']
+
+			neutral_cve_list = deserialize_json_container(neutral_row['CVEs'])
+			vulnerable_cve_list = deserialize_json_container(vulnerable_row['CVEs'])
+
+			if lists_have_elements_in_common(neutral_cve_list, vulnerable_cve_list):
+
+				is_neutral = timeline['Topological Index'] == neutral_topological_index
+				is_vulnerable = timeline['Topological Index'] == vulnerable_topological_index
+
+				neutral_files = timeline.loc[is_neutral, 'File Path']
+				vulnerable_files = timeline.loc[is_vulnerable, 'File Path']
+
+				files_in_common = neutral_files[neutral_files.isin(vulnerable_files)]
+				timeline.drop(files_in_common.index, inplace=True)
+
+				log.info(f'Removed {len(files_in_common)} neutral files that were actually vulnerable between the consecutive commits {neutral_topological_index} and {vulnerable_topological_index} ({commit_hash}): {files_in_common.tolist()}')
+
+			else:
+				log.info(f'The consecutive commits {neutral_topological_index} and {vulnerable_topological_index} ({commit_hash}) do not have vulnerabilities in common: "{neutral_cve_list}" vs "{vulnerable_cve_list}".')
+
+		timeline.drop(columns=['Next Commit Hash', 'Next Vulnerable'], inplace=True)
 		timeline.to_csv(output_csv_path, index=False)
 		
 	log.info(f'Finished running for the project "{project}".')
