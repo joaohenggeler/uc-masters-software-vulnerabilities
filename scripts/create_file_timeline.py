@@ -11,7 +11,7 @@ from collections import namedtuple
 
 import pandas as pd # type: ignore
 
-from modules.common import log, deserialize_json_container, GLOBAL_CONFIG, lists_have_elements_in_common, replace_in_filename, serialize_json_container
+from modules.common import log, GLOBAL_CONFIG, deserialize_json_container, lists_have_elements_in_common, replace_in_filename, serialize_json_container
 from modules.project import Project
 
 ####################################################################################################
@@ -20,7 +20,7 @@ project_list = Project.get_project_list_from_config()
 
 Project.debug_ensure_all_project_repositories_were_loaded(project_list)
 
-CSV_WRITE_FREQUENCY = 1 # GLOBAL_CONFIG['affected_files_csv_write_frequency']
+CSV_WRITE_FREQUENCY = GLOBAL_CONFIG['affected_files_csv_write_frequency']
 
 for project in project_list:
 
@@ -59,7 +59,6 @@ for project in project_list:
 			return commit
 
 		first_commit = project.find_first_git_commit_hash()
-		#first_commit = 'c7cabd1355e79b7e111904bb3985908cae185b73^'
 		commit_list = [create_commit_tuple(first_commit, False)]
 
 		for vulnerable_commit, neutral_commit in zip(vulnerable_commit_list, neutral_commit_list):
@@ -99,7 +98,6 @@ for project in project_list:
 					'Tag Name': from_commit.TagName,
 					'Author Date': from_commit.AuthorDate,
 					'Changed Lines': serialize_json_container(from_changed_lines),
-					'CVEs': from_commit.Cves,
 				}
 
 				second_row = None
@@ -111,6 +109,7 @@ for project in project_list:
 
 					first_row['Affected Functions'] = file['Vulnerable File Functions']
 					first_row['Affected Classes'] = file['Vulnerable File Classes']
+					first_row['CVEs'] = from_commit.Cves
 
 					second_row = {
 						'File Path': file_path,
@@ -131,7 +130,7 @@ for project in project_list:
 					timeline = timeline.append(second_row, ignore_index=True)
 
 			if index % CSV_WRITE_FREQUENCY == 0:
-				log.info(f'Updating the results with basic commit information for the index {index}...')
+				log.info(f'Updating the results for the index {index} ({from_commit.AuthorDate})...')
 				timeline.to_csv(output_csv_path, index=False)
 
 		timeline.drop_duplicates(subset=['File Path', 'Topological Index', 'Affected'], inplace=True)
@@ -161,7 +160,7 @@ for project in project_list:
 			neutral_cve_list = deserialize_json_container(neutral_row['CVEs'])
 			vulnerable_cve_list = deserialize_json_container(vulnerable_row['CVEs'])
 
-			if lists_have_elements_in_common(neutral_cve_list, vulnerable_cve_list):
+			if lists_have_elements_in_common(neutral_cve_list, vulnerable_cve_list): # type: ignore[arg-type]
 
 				is_neutral = timeline['Topological Index'] == neutral_topological_index
 				is_vulnerable = timeline['Topological Index'] == vulnerable_topological_index
