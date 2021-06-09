@@ -30,10 +30,11 @@ for project in project_list:
 
 		affected_files = pd.read_csv(input_csv_path, dtype=str)
 
-		vulnerable_commit_list = affected_files['Vulnerable Commit Hash'].drop_duplicates().tolist()
-		neutral_commit_list = affected_files['Neutral Commit Hash'].drop_duplicates().tolist()
+		unique_commits = affected_files.drop_duplicates(subset=['Vulnerable Commit Hash', 'Neutral Commit Hash'])
+		vulnerable_commit_list = unique_commits['Vulnerable Commit Hash'].tolist()
+		neutral_commit_list = unique_commits['Neutral Commit Hash'].tolist()
 
-		assert len(vulnerable_commit_list) == len(neutral_commit_list), 'The number of vulnerable and neutral commits must be the same.'
+		assert len(vulnerable_commit_list) == len(neutral_commit_list), f'The number of vulnerable ({len(vulnerable_commit_list)}) and neutral ({len(neutral_commit_list)}) commits must be the same.'
 
 		Commit = namedtuple('Commit', ['TopologicalIndex', 'Vulnerable', 'CommitHash', 'TagName', 'AuthorDate', 'Cves'])
 		topological_index = 0
