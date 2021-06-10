@@ -82,11 +82,11 @@ for project in project_list:
 
 				if to_commit.Vulnerable:
 
-					is_affected_file = (affected_files['File Path'] == file_path) & (affected_files['Vulnerable Commit Hash'] == to_commit.CommitHash)
+					is_affected = (affected_files['File Path'] == file_path) & (affected_files['Vulnerable Commit Hash'] == to_commit.CommitHash)
 
 					# Skip any vulnerable files that are listed in the previous neutral commit. If we kept these files, we would classify the same file
 					# as being both neutral and vulnerable, when it's in fact the latter.
-					if is_affected_file.any():
+					if is_affected.any():
 						log.info(f'Skipping the file "{file_path}" in the neutral commit {from_commit.CommitHash} since it will be vulnerable in the next commit {to_commit.CommitHash}.')
 						continue
 
@@ -105,11 +105,23 @@ for project in project_list:
 
 				if from_commit.Vulnerable:
 
-					is_affected_file = (affected_files['File Path'] == file_path) & (affected_files['Vulnerable Commit Hash'] == from_commit.CommitHash)
-					file = affected_files[is_affected_file].iloc[0]
+					is_affected = (affected_files['File Path'] == file_path) & (affected_files['Vulnerable Commit Hash'] == from_commit.CommitHash)
+					
+					if is_affected.any():
+						file = affected_files[is_affected].iloc[0]
+						vulnerable_functions = file['Vulnerable File Functions']
+						vulnerable_classes = file['Vulnerable File Classes']
+						neutral_functions = file['Neutral File Functions']
+						neutral_classes = file['Neutral File Classes']
+					else:
+						log.warning(f'The affected file "{file_path}" has no entry associated with the vulnerable commit {from_commit.CommitHash} ({from_commit.TopologicalIndex}).')
+						vulnerable_functions = None
+						vulnerable_classes = None
+						neutral_functions = None
+						neutral_classes = None
 
-					first_row['Affected Functions'] = file['Vulnerable File Functions']
-					first_row['Affected Classes'] = file['Vulnerable File Classes']
+					first_row['Affected Functions'] = vulnerable_functions
+					first_row['Affected Classes'] = vulnerable_classes
 					first_row['CVEs'] = from_commit.Cves
 
 					second_row = {
@@ -121,8 +133,8 @@ for project in project_list:
 						'Tag Name': to_commit.TagName,
 						'Author Date': to_commit.AuthorDate,
 						'Changed Lines': serialize_json_container(to_changed_lines),
-						'Affected Functions': file['Neutral File Functions'],
-						'Affected Classes': file['Neutral File Classes'],
+						'Affected Functions': neutral_functions,
+						'Affected Classes': neutral_classes,
 						'CVEs': to_commit.Cves,
 					}
 					

@@ -133,8 +133,8 @@ for project in project_list:
 						# Check whether the code units are actually vulnerable. A file in a vulnerable commit might
 						# have five functions, but only one could be vulnerable.
 						for unit in function_list + class_list:
-							was_unit_changed = any(check_range_overlap(unit['Lines'], line_range) for line_range in changed_lines)
-							unit_status = 'Yes' if was_unit_changed else 'No' if is_commit_vulnerable else 'No'
+							was_unit_changed = is_commit_vulnerable and any(check_range_overlap(unit['Lines'], line_range) for line_range in changed_lines)
+							unit_status = 'Yes' if was_unit_changed else 'No'
 							unit.update({'Vulnerable': unit_status})
 
 						affected_files.at[row.Index, f'{status} File Functions'] = serialize_json_container(function_list)
