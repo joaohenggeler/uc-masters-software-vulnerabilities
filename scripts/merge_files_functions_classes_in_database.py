@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 """
-	This script merges the FILES_*, FUNCTIONS_*, and CLASSES_* tables into a single one for each project and code unit. During this process, the IDs in
-	these new tables will be updated to remove the last two digits (which represent the project ID) and to make them increment themselves automatically.
+	This script merges the FILES_*, FUNCTIONS_*, and CLASSES_* tables into a single one for each project and code unit.
 """
 
 from modules.common import log, DATABASE_CONFIG

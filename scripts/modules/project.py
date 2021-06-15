@@ -10,8 +10,7 @@ import os
 import random
 import re
 import sys
-from collections import defaultdict
-from string import Template
+from collections import defaultdict, namedtuple
 from typing import Iterator, List, Optional, Tuple, Union
 
 import bs4 # type: ignore
@@ -70,9 +69,6 @@ class Project:
 	output_directory_path: str
 	scrape_all_branches: bool
 
-	csv_prefix_template: Template
-	csv_file_path_template: Template
-
 	def __init__(self, project_name: str, project_info: dict):
 		
 		self.full_name = project_name
@@ -93,14 +89,6 @@ class Project:
 		
 		if self.include_directory_path is not None:
 			self.include_directory_path = join_and_normalize_paths(self.repository_path, self.include_directory_path)
-
-		csv_prefix = os.path.join(self.output_directory_path, f'$prefix-{self.database_id}-')
-		self.csv_prefix_template = Template(csv_prefix)
-
-		used_branches = 'all-branches' if self.scrape_all_branches else 'master-branch'
-
-		csv_file_path = csv_prefix + f'{self.short_name}-{used_branches}-{CURRENT_TIMESTAMP}.csv'
-		self.csv_file_path_template = Template(csv_file_path)
 
 	def __str__(self):
 		return self.full_name
@@ -159,10 +147,22 @@ class Project:
 					log.critical(f'The repository for project "{project}" was not loaded correctly.')
 					sys.exit(1)
 
-	def find_output_csv_files(self, prefix: str) -> List[str]:
+	def find_output_csv_files(self, prefix: str, subdirectory: Optional[str] = None) -> List[str]:
 		""" Finds the paths to any CSV files that belong to this project by looking at their prefix. """
-		csv_path = self.csv_prefix_template.substitute(prefix=prefix) + '*'
+		
+		csv_path = self.output_directory_path
+
+		if subdirectory is not None:
+			csv_path = os.path.join(csv_path, subdirectory)
+
+		csv_path = os.path.join(self.output_directory_path, f'{prefix}-{self.database_id}-*')
+
 		return glob.glob(csv_path)
+
+	def create_output_subdirectory(self, subdirectory: str) -> None:
+		""" Creates a subdirectory in the project's output directory. """
+		path = os.path.join(self.output_directory_path, subdirectory)
+		os.makedirs(path, exist_ok=True)
 
 	####################################################################################################
 
@@ -717,69 +717,83 @@ class Project:
 
 		return (function_list, class_list)
 
-	def iterate_and_checkout_affected_files_in_repository(self, csv_file_path: str) -> Iterator[ Tuple[str, bool, list, list, dict, dict] ]:
+	def iterate_and_checkout_file_timeline_in_repository(self, csv_file_path: str) -> Iterator[tuple]:
 		""" Iterates over and performs a Git checkout operation on a list of files affected by the project's vulnerabilities.
 		
 		For each neutral-vulnerable commit pair, the commit hash and vulnerability status are different, but the file list is the same
 		since it only uses the information relative to the neutral commit, even for the vulnerable one."""
 
-		affected_files = pd.read_csv(csv_file_path, usecols=[	'File Path', 'Topological Index',
-																'Vulnerable Commit Hash', 'Vulnerable File Functions', 'Vulnerable File Classes',
-																'Neutral Commit Hash', 'Neutral File Functions', 'Neutral File Classes'], dtype=str)
+		timeline = pd.read_csv(csv_file_path, usecols=[	'File Path', 'Topological Index', 'Affected', 'Vulnerable',
+														'Commit Hash', 'Affected Functions', 'Affected Classes', 'CVEs'], dtype=str)
+
+		timeline = timeline.replace({np.nan: None})
 		
-		grouped_files = affected_files.groupby(by=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'])
-		for (_, vulnerable_commit_hash, neutral_commit_hash), group_df in grouped_files:
+		grouped_files = timeline.groupby(by=['Topological Index', 'Affected', 'Vulnerable', 'Commit Hash', 'CVEs'], dropna=False)
 
-			def checkout_affected_files(commit_hash: str, is_vulnerable: bool,
-										full_file_path_list: list, relative_file_path_list: list,
-										function_list: list, class_list: list) -> Iterator[ Tuple[str, bool, list, list, dict, dict] ]:
-				""" A helper method that performs the checkout and yields the result. """
+		ChangedFiles = namedtuple('ChangedFiles', [	'TopologicalIndex', 'Affected', 'Vulnerable', 'CommitHash', 'Cves',
+													'AbsoluteFilePaths', 'RelativeFilePaths', 'FilePathToFunctions', 'FilePathToClasses'])
 
-				checkout_success = self.checkout_entire_git_commit(commit_hash)
-				if checkout_success:
+		for (topological_index, affected, vulnerable, commit_hash, cves), group_df in grouped_files:
+			
+			topological_index = int(topological_index)
+			affected = (affected == 'Yes')
 
-					def map_file_paths_to_code_units(code_unit_list: list) -> dict:
-						""" Maps the relative file paths in the repository to their code units. """
+			# For any file in an affected commit (vulnerable or neutral), we know that their paths exist in that particular commit.
+			# When we look at the files that weren't affected, we are now dealing with multiple changes across different commits.
+			# Because of this, we must checkout the next commit (i.e. the next vulnerable commit) so that we can guarantee that
+			# those files exist. For example, if we checked out the first commit in the project, we would be missing any files
+			# that were added or changed between that commit and the next vulnerable one.
 
-						# It's possible that the SATs generate metrics or alerts related to files that we're not currently
-						# iterating over (e.g. the header files of the current C/C++ source file). In those cases, we won't
-						# have a list of code units.
-						file_path_to_code_units = defaultdict(lambda: [])
-						for file_path, units in zip(relative_file_path_list, code_unit_list):
+			if affected:
+				commit_hash_to_checkout = commit_hash
 
-							file_path = self.get_relative_path_in_repository(file_path)
-							file_path_to_code_units[file_path] = units if units is not None else []
-
-						return file_path_to_code_units
-
-					file_path_to_functions = map_file_paths_to_code_units(function_list)
-					file_path_to_classes = map_file_paths_to_code_units(class_list)
-
-					yield (commit_hash, is_vulnerable, full_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes)
+			else:
+				is_next_commit = (timeline['Topological Index'] == str(topological_index + 1)) | (timeline['Topological Index'] == str(topological_index + 2))
+				
+				if is_next_commit.any():
+					next_group = timeline[is_next_commit].iloc[0]
+					commit_hash_to_checkout = next_group['Commit Hash']
 				else:
-					status = 'Vulnerable' if is_vulnerable else 'Neutral'
-					log.error(f'Failed to checkout the commit {commit_hash} ({status}).')
+					log.warning(f'Defaulting to the current commit hash {commit_hash}.')
+					commit_hash_to_checkout = commit_hash
 
-			group_df = group_df.replace({np.nan: None})
+			checkout_success = self.checkout_entire_git_commit(commit_hash_to_checkout)
+			if checkout_success:
 
-			relative_file_path_list = group_df['File Path'].tolist()
-			full_file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in relative_file_path_list]
+				vulnerable = (vulnerable == 'Yes')
+				if pd.isna(cves):
+					cves = None
 
-			vulnerable_function_list = group_df['Vulnerable File Functions'].tolist()
-			vulnerable_function_list = [deserialize_json_container(function_list) for function_list in vulnerable_function_list]
+				relative_file_path_list: list = group_df['File Path'].tolist()
+				absolute_file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in relative_file_path_list]
+				
+				affected_function_list = group_df['Affected Functions'].tolist()
+				affected_function_list = [deserialize_json_container(function_list) for function_list in affected_function_list if pd.notna(function_list)]
 
-			vulnerable_class_list = group_df['Vulnerable File Classes'].tolist()
-			vulnerable_class_list = [deserialize_json_container(class_list) for class_list in vulnerable_class_list]
+				affected_class_list = group_df['Affected Classes'].tolist()
+				affected_class_list = [deserialize_json_container(class_list) for class_list in affected_class_list if pd.notna(class_list)]
 
-			neutral_function_list = group_df['Neutral File Functions'].tolist()
-			neutral_function_list = [deserialize_json_container(function_list) for function_list in neutral_function_list]
+				def map_file_paths_to_code_units(code_unit_list: list) -> dict:
+					""" Maps the relative file paths in the repository to their code units. """
 
-			neutral_class_list = group_df['Neutral File Classes'].tolist()
-			neutral_class_list = [deserialize_json_container(class_list) for class_list in neutral_class_list]
-			
-			yield from checkout_affected_files(vulnerable_commit_hash, True, full_file_path_list, relative_file_path_list, vulnerable_function_list, vulnerable_class_list)
-			yield from checkout_affected_files(neutral_commit_hash, False, full_file_path_list, relative_file_path_list, neutral_function_list, neutral_class_list)
-			
+					# It's possible that the SATs generate metrics or alerts related to files that we're not currently
+					# iterating over (e.g. the header files of the current C/C++ source file). In those cases, we won't
+					# have a list of code units.
+					file_path_to_code_units = defaultdict(lambda: [])
+					for file_path, units in zip(relative_file_path_list, code_unit_list):
+						file_path_to_code_units[file_path] = units if units is not None else []
+
+					return file_path_to_code_units
+
+				file_path_to_functions = map_file_paths_to_code_units(affected_function_list)
+				file_path_to_classes = map_file_paths_to_code_units(affected_class_list)
+
+				yield ChangedFiles(	topological_index, affected, vulnerable, commit_hash, cves,
+									absolute_file_path_list, relative_file_path_list, file_path_to_functions, file_path_to_classes)
+
+			else:
+				log.error(f'Failed to checkout the commit {commit_hash_to_checkout} in the CSV file "{csv_file_path}".')
+		
 		self.hard_reset_git_head()
 
 ####################################################################################################

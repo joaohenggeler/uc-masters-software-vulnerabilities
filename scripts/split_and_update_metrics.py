@@ -25,7 +25,7 @@ Project.debug_ensure_all_project_repositories_were_loaded(project_list)
 
 for project in project_list:
 
-	for input_csv_path in project.find_output_csv_files('metrics'):
+	for input_csv_path in project.find_output_csv_files('metrics', 'metrics'):
 
 		log.info(f'Splitting and updating metrics for the project "{project}" using the information in "{input_csv_path}".')
 

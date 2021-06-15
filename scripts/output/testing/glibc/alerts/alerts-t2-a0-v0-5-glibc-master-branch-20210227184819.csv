@@ -1,0 +1,734 @@
+Topological Index,Affected Commit,Vulnerable Commit,Commit Hash,CVEs,Affected Functions,Affected Classes,Vulnerable File,File,Line,Column,Severity,Rule,CWE,Message
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,argp/argp-help.c,1317,33,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,argp/argp-help.c,1588,30,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,argp/argp-help.c,990,7,warning,nullPointer,476,Possible null pointer dereference: argp
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,argp/argp-help.c,1262,11,warning,selfAssignment,398,Redundant assignment of 'arg' to itself.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,argp/argp-help.c,1296,8,warning,selfAssignment,398,Redundant assignment of 'arg' to itself.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,assert/assert-perr.c,42,,error,preprocessorErrorDirective,,No header in #include
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,assert/assert.c,43,,error,preprocessorErrorDirective,,No header in #include
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,catgets/gencat.c,940,18,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,catgets/gencat.c,943,20,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,csu/elf-init.c,72,45,error,comparePointers,570,Subtracting pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,csu/elf-init.c,81,40,error,comparePointers,570,Subtracting pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,csu/elf-init.c,93,31,error,comparePointers,570,Subtracting pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,csu/libc-tls.c,120,14,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,csu/libc-tls.c,153,12,portability,arithOperationsOnVoidPointer,467,"'tlsblock' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,include/unistd.h,4,,error,preprocessorErrorDirective,,"failed to expand 'libc_hidden_proto', Wrong number of parameters for macro 'libc_hidden_proto'."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,227,55,portability,pointerOutOfBounds,758,"Undefined behaviour, pointer arithmetic 'a.buf1+10' is out of bounds."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,459,59,portability,pointerOutOfBounds,758,"Undefined behaviour, pointer arithmetic 'wa.buf1+10' is out of bounds."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,224,16,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,228,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,232,16,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,240,16,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,244,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,248,16,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,252,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,256,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,261,16,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,266,16,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: a.buf1
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,684,7,warning,getsCalled,477,Obsolete function 'gets' called. It is recommended to use 'fgets' or 'gets_s' instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,686,7,warning,getsCalled,477,Obsolete function 'gets' called. It is recommended to use 'fgets' or 'gets_s' instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,832,3,warning,wrongPrintfScanfParameterPositionError,685,printf: referencing parameter 3 while 1 arguments given
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,832,3,warning,wrongPrintfScanfArgNum,685,printf format string requires 1 parameter but 4 are given.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,836,3,warning,wrongPrintfScanfParameterPositionError,685,fprintf: referencing parameter 3 while 1 arguments given
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,836,3,warning,wrongPrintfScanfArgNum,685,fprintf format string requires 1 parameter but 4 are given.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,840,3,warning,wrongPrintfScanfParameterPositionError,685,sprintf: referencing parameter 3 while 1 arguments given
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,840,3,warning,wrongPrintfScanfArgNum,685,sprintf format string requires 1 parameter but 4 are given.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,844,3,warning,wrongPrintfScanfParameterPositionError,685,snprintf: referencing parameter 3 while 1 arguments given
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,844,3,warning,wrongPrintfScanfArgNum,685,snprintf format string requires 1 parameter but 4 are given.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,debug/tst-chk1.c,1114,22,error,uninitvar,457,Uninitialized variable: wenough
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/strfile.h,30,21,error,internalAstError,,"Syntax Error: AST broken, ternary operator lacks ':'."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/cache.c,185,57,portability,arithOperationsOnVoidPointer,467,"'(void*)cache' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/check-localplt.c,79,19,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/check-localplt.c,102,17,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/check-localplt.c,160,15,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/check-localplt.c,180,15,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/check-textrel.c,75,19,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/check-textrel.c,110,17,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/circleload1.c,23,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-addr.c,111,20,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-close.c,281,5,portability,arithOperationsOnVoidPointer,467,"'(void*)imap->l_addr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-deps.c,217,32,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-deps.c,240,10,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-deps.c,269,14,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-deps.c,291,10,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-deps.c,358,10,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-deps.c,225,20,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-deps.c,162,13,error,uninitvar,457,Uninitialized variable: nlist
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-deps.c,163,13,error,uninitvar,457,Uninitialized variable: nlist
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-deps.c,164,13,error,uninitvar,457,Uninitialized variable: nlist
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-error.c,188,14,error,uninitStructMember,457,Uninitialized struct member: c.objname
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-error.c,190,16,error,uninitStructMember,457,Uninitialized struct member: c.malloced
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-lookup.c,262,9,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-lookup.c,290,9,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-lookup.c,258,27,warning,nullPointer,476,Possible null pointer dereference: reference_name
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/do-lookup.h,166,23,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-minimal.c,68,30,error,nullPointerArithmetic,682,Pointer addition with NULL pointer.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-minimal.c,68,45,error,nullPointerArithmetic,682,"Overflow in pointer arithmetic, NULL pointer is subtracted."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-minimal.c,74,26,error,nullPointerArithmetic,682,Pointer addition with NULL pointer.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-minimal.c,74,41,error,nullPointerArithmetic,682,"Overflow in pointer arithmetic, NULL pointer is subtracted."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-minimal.c,68,30,portability,arithOperationsOnVoidPointer,467,"'(void*)0' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-minimal.c,74,26,portability,arithOperationsOnVoidPointer,467,"'(void*)0' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-minimal.c,77,17,portability,arithOperationsOnVoidPointer,467,"'alloc_ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-minimal.c,91,13,portability,arithOperationsOnVoidPointer,467,"'alloc_ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-misc.c,196,24,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/dl-support.c,152,43,error,syntaxError,,syntax error
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,425,18,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,426,17,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,431,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,432,26,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,549,22,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,639,15,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,655,24,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,713,16,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,724,25,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,1218,20,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,1261,20,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/ldconfig.c,1044,35,warning,nullPointerRedundantCheck,476,Either the condition 'cp!=NULL' is redundant or there is possible null pointer dereference: cp.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/loadtest.c,128,4,warning,nullPointerRedundantCheck,476,Either the condition 'fct==NULL' is redundant or there is possible null pointer dereference: fct.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/neededtest.c,23,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/neededtest2.c,23,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/neededtest3.c,23,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/neededtest4.c,23,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/neededtest4.c,109,17,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/neededtest4.c,113,17,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/readlib.c,77,14,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,54,14,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,84,53,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,85,3,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,98,7,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,116,50,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,117,4,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,133,12,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,158,50,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,159,3,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,166,7,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,169,46,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,170,4,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,elf/readelflib.c,185,4,portability,arithOperationsOnVoidPointer,467,"'file_contents' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,278,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,390,34,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,533,25,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,538,29,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,564,40,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,576,33,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,596,32,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,626,39,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,632,24,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,747,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,454,5,warning,invalidPrintfArgType_sint,686,%d in format string (no. 1) requires 'int' but the argument type is 'unsigned int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1029,6,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1030,6,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1031,6,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1032,6,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1033,6,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1035,6,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1036,6,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1087,8,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1088,8,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1089,8,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1090,8,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1091,8,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1093,8,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1094,8,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,1095,8,warning,nullPointerRedundantCheck,476,Either the condition 'newsym==NULL' is redundant or there is possible null pointer dereference: newsym.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,374,20,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,377,14,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,379,14,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/sprof.c,667,18,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/tst-stackguard1.c,151,4,error,objectIndex,758,The address of local variable 'default_guard' is accessed at non-zero index.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,elf/tst-stackguard1.c,152,4,error,objectIndex,758,The address of local variable 'default_guard' is accessed at non-zero index.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,hurd/hurdlookup.c,91,4,warning,uselessAssignmentPtrArg,398,Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,hurd/hurdlookup.c,87,14,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,hurd/hurdmalloc.c,284,23,portability,arithOperationsOnVoidPointer,467,"'base' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,hurd/hurdmalloc.c,337,27,portability,arithOperationsOnVoidPointer,467,"'old_base' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,hurd/intr-msg.c,191,38,portability,arithOperationsOnVoidPointer,467,"'(void*)msg' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,hurd/intr-msg.c,228,22,portability,arithOperationsOnVoidPointer,467,"'(void*)ty' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,hurd/intr-msg.c,235,22,portability,arithOperationsOnVoidPointer,467,"'(void*)ty' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,hurd/intr-msg.c,242,22,portability,arithOperationsOnVoidPointer,467,"'(void*)ty' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,hurd/intr-msg.c,250,22,portability,arithOperationsOnVoidPointer,467,"'(void*)ty' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/gconv_conf.c,468,17,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/gconv_conf.c,204,38,warning,nullPointerRedundantCheck,476,Either the condition 'root!=NULL' is redundant or there is possible null pointer dereference: root.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/gconv_db.c,43,33,error,syntaxError,,syntax error
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/gconv_open.c,57,30,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/gconv_open.c,89,40,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/gconv_open.c,127,40,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/gconv_open.c,149,35,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/gconv_open.c,162,31,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/gconv_open.c,170,33,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/iconv_prog.c,165,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/iconvconfig.c,429,8,warning,nullPointerRedundantCheck,476,Either the condition 'inserted==NULL' is redundant or there is possible null pointer dereference: inserted.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/iconvconfig.c,1047,29,error,uninitvar,457,Uninitialized variable: hash_size
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/iconvconfig.c,1048,36,error,uninitvar,457,Uninitialized variable: hash_size
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/iconvconfig.c,1050,30,error,uninitvar,457,Uninitialized variable: string_offset
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/iconvconfig.c,1051,24,error,uninitvar,457,Uninitialized variable: hash_size
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/iconvconfig.c,1052,11,error,uninitvar,457,Uninitialized variable: hash_size
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/iconvconfig.c,1054,7,error,uninitvar,457,Uninitialized variable: hash_table
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,iconv/iconvconfig.c,1057,7,error,uninitvar,457,Uninitialized variable: hash_table
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,inet/getnameinfo.c,84,19,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,inet/getnameinfo.c,166,18,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,inet/getnameinfo.c,79,11,warning,identicalInnerCondition,398,Identical inner 'if' condition is always true.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,inet/getnameinfo.c,183,35,error,nullPointer,476,Null pointer dereference: (struct sockaddr_un*)NULL
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,inet/inet_ntoa.c,36,23,error,objectIndex,758,The address of local variable 'in' is accessed at non-zero index.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,inet/rcmd.c,559,14,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,intl/dcigettext.c,1361,,error,preprocessorErrorDirective,,"failed to expand 'PARAMS', it is invalid to use a preprocessor directive as macro parameter"
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,io/ftw.c,642,42,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,183,9,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,242,10,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(f))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,356,10,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,389,10,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,418,9,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,435,12,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,480,24,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(f))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,495,10,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,558,9,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,581,10,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,732,14,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,753,14,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,844,7,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,898,2,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/genops.c,974,4,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/iofclose.c,66,3,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/iofwide.c,208,21,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/iovdprintf.c,63,3,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(&tmpfil.file))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/iovsprintf.c,47,,error,preprocessorErrorDirective,,"failed to expand 'INTDEF2', Wrong number of parameters for macro 'INTDEF2'."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/memstream.c,88,5,error,memleak,401,Memory leak: new_f
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/strfile.h,30,21,error,syntaxError,,syntax error
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wfileops.c,225,2,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(_IO_stdout))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wfileops.c,241,11,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wfileops.c,483,17,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wfileops.c,616,6,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wfileops.c,728,12,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wfileops.c,735,15,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wfileops.c,755,12,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wfileops.c,775,5,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wfileops.c,93,13,error,uninitvar,457,Uninitialized variable: new_data
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wgenops.c,232,9,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wgenops.c,247,10,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(f))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wgenops.c,279,10,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wgenops.c,310,10,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wgenops.c,615,14,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wgenops.c,636,14,portability,arithOperationsOnVoidPointer,467,"'(void*)&((struct _IO_FILE_plus*)(fp))->vtable' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,libio/wmemstream.c,88,5,error,memleak,401,Memory leak: new_f
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/findlocale.c,228,34,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/findlocale.c,231,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/loadarchive.c,184,22,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/loadarchive.c,289,33,portability,arithOperationsOnVoidPointer,467,"'headmap.ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/loadarchive.c,302,46,portability,arithOperationsOnVoidPointer,467,"'headmap.ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/loadarchive.c,315,38,portability,arithOperationsOnVoidPointer,467,"'headmap.ptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,locale/categories.def,42,1,error,syntaxError,,syntax error
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/charmap-dir.c,219,14,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/charmap-dir.c,266,11,warning,invalidScanfArgType_float,686,%a in format string (no. 1) requires 'float *' but the argument type is 'char *'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/charmap-dir.c,267,14,warning,invalidScanfArgType_float,686,%a in format string (no. 1) requires 'float *' but the argument type is 'char *'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-address.c,566,4,warning,invalidPrintfArgType_sint,686,%ld in format string (no. 1) requires 'long' but the argument type is 'unsigned long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-collate.c,828,7,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-collate.c,1092,21,warning,nullPointerRedundantCheck,476,Either the condition 'startp==NULL' is redundant or there is possible null pointer dereference: startp.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-collate.c,271,37,portability,shiftNegativeLHS,758,Shifting a negative value is technically undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-collate.c,840,18,warning,pointerSize,467,Size of pointer 'weights' used instead of size of its data.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,888,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,892,19,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,1032,37,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,1047,40,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,1061,40,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,1078,49,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,1099,49,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,1112,21,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,1174,40,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-ctype.c,4107,39,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-time.c,541,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/ld-time.c,714,31,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/locale.c,884,6,warning,invalidPrintfArgType_sint,686,%d in format string (no. 1) requires 'int' but the argument type is 'unsigned int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/locarchive.c,711,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/locarchive.c,793,20,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/locarchive.c,266,5,warning,invalidPrintfArgType_sint,686,%d in format string (no. 2) requires 'int' but the argument type is 'unsigned int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/locarchive.c,1500,3,warning,invalidPrintfArgType_sint,686,%d in format string (no. 1) requires 'int' but the argument type is 'unsigned int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/locarchive.c,1500,3,warning,invalidPrintfArgType_sint,686,%d in format string (no. 3) requires 'int' but the argument type is 'unsigned int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/locarchive.c,617,24,portability,arithOperationsOnVoidPointer,467,"'ah->addr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/locarchive.c,617,46,portability,arithOperationsOnVoidPointer,467,"'ah->addr+head->string_offset' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/programs/locarchive.c,1417,29,portability,arithOperationsOnVoidPointer,467,"'ah.addr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,locale/setlocale.c,126,33,error,syntaxError,,syntax error
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,localedata/tst-ctype.c,192,7,error,comparePointers,570,Subtracting pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/arena.c,61,13,warning,signConversion,195,Expression '-5' has a negative value. That is converted to an unsigned value and used in an unsigned calculation.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/hooks.c,333,3,warning,signConversion,195,Expression '-2' has a negative value. That is converted to an unsigned value and used in an unsigned calculation.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/hooks.c,406,3,warning,signConversion,195,Expression '-2' has a negative value. That is converted to an unsigned value and used in an unsigned calculation.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/malloc.c,3491,3,warning,signConversion,195,Expression '-2' has a negative value. That is converted to an unsigned value and used in an unsigned calculation.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/malloc.c,3894,3,warning,signConversion,195,Expression '-2' has a negative value. That is converted to an unsigned value and used in an unsigned calculation.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/malloc.c,4639,3,warning,signConversion,195,Expression '-2' has a negative value. That is converted to an unsigned value and used in an unsigned calculation.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/malloc.c,4879,3,warning,signConversion,195,Expression '-2' has a negative value. That is converted to an unsigned value and used in an unsigned calculation.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/memusage.c,793,3,warning,invalidPrintfArgType_sint,686,%ld in format string (no. 12) requires 'long' but the argument type is 'unsigned long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/memusage.c,793,3,warning,invalidPrintfArgType_sint,686,%ld in format string (no. 13) requires 'long' but the argument type is 'unsigned long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/memusage.c,819,5,warning,invalidPrintfArgType_sint,686,%ld in format string (no. 17) requires 'long' but the argument type is 'unsigned long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/memusage.c,819,5,warning,invalidPrintfArgType_sint,686,%ld in format string (no. 18) requires 'long' but the argument type is 'unsigned long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/memusage.c,131,68,warning,constStatement,398,Found suspicious operator '-'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/memusagestat.c,156,17,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/tst-mallocfork.c,28,3,warning,ignoredReturnValue,252,Return value of function malloc() is not used.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/tst-mallocfork.c,28,3,error,leakReturnValNotUsed,771,Return value of allocation function 'malloc' is not stored.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/tst-mcheck.c,40,16,error,invalidFunctionArg,628,Invalid malloc() argument nr 1. The value is -1 but the valid values are '0:'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/tst-mcheck.c,71,20,error,invalidFunctionArg,628,Invalid realloc() argument nr 2. The value is -256 but the valid values are '0:'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/tst-mcheck.c,82,20,error,invalidFunctionArg,628,Invalid realloc() argument nr 2. The value is -1 but the valid values are '0:'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/tst-mcheck.c,71,7,error,leakReturnValNotUsed,771,Return value of allocation function 'realloc' is not stored.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/tst-mcheck.c,82,7,error,leakReturnValNotUsed,771,Return value of allocation function 'realloc' is not stored.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/tst-mcheck.c,51,3,error,memleakOnRealloc,401,Common realloc mistake: 'p' nulled but not freed upon failure
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,malloc/tst-mcheck.c,59,3,error,memleakOnRealloc,401,Common realloc mistake: 'p' nulled but not freed upon failure
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,misc/error.c,390,7,warning,invalidPrintfArgType_sint,686,%d in format string (no. 2) requires 'int' but the argument type is 'unsigned int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_compat/compat-pwd.c,200,4,warning,uselessAssignmentPtrArg,398,Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_compat/compat-spwd.c,140,4,warning,uselessAssignmentPtrArg,398,Assignment of function parameter has no effect outside the function. Did you forget dereferencing it?
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nis/nis-initgroups.c,125,24,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-alias.c,302,20,warning,nullPointerRedundantCheck,476,Either the condition 'name!=NULL' is redundant or there is possible null pointer dereference: name.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-alias.c,305,48,warning,nullPointerRedundantCheck,476,Either the condition 'name!=NULL' is redundant or there is possible null pointer dereference: name.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-alias.c,302,20,error,nullPointer,476,Null pointer dereference
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-alias.c,305,48,error,nullPointer,476,Null pointer dereference
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-hosts.c,405,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-netgrp.c,153,20,warning,nullPointerRedundantCheck,476,Either the condition 'group==NULL' is redundant or there is possible null pointer dereference: group.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-network.c,363,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-proto.c,337,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-rpc.c,339,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nis/nss_nisplus/nisplus-service.c,348,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/perf.c,536,2,warning,invalidPrintfArgType_uint,686,%u in format string (no. 1) requires 'unsigned int' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/perf.c,606,2,warning,invalidPrintfArgType_uint,686,%u in format string (no. 1) requires 'unsigned int' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/sem_open.c,168,35,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/sem_open.c,257,24,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/sem_open.c,314,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/sysdeps/unix/sysv/linux/pthread_setaffinity.c,40,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/sysdeps/unix/sysv/linux/timer_create.c,124,8,error,memleak,401,Memory leak: newp
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/tst-cancel24.cc,26,14,error,syntaxError,,Code 'C++ cast <...' is invalid C code. Use --std or --language to configure the language.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/tst-stackguard1.c,181,4,error,objectIndex,758,The address of local variable 'default_guard' is accessed at non-zero index.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nptl/tst-stackguard1.c,182,4,error,objectIndex,758,The address of local variable 'default_guard' is accessed at non-zero index.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/aicache.c,117,19,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/aicache.c,160,18,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/aicache.c,206,21,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/aicache.c,240,24,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/aicache.c,281,34,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/connections.c,1135,15,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/connections.c,1178,17,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/connections.c,335,33,warning,invalidFunctionArg,628,Either the condition 'head->first_free<0' is redundant or calloc() argument nr 1 can have invalid value. The value is 0 but the valid values are '1:'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/connections.c,1776,52,warning,divideSizeof,682,Division of result of sizeof() on pointer type.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/grpcache.c,174,19,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/grpcache.c,186,33,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/grpcache.c,216,33,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/grpcache.c,434,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/hstcache.c,188,36,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/hstcache.c,236,33,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/hstcache.c,444,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/initgrcache.c,271,33,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/mem.c,302,24,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_conf.c,107,24,warning,nullPointerRedundantCheck,476,Either the condition '!arg1' is redundant or there is possible null pointer dereference: arg1.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_conf.c,110,25,warning,nullPointerRedundantCheck,476,Either the condition '!arg1' is redundant or there is possible null pointer dereference: cp.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_getai.c,186,7,error,doubleFree,415,Memory pointed to by 'resultbuf' is freed twice.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_getai.c,89,7,warning,nullPointerRedundantCheck,476,Either the condition 'ai_resp==NULL' is redundant or there is possible null pointer dereference: ai_resp.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_getgr_r.c,191,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_getgr_r.c,141,25,warning,nullPointerRedundantCheck,476,Either the condition 'gr_resp==NULL' is redundant or there is possible null pointer dereference: gr_resp.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_getgr_r.c,226,37,warning,nullPointerArithmeticRedundantCheck,682,Either the condition 'gr_name==NULL' is redundant or there is pointer arithmetic with NULL pointer.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_gethst_r.c,150,24,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_gethst_r.c,263,22,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_gethst_r.c,285,14,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_gethst_r.c,187,25,warning,nullPointerRedundantCheck,476,Either the condition 'hst_resp==NULL' is redundant or there is possible null pointer dereference: hst_resp.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_gethst_r.c,211,7,error,nullPointerArithmetic,682,"Overflow in pointer arithmetic, NULL pointer is subtracted."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_gethst_r.c,321,54,warning,nullPointerArithmeticRedundantCheck,682,Either the condition 'addr_list==NULL' is redundant or there is pointer arithmetic with NULL pointer.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_getpw_r.c,132,25,warning,nullPointerRedundantCheck,476,Either the condition 'pw_resp==NULL' is redundant or there is possible null pointer dereference: pw_resp.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_getpw_r.c,163,37,warning,nullPointerArithmeticRedundantCheck,682,Either the condition 'pw_name==NULL' is redundant or there is pointer arithmetic with NULL pointer.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/nscd_initgroups.c,86,7,warning,nullPointerRedundantCheck,476,Either the condition 'initgr_resp==NULL' is redundant or there is possible null pointer dereference: initgr_resp.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/pwdcache.c,181,19,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/pwdcache.c,211,33,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/pwdcache.c,429,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/selinux.c,128,10,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,nscd/selinux.c,182,27,error,uninitvar,457,Uninitialized variable: new_caps
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/bug-regex22.c,104,8,warning,nullPointerRedundantCheck,476,Either the condition 's==NULL' is redundant or there is possible null pointer dereference: s.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/bug-regex22.c,114,8,warning,nullPointerRedundantCheck,476,Either the condition 's==NULL' is redundant or there is possible null pointer dereference: s.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/bug-regex22.c,104,8,error,nullPointer,476,Null pointer dereference
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/bug-regex22.c,114,8,error,nullPointer,476,Null pointer dereference
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/execl.c,54,17,error,va_end_missing,664,va_list 'args' was opened but not closed by va_end().
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/fnmatch_loop.c,1083,6,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/fnmatch_loop.c,1090,6,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/fnmatch.c,344,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/fnmatch.c,362,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/fnmatch.c,376,26,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/fnmatch.c,394,26,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/getconf.c,969,13,warning,invalidPrintfArgType_uint,686,%lu in format string (no. 1) requires 'unsigned long' but the argument type is 'signed long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/getconf.c,1144,5,warning,invalidPrintfArgType_uint,686,%lu in format string (no. 1) requires 'unsigned long' but the argument type is 'signed long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/regexec.c,1417,37,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/regexec.c,3319,42,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/regexec.c,3357,7,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/tst-mmap.c,170,6,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/tst-mmap.c,190,6,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/tst-mmap.c,100,23,portability,arithOperationsOnVoidPointer,467,"'mem' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/tst-mmap.c,113,25,portability,arithOperationsOnVoidPointer,467,"'mem' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/tst-mmap.c,126,23,portability,arithOperationsOnVoidPointer,467,"'mem' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/tst-mmap.c,139,25,portability,arithOperationsOnVoidPointer,467,"'mem' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/posix/getaddrinfo.c,557,18,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/posix/getaddrinfo.c,623,23,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/posix/getaddrinfo.c,796,19,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/posix/getaddrinfo.c,856,22,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/posix/getaddrinfo.c,1341,24,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,posix/wordexp.c,135,2,error,doubleFree,415,Memory pointed to by 'old_buffer' is freed twice.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,resolv/gethnamaddr.c,621,35,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,resolv/res_debug.c,237,3,portability,invalidPrintfArgType_sint,686,%d in format string (no. 3) requires 'int' but the argument type is 'u_int {aka unsigned int}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,resolv/res_debug.c,640,9,warning,invalidPrintfArgType_sint,686,%ld in format string (no. 1) requires 'long' but the argument type is 'unsigned long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,resolv/res_debug.c,640,9,warning,invalidPrintfArgType_sint,686,%ld in format string (no. 2) requires 'long' but the argument type is 'unsigned long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,resolv/res_query.c,126,8,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,resolv/res_send.c,1058,3,warning,invalidPrintfArgType_uint,686,%u in format string (no. 3) requires 'unsigned int' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,stdio-common/_i18n_number.h,61,28,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/printf_fp.c,454,26,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/printf_fp.c,455,25,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/printf_fp.c,456,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/printf_fp.c,898,29,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/printf_fp.c,1136,24,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/printf_fp.c,1130,9,warning,identicalInnerCondition,398,Identical inner 'if' condition is always true.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/printf_fp.c,230,9,error,uninitvar,457,Uninitialized variable: frac
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/psignal.c,40,22,warning,charLiteralWithCharPtrCompare,595,Char literal compared with pointer 's'. Did you intend to dereference it?
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-fwrite.c,57,11,error,IOWithoutPositioning,664,"Read and write operations without a call to a positioning function (fseek, fsetpos or rewind) or fflush in between result in undefined behaviour."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,153,3,error,wrongPrintfScanfArgNum,685,printf format string requires 1 parameter but only 0 are given.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,162,3,warning,invalidPrintfArgType_uint,686,%lu in format string (no. 1) requires 'unsigned long' but the argument type is 'signed long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,226,6,warning,invalidPrintfArgType_uint,686,%u in format string (no. 1) requires 'unsigned int' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,263,5,warning,invalidPrintfArgType_uint,686,%Lo in format string (no. 1) requires 'unsigned long long' but the argument type is 'signed long long'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,274,3,warning,invalidPrintfArgType_uint,686,%u in format string (no. 1) requires 'unsigned int' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,274,3,warning,invalidPrintfArgType_uint,686,%hhu in format string (no. 2) requires 'unsigned char' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,275,3,warning,invalidPrintfArgType_uint,686,%u in format string (no. 1) requires 'unsigned int' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,275,3,warning,invalidPrintfArgType_uint,686,%hu in format string (no. 2) requires 'unsigned short' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,276,3,warning,invalidPrintfArgType_sint,686,%hhi in format string (no. 2) requires 'char' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,277,3,warning,invalidPrintfArgType_sint,686,%hi in format string (no. 2) requires 'short' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,279,3,warning,invalidPrintfArgType_uint,686,%u in format string (no. 1) requires 'unsigned int' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,279,3,warning,invalidPrintfArgType_uint,686,%hhu in format string (no. 2) requires 'unsigned char' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,281,3,warning,invalidPrintfArgType_uint,686,%u in format string (no. 1) requires 'unsigned int' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,281,3,warning,invalidPrintfArgType_uint,686,%hu in format string (no. 2) requires 'unsigned short' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,282,3,warning,invalidPrintfArgType_sint,686,%hhi in format string (no. 2) requires 'char' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,284,3,warning,invalidPrintfArgType_sint,686,%hi in format string (no. 2) requires 'short' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,361,3,warning,invalidPrintfArgType_uint,686,%u in format string (no. 2) requires 'unsigned int' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,385,3,warning,invalidPrintfArgType_sint,686,%hi in format string (no. 4) requires 'short' but the argument type is 'double'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,385,3,warning,invalidPrintfArgType_uint,686,%lo in format string (no. 6) requires 'unsigned long' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,385,3,warning,invalidPrintfArgType_float,686,%f in format string (no. 8) requires 'double' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,385,3,warning,invalidPrintfArgType_float,686,%g in format string (no. 12) requires 'double' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,385,3,warning,invalidPrintfArgType_s,686,%s in format string (no. 14) requires 'char *' but the argument type is 'signed int'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,128,20,error,nullPointer,476,Null pointer dereference
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,129,21,error,nullPointer,476,Null pointer dereference
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tst-printf.c,172,36,error,nullPointer,476,Null pointer dereference
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tstdiomisc.c,32,3,warning,invalidScanfArgType_int,686,%llllld in format string (no. 1) requires 'long long *' but the argument type is 'signed long *'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tstdiomisc.c,33,3,warning,invalidScanfArgType_int,686,%LLLLLd in format string (no. 1) requires 'long long *' but the argument type is 'signed long *'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/tstdiomisc.c,36,3,warning,invalidLengthModifierError,704,'l' in format string (no. 1) is a length modifier and cannot be used without a conversion specifier.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdio-common/vfprintf.c,1316,7,error,syntaxError,,syntax error
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdlib/mul.c,118,21,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdlib/mul.c,126,28,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdlib/mul_n.c,383,22,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdlib/mul_n.c,396,22,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,stdlib/tst-setcontext.c,60,16,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/strnlen.c,75,34,error,integerOverflow,190,Signed integer overflow for expression '0x7efefefeL<<16'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/strnlen.c,75,41,error,integerOverflow,190,Signed integer overflow for expression '(0x7efefefeL<<16)<<16'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/strxfrm_l.c,170,28,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/strxfrm_l.c,171,35,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/strxfrm_l.c,69,37,portability,shiftNegativeLHS,758,Shifting a negative value is technically undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,locale/weight.h,25,20,error,uninitvar,457,Uninitialized variable: table
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memccpy.c,93,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memccpy.c,126,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memccpy.c,126,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memccpy.c,126,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 4) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memccpy.c,126,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 5) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memccpy.c,128,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memccpy.c,205,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memccpy.c,265,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memchr.c,66,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memchr.c,101,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memchr.c,101,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memchr.c,103,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memchr.c,151,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memchr.c,171,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcmp.c,70,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcmp.c,102,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcmp.c,102,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcmp.c,102,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcmp.c,104,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcmp.c,162,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcmp.c,188,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcpy.c,87,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcpy.c,112,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcpy.c,112,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcpy.c,112,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcpy.c,114,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcpy.c,187,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memcpy.c,241,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memmove.c,86,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memmove.c,111,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memmove.c,111,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memmove.c,111,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memmove.c,113,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memmove.c,178,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memmove.c,249,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memset.c,77,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memset.c,89,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memset.c,89,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memset.c,91,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memset.c,140,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-memset.c,192,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcat.c,76,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcat.c,105,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcat.c,105,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcat.c,105,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcat.c,105,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 4) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcat.c,107,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcat.c,173,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcat.c,231,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strchr.c,79,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strchr.c,112,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strchr.c,112,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strchr.c,114,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strchr.c,175,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strchr.c,194,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcmp.c,84,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcmp.c,118,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcmp.c,118,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcmp.c,118,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcmp.c,120,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcmp.c,199,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcmp.c,225,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcpy.c,77,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcpy.c,103,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcpy.c,103,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcpy.c,103,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcpy.c,105,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcpy.c,148,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strcpy.c,198,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strlen.c,74,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strlen.c,92,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strlen.c,92,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strlen.c,94,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strlen.c,129,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strlen.c,148,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,84,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,100,2,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,100,2,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,138,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,138,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,138,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,138,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 4) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,183,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,183,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,183,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,183,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 4) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,102,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,140,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,185,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,268,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncmp.c,294,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncpy.c,109,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncpy.c,137,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncpy.c,137,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncpy.c,137,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncpy.c,137,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 4) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncpy.c,139,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncpy.c,215,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strncpy.c,280,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strpbrk.c,89,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strpbrk.c,141,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strpbrk.c,141,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strpbrk.c,141,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strpbrk.c,143,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strpbrk.c,213,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strpbrk.c,233,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strrchr.c,69,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strrchr.c,106,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strrchr.c,106,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strrchr.c,108,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strrchr.c,174,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strrchr.c,193,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strspn.c,93,7,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strspn.c,133,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 1) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strspn.c,133,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 2) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strspn.c,133,5,portability,invalidPrintfArgType_sint,686,%zd in format string (no. 3) requires 'ssize_t' but the argument type is 'size_t {aka unsigned long long}'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strspn.c,135,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strspn.c,195,7,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/test-strspn.c,216,3,error,comparePointers,570,Comparing pointers that point to different objects
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,314,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: one
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,318,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: one
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,324,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: one
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,329,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: one
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,332,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: one
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,335,19,error,bufferAccessOutOfBounds,788,Buffer is accessed out of bounds: one
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,348,30,error,invalidFunctionArg,628,Invalid strncat() argument nr 3. The value is -1 but the valid values are '0:'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,370,30,error,invalidFunctionArg,628,Invalid strncmp() argument nr 3. The value is -1 but the valid values are '0:'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,371,33,error,invalidFunctionArg,628,Invalid strncmp() argument nr 3. The value is -2 but the valid values are '0:'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1002,26,error,invalidFunctionArg,628,Invalid memchr() argument nr 2. The value is -157 but the valid values are '0:'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1198,10,warning,memsetZeroBytes,687,memset() called to fill 0 bytes.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1205,24,warning,memsetValueOutOfRange,686,The 2nd memset() argument '010045' doesn't fit into an 'unsigned char'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1209,16,warning,memsetValueOutOfRange,686,The 2nd memset() argument '0x101' doesn't fit into an 'unsigned char'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,69,10,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,70,10,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,71,10,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,72,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,73,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,74,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,75,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,76,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,77,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,357,10,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,358,10,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,359,10,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,360,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,361,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,362,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,363,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,364,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,365,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,366,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,367,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,368,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,369,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,370,10,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,371,10,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,985,9,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,986,9,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,987,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,988,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,989,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,990,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,991,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,992,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1317,9,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1318,9,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1319,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1320,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1321,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1322,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1323,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1340,9,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1341,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1342,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1343,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1344,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1345,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1346,9,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1347,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1348,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1349,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1350,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1351,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1359,9,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1360,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1361,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1362,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1363,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1364,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1365,9,warning,staticStringCompare,571,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1366,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1367,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1368,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1369,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1370,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1371,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1372,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1373,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1374,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1375,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1376,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1377,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,string/tester.c,1378,9,warning,staticStringCompare,570,Unnecessary comparison of static strings.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sunrpc/rpc_scan.c,536,8,error,uninitdata,457,Memory is allocated but not initialized: file
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sunrpc/rpc_thread.c,13,20,error,syntaxError,,syntax error
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sunrpc/svcauth_des.c,295,17,error,syntaxError,,syntax error: <)
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/alpha/div_libc.h,44,2,error,syntaxError,,syntax error:  . set
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/alpha/fpu/fesetround.c,35,20,error,shiftTooManyBits,758,Shifting 32-bit value by 58 bits is undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/alpha/fpu/fesetround.c,36,28,error,shiftTooManyBits,758,Shifting 32-bit value by 58 bits is undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/dl-osinfo.h,8,4,error,objectIndex,758,The address of local variable 'ret' is accessed at non-zero index.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/dl-osinfo.h,9,4,error,objectIndex,758,The address of local variable 'ret' is accessed at non-zero index.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,sysdeps/generic/unwind-dw2-fde.h,152,32,portability,arithOperationsOnVoidPointer,467,"'(void*)&f->CIE_delta' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/unwind-dw2.c,230,47,portability,arithOperationsOnVoidPointer,467,"'pc' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/unwind-dw2.c,757,9,portability,arithOperationsOnVoidPointer,467,"'fs->pc' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/unwind-dw2.c,779,11,portability,arithOperationsOnVoidPointer,467,"'fs->pc' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/unwind-dw2.c,783,11,portability,arithOperationsOnVoidPointer,467,"'fs->pc' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/unwind-dw2.c,787,11,portability,arithOperationsOnVoidPointer,467,"'fs->pc' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/unwind-dw2.c,956,39,portability,arithOperationsOnVoidPointer,467,"'context->ra' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/unwind-dw2.c,1039,26,portability,arithOperationsOnVoidPointer,467,"'pc_target' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/unwind-dw2.c,1115,11,portability,arithOperationsOnVoidPointer,467,"'cfa' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/generic/unwind-dw2.c,1142,24,portability,arithOperationsOnVoidPointer,467,"'cfa' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,sysdeps/generic/unwind-pe.h,188,20,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour. See condition at line 187.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/flt-32/e_atan2f.c,53,10,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/flt-32/s_expm1f.c,115,24,portability,shiftNegativeLHS,758,Shifting a negative value is technically undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/flt-32/s_expm1f.c,121,50,error,shiftNegative,758,Shifting by a negative value is undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/flt-32/s_expm1f.c,124,24,portability,shiftNegativeLHS,758,Shifting a negative value is technically undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/e_asinl.c,214,22,error,uninitvar,457,Uninitialized variable: t
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/e_atan2l.c,77,10,portability,shiftTooManyBitsSigned,758,Shifting signed 64-bit value by 63 bits is implementation-defined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/e_fmodl.c,88,18,portability,shiftTooManyBitsSigned,758,Shifting signed 64-bit value by 63 bits is implementation-defined behaviour. See condition at line 87.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/e_fmodl.c,100,18,portability,shiftTooManyBitsSigned,758,Shifting signed 64-bit value by 63 bits is implementation-defined behaviour. See condition at line 99.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/e_fmodl.c,130,34,portability,shiftTooManyBitsSigned,758,Shifting signed 64-bit value by 63 bits is implementation-defined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/e_fmodl.c,141,34,portability,shiftTooManyBitsSigned,758,Shifting signed 64-bit value by 63 bits is implementation-defined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/k_cosl.c,108,33,portability,shiftNegativeLHS,758,Shifting a negative value is technically undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/k_sincosl.c,135,33,portability,shiftNegativeLHS,758,Shifting a negative value is technically undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/k_sinl.c,108,33,portability,shiftNegativeLHS,758,Shifting a negative value is technically undefined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/s_nearbyintl.c,117,17,error,uninitvar,457,Uninitialized variable: high
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/s_nearbyintl.c,93,4,error,uninitvar,457,Uninitialized variable: low
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/s_nearbyintl.c,114,18,error,uninitvar,457,Uninitialized variable: low
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/ieee754/ldbl-128ibm/s_nearbyintl.c,117,24,error,uninitvar,457,Uninitialized variable: low
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/i386/init-first.c,108,21,warning,constStatement,398,Found suspicious operator '*'
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/i386/init-first.c,127,54,portability,arithOperationsOnVoidPointer,467,"'(const void*)ehdr' is of type 'const void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/i386/init-first.c,233,28,portability,arithOperationsOnVoidPointer,467,"'(void*)newsp' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/i386/trampoline.c,109,9,portability,arithOperationsOnVoidPointer,467,"'sigsp' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/ioctl.c,134,12,portability,arithOperationsOnVoidPointer,467,"'argptr' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/ioctl.c,153,19,portability,arithOperationsOnVoidPointer,467,"'(void*)p' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/ioctl.c,298,10,portability,arithOperationsOnVoidPointer,467,"'p' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/ioctl.c,116,19,error,uninitvar,457,Uninitialized variable: arg
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/ioctl.c,150,19,portability,arithOperationsOnVoidPointer,467,"'(void*)t' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/powerpc/trampoline.c,74,9,portability,arithOperationsOnVoidPointer,467,"'sigsp' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/powerpc/trampoline.c,76,9,portability,arithOperationsOnVoidPointer,467,"'sigsp' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/readdir64_r.c,96,14,warning,nullPointerRedundantCheck,476,Either the condition 'if(dp)' is redundant or there is possible null pointer dereference: dp.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/readdir64_r.c,98,7,error,uninitvar,457,Uninitialized variable: dp
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/readdir64_r.c,109,10,error,uninitvar,457,Uninitialized variable: dp
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/mach/hurd/setitimer.c,252,43,error,syntaxError,,syntax error: <)
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/posix/libc_fatal.c,102,31,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/posix/libc_fatal.c,113,27,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/posix/libc_fatal.c,35,,error,preprocessorErrorDirective,,No header in #include
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/powerpc/dl-procinfo.h,66,19,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/powerpc/powerpc64/sysdep.h,73,,error,preprocessorErrorDirective,,"failed to expand 'ret', Invalid ## usage when expanding 'DOT_LABEL'."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/powerpc/powerpc64/sysdep.h,28,3,error,syntaxError,,syntax error
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,,sysdeps/unix/dirstream.h,43,25,error,syntaxError,,syntax error
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/alpha/fxstatat.c,58,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/check_pf.c,150,34,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/dl-osinfo.h,177,4,error,objectIndex,758,The address of local variable 'ret' is accessed at non-zero index.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/dl-osinfo.h,178,4,error,objectIndex,758,The address of local variable 'ret' is accessed at non-zero index.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/dl-osinfo.h,76,7,portability,arithOperationsOnVoidPointer,467,"'(const void*)note' is of type 'const void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/dl-osinfo.h,79,4,portability,arithOperationsOnVoidPointer,467,"'(const void*)(note+1)' is of type 'const void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/dl-sysdep.c,48,36,error,nullPointerArithmetic,682,Pointer addition with NULL pointer.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/dl-sysdep.c,48,50,error,nullPointerArithmetic,682,"Overflow in pointer arithmetic, NULL pointer is subtracted."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/dl-sysdep.c,48,36,portability,arithOperationsOnVoidPointer,467,"'(void*)0' is of type 'void *'. When using void pointers in calculations, the behaviour is undefined."
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/faccessat.c,84,10,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/fchmodat.c,83,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/fchownat.c,78,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/futimesat.c,71,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/futimesat.c,88,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/fxstatat.c,96,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/fxstatat64.c,102,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/getsourcefilter.c,102,34,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/i386/fchownat.c,84,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/i386/fxstatat.c,98,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/ia64/sigaction.c,52,,error,preprocessorErrorDirective,,No header in #include
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/ifaddrs.c,139,11,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/ifaddrs.c,465,22,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/lddlibc4.c,80,18,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/linkat.c,77,17,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/linkat.c,96,15,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/openat.c,119,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/renameat.c,146,16,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/renameat.c,165,16,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/s390/s390-32/fchownat.c,76,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/s390/s390-64/sigaction.c,48,,error,preprocessorErrorDirective,,No header in #include
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/semctl.c,121,7,error,va_start_subsequentCalls,664,va_start() or va_copy() called subsequently on 'ap' without va_end() in between.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/semctl.c,127,3,error,va_list_usedBeforeStarted,664,va_list 'ap' used before va_start() was called.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/semctl.c,87,7,error,va_start_subsequentCalls,664,va_start() or va_copy() called subsequently on 'ap' without va_end() in between.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/semctl.c,93,3,error,va_list_usedBeforeStarted,664,va_list 'ap' used before va_start() was called.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/setsourcefilter.c,45,34,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/sh/fchownat.c,63,13,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/shm_open.c,159,20,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/shm_open.c,230,20,warning,allocaCalled,,Obsolete function 'alloca' called. In C99 and later it is recommended to use a variable length array instead.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/sigaction.c,133,,error,preprocessorErrorDirective,,No header in #include
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/sparc/sparc32/sigaction.c,136,,error,preprocessorErrorDirective,,No header in #include
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/sparc/sparc64/sigaction.c,69,,error,preprocessorErrorDirective,,No header in #include
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/sparc/sparc64/sigaction.c,56,15,error,uninitvar,457,Uninitialized variable: retl
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/sparc/sparc64/sigaction.c,64,10,error,uninitvar,457,Uninitialized variable: retl
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/sys/epoll.h,50,18,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sysdeps/unix/sysv/linux/x86_64/sys/epoll.h,50,18,portability,shiftTooManyBitsSigned,758,Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,time/strptime_l.c,434,2,warning,unusedLabelSwitchConfiguration,398,Label 'match_century' is not used. There is #if in function body so the label might be used in code that is removed by the preprocessor. Should this be a 'case' of the enclosing switch()?
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,time/strptime_l.c,670,2,warning,unusedLabelSwitchConfiguration,398,Label 'match_year_in_century' is not used. There is #if in function body so the label might be used in code that is removed by the preprocessor. Should this be a 'case' of the enclosing switch()?
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,timezone/zic.c,2305,13,warning,incorrectLogicOperator,570,Logical conjunction always evaluates to false: i < 0 && l >= 0.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,timezone/zic.c,2305,35,warning,incorrectLogicOperator,570,Logical conjunction always evaluates to false: i == 0 && l != 0.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,timezone/zic.c,2305,56,warning,incorrectLogicOperator,570,Logical conjunction always evaluates to false: i > 0 && l <= 0.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,wcsmbs/tst-mbrtowc2.c,61,38,style,duplicateExpression,398,Same expression on both sides of '||'.
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,argp/argp-help.c,990,7,error,ctunullpointer,476,Null pointer dereference: argp
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,argp/argp-help.c,1353,36,error,ctunullpointer,476,Null pointer dereference: argp
+2,No,No,edac424073092fda118fb8514ad524d3a66a9ae6,,,,No,sunrpc/rpc_hout.c,427,28,error,ctunullpointer,476,Null pointer dereference: addargtype

@@ -7,6 +7,7 @@
 import os
 import re
 import subprocess
+import tempfile
 from typing import Optional, Tuple, Union
 
 import bs4 # type: ignore
@@ -57,6 +58,27 @@ class Sat():
 
 		return (success, result.stdout)
 
+	@staticmethod
+	def write_list_to_temporary_file(value_list: list) -> Optional[str]:
+		""" Writes a list to a temporary file, where each item appears in its own line. If this file cannot be created, this function returns None.
+		This file is closed before returning so it can be opened by other processes. For example, passing a list of file paths to a SAT. """
+
+		result = None
+
+		try:
+			_, temporary_file_path = tempfile.mkstemp()
+
+			with open(temporary_file_path, 'w') as temporary_file:
+				for value in value_list:
+					temporary_file.write(value + '\n')
+
+			result = temporary_file_path
+
+		except Exception as error:
+			log.error(f'Failed to write the list to a temporary file with the error: {repr(error)}')
+
+		return result
+
 ####################################################################################################
 
 class UnderstandSat(Sat):
@@ -92,26 +114,33 @@ class UnderstandSat(Sat):
 			These were listed using the command: und list -all settings <Database Name>
 		"""
 
+		success = False
 		database_path = os.path.join(self.project.output_directory_path, self.project.short_name + self.database_extension)
 
 		if isinstance(file_path_list, bool):
 			file_path_list = [self.project.repository_path]
 
-		success, _ = self.run	(
-									'-quiet', '-db', database_path,
-									'create', '-languages', 'c++', # This value cannot be self.project.language since only "c++" is accepted.
-									'settings', '-metrics', 'all',
-												'-metricsWriteColumnTitles', 'on',
-												'-metricsShowFunctionParameterTypes', 'on',
-												'-metricsShowDeclaredInFile', 'on',
-												'-metricsFileNameDisplayMode', 'NoPath',
-												'-metricsDeclaredInFileDisplayMode', 'FullPath', # See below.
-												'-metricsOutputFile', output_csv_path,
+		temporary_file_path = Sat.write_list_to_temporary_file(file_path_list)
 
-									'add', *file_path_list,
-									'analyze',
-									'metrics'
-								)
+		if temporary_file_path:
+
+			success, _ = self.run	(
+										'-quiet', '-db', database_path,
+										'create', '-languages', 'c++', # This value cannot be self.project.language since only "c++" is accepted.
+										'settings', '-metrics', 'all',
+													'-metricsWriteColumnTitles', 'on',
+													'-metricsShowFunctionParameterTypes', 'on',
+													'-metricsShowDeclaredInFile', 'on',
+													'-metricsFileNameDisplayMode', 'NoPath',
+													'-metricsDeclaredInFileDisplayMode', 'FullPath', # See below.
+													'-metricsOutputFile', output_csv_path,
+
+										'add', f'@{temporary_file_path}',
+										'analyze',
+										'metrics'
+									)
+
+			delete_file(temporary_file_path)
 
 		if success:
 			
@@ -163,6 +192,8 @@ class CppcheckSat(Sat):
 	def generate_project_alerts(self, file_path_list: Union[list, bool], output_csv_path: str) -> bool:
 		""" Generates the project's alerts given list of files. """
 
+		success = False
+
 		if self.project.include_directory_path is not None:
 			include_arguments = ['-I', self.project.include_directory_path]
 		else:
@@ -171,18 +202,24 @@ class CppcheckSat(Sat):
 		if isinstance(file_path_list, bool):
 			file_path_list = [self.project.repository_path]
 
-		# The argument "--enable=error" is not necessary since it's enabled by default.
-		# @Future: Should "--force" be used? If so, remove "--suppress=toomanyconfigs".
-		success, _ = self.run	(
-									'--quiet',
-									'--enable=warning,portability', '--inconclusive',
-									f'--language={self.project.language}', *include_arguments,
-									'--suppress=toomanyconfigs', '--suppress=unknownMacro', '--suppress=unmatchedSuppression',
-									
-									'--template="{file}","{line}","{column}","{severity}","{id}","{cwe}","{message}"',
-									f'--output-file={output_csv_path}',
-									*file_path_list
+		temporary_file_path = Sat.write_list_to_temporary_file(file_path_list)
+
+		if temporary_file_path:
+
+			# The argument "--enable=error" is not necessary since it's enabled by default.
+			# @Future: Should "--force" be used? If so, remove "--suppress=toomanyconfigs".
+			success, _ = self.run	(
+										'--quiet',
+										'--enable=warning,portability', '--inconclusive',
+										f'--language={self.project.language}', *include_arguments,
+										'--suppress=toomanyconfigs', '--suppress=unknownMacro', '--suppress=unmatchedSuppression',
+										
+										'--template="{file}","{line}","{column}","{severity}","{id}","{cwe}","{message}"',
+										f'--output-file={output_csv_path}',
+										f'--file-list={temporary_file_path}'
 								)
+
+			delete_file(temporary_file_path)
 
 		if success:
 			alerts = pd.read_csv(output_csv_path, header=None, names=['File', 'Line', 'Column', 'Severity', 'Rule', 'CWE', 'Message'], dtype=str)
