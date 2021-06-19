@@ -34,7 +34,7 @@ for project in project_list:
 
 	for input_csv_path in project.find_output_csv_files('file-timeline'):
 
-		log.info(f'Generating metrics for the project "{project}" using the information in "{input_csv_path}".')
+		log.info(f'Generating metrics with Understand version {understand.version} for the project "{project}" using the information in "{input_csv_path}".')
 
 		for changed_files in project.iterate_and_checkout_file_timeline_in_repository(input_csv_path):
 
@@ -74,7 +74,7 @@ for project in project_list:
 
 					def get_code_unit_status(signature: str, code_unit_list: list) -> Tuple[str, list]:
 						""" Checks if a code unit is vulnerable given its name/signature and retrieves its line numbers. """
-						status = 'No'
+						status = 'Unknown'
 						lines = []
 
 						# E.g. "EventStateManager::SetPointerLock(nsIWidget *,nsIContent *)" -> "setpointerlock".

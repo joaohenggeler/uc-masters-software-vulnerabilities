@@ -32,7 +32,7 @@ for project in project_list:
 
 	for input_csv_path in project.find_output_csv_files('file-timeline'):
 
-		log.info(f'Generating the alerts for the project "{project}" using the information in "{input_csv_path}".')
+		log.info(f'Generating the alerts with Cppcheck version {cppcheck.version} for the project "{project}" using the information in "{input_csv_path}".')
 
 		for changed_files in project.iterate_and_checkout_file_timeline_in_repository(input_csv_path):
 
