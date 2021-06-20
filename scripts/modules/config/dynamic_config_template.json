@@ -6,7 +6,10 @@
 		"min_hub_pages": 6,
 		"hub_page_step": 5,
 		"max_cves_per_hub_page": 5,
-		"use_random_sampling": true
+		"use_random_sampling": true,
+
+		"verify_different_unit_names": true,
+		"different_unit_names_ratio_limit": 80
 	},
 
 	"recursion_limit": null,

@@ -14,8 +14,9 @@ import os
 from typing import Tuple
 
 import pandas as pd # type: ignore
+from fuzzywuzzy import fuzz # type: ignore
 
-from modules.common import log, delete_file, replace_in_filename, serialize_json_container
+from modules.common import log, DEBUG_ENABLED, DEBUG_CONFIG, delete_file, replace_in_filename, serialize_json_container
 from modules.sats import UnderstandSat
 from modules.project import Project
 
@@ -85,10 +86,19 @@ for project in project_list:
 						name = name.rsplit('::', 1)[-1]
 
 						for unit in code_unit_list:
-							if name == unit['Name'].lower():
+							
+							unit_name = unit['Name'].lower()
+
+							if name == unit_name:
 								status = unit['Vulnerable']
 								lines = unit['Lines']
 								break
+
+							elif DEBUG_ENABLED and DEBUG_CONFIG['verify_different_unit_names']:
+								
+								ratio = fuzz.ratio(name, unit_name)
+								if ratio >= DEBUG_CONFIG['different_unit_names_ratio_limit']:
+									log.debug(f'The code unit "{name}" has a ratio of {ratio} when compared with "{unit_name}".')
 
 						return (status, lines)
 
