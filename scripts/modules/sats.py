@@ -120,6 +120,18 @@ class UnderstandSat(Sat):
 		if isinstance(file_path_list, bool):
 			file_path_list = [self.project.repository_path]
 
+		# Understand fails if one of the files doesn't exist on disk so we'll filter the paths before running it.
+		filtered_file_path_list = []
+		for file_path in file_path_list
+
+			if os.path.isfile(file_path):
+				filtered_file_path_list.append(file_path)
+			else:
+				log.warning(f'Removing the file path "{file_path}" since it does not exist on disk.')
+
+		file_path_list = filtered_file_path_list
+		del filtered_file_path_list
+
 		temporary_file_path = Sat.write_list_to_temporary_file(file_path_list)
 
 		if temporary_file_path:

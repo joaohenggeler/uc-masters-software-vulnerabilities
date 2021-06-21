@@ -95,7 +95,7 @@ for project in project_list:
 								break
 
 							elif DEBUG_ENABLED and DEBUG_CONFIG['verify_different_unit_names']:
-								
+
 								ratio = fuzz.ratio(name, unit_name)
 								if ratio >= DEBUG_CONFIG['different_unit_names_ratio_limit']:
 									log.debug(f'The code unit "{name}" has a ratio of {ratio} when compared with "{unit_name}".')

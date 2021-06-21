@@ -1,5 +1,6 @@
 beautifulsoup4>=4.9.3
 clang>=11.0
+fuzzywuzzy>=0.18.0
 GitPython>=3.1.13
 lxml>=4.6.2
 matplotlib-venn>=0.11.6
@@ -9,5 +10,6 @@ numpy>=1.19.4
 openpyxl>=3.0.5
 pandas>=1.1.5
 PyGithub>=1.54.1
+python-Levenshtein>=0.12.2
 requests>=2.25.1
 xlrd>=2.0.1
