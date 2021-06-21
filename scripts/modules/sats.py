@@ -122,7 +122,7 @@ class UnderstandSat(Sat):
 
 		# Understand fails if one of the files doesn't exist on disk so we'll filter the paths before running it.
 		filtered_file_path_list = []
-		for file_path in file_path_list
+		for file_path in file_path_list:
 
 			if os.path.isfile(file_path):
 				filtered_file_path_list.append(file_path)
