@@ -75,6 +75,12 @@ for project in project_list:
 
 					def get_code_unit_status(signature: str, code_unit_list: list) -> Tuple[str, list]:
 						""" Checks if a code unit is vulnerable given its name/signature and retrieves its line numbers. """
+						
+						# All files that aren't affected by a vulnerability have an empty code unit list, and should be
+						# marked as neutral instead of using the default unknown status.
+						if not changed_files.Affected:
+							return ('No', [])
+
 						status = 'Unknown'
 						lines = []
 
