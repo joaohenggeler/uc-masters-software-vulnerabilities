@@ -106,6 +106,9 @@ for project in project_list:
 								if ratio >= DEBUG_CONFIG['different_unit_names_ratio_limit']:
 									log.debug(f'The code unit "{name}" has a ratio of {ratio} when compared with "{unit_name}".')
 
+						if DEBUG_ENABLED and status == 'Unknown':
+							log.debug(f'The code unit "{name}" ("{signature}") does not exist in the unit list: {code_unit_list}')
+
 						return (status, lines)
 
 					for row in group_df.itertuples():

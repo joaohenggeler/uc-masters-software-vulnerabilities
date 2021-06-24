@@ -127,7 +127,7 @@ class UnderstandSat(Sat):
 			if os.path.isfile(file_path):
 				filtered_file_path_list.append(file_path)
 			else:
-				log.warning(f'Removing the file path "{file_path}" since it does not exist on disk.')
+				log.warning(f'Skipping the file path "{file_path}" since it does not exist on disk.')
 
 		file_path_list = filtered_file_path_list
 		del filtered_file_path_list
@@ -153,6 +153,9 @@ class UnderstandSat(Sat):
 									)
 
 			delete_file(temporary_file_path)
+
+		# Safeguard against the tool executing successfully without having created the CSV file.
+		success = success and os.path.isfile(output_csv_path)
 
 		if success:
 			
@@ -233,7 +236,11 @@ class CppcheckSat(Sat):
 
 			delete_file(temporary_file_path)
 
+		# Safeguard against the tool executing successfully without having created the CSV file.
+		success = success and os.path.isfile(output_csv_path)
+
 		if success:
+
 			alerts = pd.read_csv(output_csv_path, header=None, names=['File', 'Line', 'Column', 'Severity', 'Rule', 'CWE', 'Message'], dtype=str)
 
 			alerts['File'] = alerts['File'].map(lambda x: None if x == 'nofile' else self.project.get_relative_path_in_repository(x))
