@@ -95,7 +95,7 @@ for project in project_list:
 				log.info(f'Generated the alerts to "{output_csv_path}".')
 				alerts.to_csv(output_csv_path, index=False)
 			else:
-				log.error(f'Failed to generate the alerts to "{output_csv_path}".')
+				log.error(f'Failed to generate the alerts for the commit {changed_files.CommitHash} to "{output_csv_path}".')
 				delete_file(output_csv_path)
 
 	log.info(f'Finished running for the project "{project}".')

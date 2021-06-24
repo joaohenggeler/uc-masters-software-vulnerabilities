@@ -768,10 +768,10 @@ class Project:
 				absolute_file_path_list = [self.get_absolute_path_in_repository(file_path) for file_path in relative_file_path_list]
 				
 				affected_function_list = group_df['Affected Functions'].tolist()
-				affected_function_list = [deserialize_json_container(function_list) for function_list in affected_function_list if pd.notna(function_list)]
+				affected_function_list = [deserialize_json_container(function_list) for function_list in affected_function_list]
 
 				affected_class_list = group_df['Affected Classes'].tolist()
-				affected_class_list = [deserialize_json_container(class_list) for class_list in affected_class_list if pd.notna(class_list)]
+				affected_class_list = [deserialize_json_container(class_list) for class_list in affected_class_list]
 
 				def map_file_paths_to_code_units(code_unit_list: list) -> dict:
 					""" Maps the relative file paths in the repository to their code units. """
@@ -781,7 +781,8 @@ class Project:
 					# have a list of code units.
 					file_path_to_code_units = defaultdict(lambda: [])
 					for file_path, units in zip(relative_file_path_list, code_unit_list):
-						file_path_to_code_units[file_path] = units if units is not None else []
+						if units is not None:
+							file_path_to_code_units[file_path] = units
 
 					return file_path_to_code_units
 

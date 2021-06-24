@@ -9,7 +9,7 @@
 		"use_random_sampling": true,
 
 		"verify_different_unit_names": true,
-		"different_unit_names_ratio_limit": 80
+		"different_unit_names_ratio_limit": 90
 	},
 
 	"recursion_limit": null,
