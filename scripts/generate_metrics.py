@@ -76,12 +76,13 @@ for project in project_list:
 						""" Checks if a code unit is vulnerable given its name/signature and retrieves its line numbers. """
 						
 						# All files that aren't affected by a vulnerability have an empty code unit list, and should be
-						# marked as neutral instead of potentially using the default unknown status. The same applies to
-						# neutral files that were affected by vulnerabilities.
-						if not changed_files.Vulnerable:
+						# marked as neutral instead of using the default unknown status. The same applies to neutral files
+						# that were affected by vulnerabilities, though we want to save the code unit line numbers below.
+						if not changed_files.Affected:
 							return ('No', [])
 
-						status = 'Unknown'
+						DEFAULT_STATUS = 'Unknown'
+						status = DEFAULT_STATUS
 						lines = []
 
 						# E.g. "EventStateManager::SetPointerLock(nsIWidget *,nsIContent *)" -> "setpointerlock".
@@ -106,8 +107,11 @@ for project in project_list:
 								if ratio >= DEBUG_CONFIG['different_unit_names_ratio_limit']:
 									log.debug(f'The code unit "{name}" has a ratio of {ratio} when compared with "{unit_name}".')
 
-						if DEBUG_ENABLED and status == 'Unknown':
+						if DEBUG_ENABLED and status == DEFAULT_STATUS:
 							log.debug(f'The code unit "{name}" ("{signature}") does not exist in the unit list of the file "{row.File}" ({changed_files.CommitHash}).')
+
+						if not changed_files.Vulnerable and status == DEFAULT_STATUS:
+							status = 'No'
 
 						return (status, lines)
 
