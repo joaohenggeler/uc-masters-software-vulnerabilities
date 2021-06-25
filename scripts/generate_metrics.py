@@ -76,8 +76,9 @@ for project in project_list:
 						""" Checks if a code unit is vulnerable given its name/signature and retrieves its line numbers. """
 						
 						# All files that aren't affected by a vulnerability have an empty code unit list, and should be
-						# marked as neutral instead of using the default unknown status.
-						if not changed_files.Affected:
+						# marked as neutral instead of potentially using the default unknown status. The same applies to
+						# neutral files that were affected by vulnerabilities.
+						if not changed_files.Vulnerable:
 							return ('No', [])
 
 						status = 'Unknown'
