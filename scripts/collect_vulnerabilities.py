@@ -42,7 +42,7 @@ for project in project_list:
 	
 	os.makedirs(project.output_directory_path, exist_ok=True)
 
-	output_csv_path = project.output_csv_path_template.substitute(prefix='cve')
+	output_csv_path = project.get_base_output_csv_path('cve')
 
 	with open(output_csv_path, 'w', newline='') as csv_file:
 
@@ -74,4 +74,5 @@ for project in project_list:
 
 	log.info(f'Finished running for the project "{project}".')
 
+log.info('Finished running.')
 print('Finished running.')

@@ -107,11 +107,11 @@ for project in project_list:
 								if ratio >= DEBUG_CONFIG['different_unit_names_ratio_limit']:
 									log.debug(f'The code unit "{name}" has a ratio of {ratio} when compared with "{unit_name}".')
 
-						if DEBUG_ENABLED and status == DEFAULT_STATUS:
-							log.debug(f'The code unit "{name}" ("{signature}") does not exist in the unit list of the file "{row.File}" ({changed_files.CommitHash}).')
-
 						if not changed_files.Vulnerable and status == DEFAULT_STATUS:
 							status = 'No'
+
+						if DEBUG_ENABLED and status == DEFAULT_STATUS:
+							log.debug(f'The code unit "{name}" ("{signature}") does not exist in the unit list of the file "{row.File}" ({changed_files.CommitHash}).')
 
 						return (status, lines)
 

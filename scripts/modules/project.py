@@ -147,6 +147,13 @@ class Project:
 					log.critical(f'The repository for project "{project}" was not loaded correctly.')
 					sys.exit(1)
 
+	def get_base_output_csv_path(self, prefix: str) -> str:
+		""" Creates the base output path for a CSV file with a given prefix. For example, using the prefix "cve" for the Mozilla project,
+		the file path would be: "cve-1-mozilla-master-branch-20210401212440.csv". """
+		used_branches = 'all-branches' if self.scrape_all_branches else 'master-branch'
+		filename = prefix + f'-{self.database_id}-{self.short_name}-{used_branches}-{CURRENT_TIMESTAMP}.csv'
+		return os.path.join(self.output_directory_path, filename)
+
 	def find_output_csv_files(self, prefix: str, subdirectory: Optional[str] = None) -> List[str]:
 		""" Finds the paths to any CSV files that belong to this project by looking at their prefix. """
 		
