@@ -90,22 +90,13 @@ def alter_vulnerabilities_in_database() -> None:
 			log.error(f'Failed to create the new vulnerability ID column with the error code {error_code}.')
 			return
 
-		"""
-		success, error_code = db.execute_query(	'''
-												SET @NUM := 1;
-												UPDATE VULNERABILITIES SET V_ID = @NUM := (@NUM + 1) ORDER BY CVE IS NULL, CVE;
-												''', multi=True)
-
-		if not success:
-			log.error(f'Failed to set the new vulnerability ID values with the error code {error_code}.')
-			return
-		"""
-
 		success, error_code = db.execute_query(	'''
 												ALTER TABLE VULNERABILITIES
 												DROP PRIMARY KEY,
 												ADD PRIMARY KEY (V_ID),
-												MODIFY COLUMN V_ID INTEGER NOT NULL AUTO_INCREMENT;
+												MODIFY COLUMN V_ID INTEGER NOT NULL AUTO_INCREMENT,
+												MODIFY COLUMN V_ID_LEGACY VARCHAR(30) NULL,
+												MODIFY COLUMN VULNERABILITY_URL VARCHAR(3000);
 												''')
 
 		if not success:
