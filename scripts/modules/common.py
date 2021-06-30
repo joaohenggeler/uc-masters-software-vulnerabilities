@@ -174,11 +174,17 @@ def has_file_extension(file_path: str, file_extension: str) -> bool:
 
 	return file_path.lower().endswith('.' + file_extension)
 
-def replace_in_filename(file_path: str, old: str, new: str) -> str:
-	""" Replaces a substring in a path's filename. """
+def replace_in_filename(file_path: str, old: str, new: str, remove_extra_extensions: bool = False) -> str:
+	""" Replaces a substring in a path's filename. Any additional file extensions may be optionally removed.
+	For example, if remove_extra_extensions is True: "path/old-file.txt.gz" -> "path/new-file.txt". """
 
 	directory_path, filename = os.path.split(file_path)
 	filename = filename.replace(old, new)
+
+	if remove_extra_extensions:
+		split_filename = filename.split('.')
+		filename = '.'.join(split_filename[0:2])
+
 	return os.path.join(directory_path, filename)
 
 def join_and_normalize_paths(*component_list) -> str:

@@ -41,7 +41,7 @@ for project in project_list:
 
 			# We should be careful when using the topological index here since it may be repeated for different affected values.
 			output_path = os.path.join(OUTPUT_SUBDIRECTORY, f'alerts-t{changed_files.TopologicalIndex}-a{affected_commit}-v{vulnerable_commit}')
-			output_csv_path = replace_in_filename(input_csv_path, 'file-timeline', output_path)
+			output_csv_path = replace_in_filename(input_csv_path, 'file-timeline', output_path, remove_extra_extensions=True)
 
 			cppcheck_success = cppcheck.generate_project_alerts(changed_files.AbsoluteFilePaths, output_csv_path)
 

@@ -687,8 +687,9 @@ class Project:
 			global CLANG_INDEX
 			tu = CLANG_INDEX.parse(source_file_name, args=clang_arguments, unsaved_files=[ (source_file_name, source_contents) ])
 			
-			for diagnostic in tu.diagnostics:
-				log.info(f'Diagnostic: {diagnostic}')
+			if DEBUG_ENABLED:
+				for diagnostic in tu.diagnostics:
+					log.debug(f'Diagnostic: {diagnostic}')
 
 			FUNCTION_KINDS = [	CursorKind.FUNCTION_DECL, CursorKind.CXX_METHOD, CursorKind.CONSTRUCTOR, CursorKind.DESTRUCTOR,
 								CursorKind.CONVERSION_FUNCTION, CursorKind.FUNCTION_TEMPLATE]
