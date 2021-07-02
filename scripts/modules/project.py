@@ -52,6 +52,8 @@ class Project:
 	full_name: str
 	short_name: str
 	database_id: int
+	database_name: str
+	github_data_name: str
 	vendor_id: int
 	product_id: int
 	url_pattern: str

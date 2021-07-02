@@ -32,6 +32,8 @@
 
 	"extra_time_tables_to_import": ["files", "functions", "class"],
 
+	"github_token": null,
+
 	"projects":
 	{
 		"Glibc":
