@@ -50,7 +50,11 @@ for project in project_list:
 
 			if success:
 
-				metrics = pd.read_csv(output_csv_path, dtype=str)
+				try:
+					metrics = pd.read_csv(output_csv_path, dtype=str)
+				except pd.errors.ParserError as error:
+					log.warning(f'Could not parse the metrics in "{output_csv_path}" with the error: {repr(error)}')
+					metrics = pd.read_csv(output_csv_path, dtype=str, on_bad_lines='warn')
 
 				metrics.insert(0, 'Topological Index', None)
 				metrics.insert(1, 'Affected Commit', None)

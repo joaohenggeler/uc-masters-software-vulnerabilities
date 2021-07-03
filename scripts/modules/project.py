@@ -746,13 +746,17 @@ class Project:
 		for (topological_index, affected, vulnerable, commit_hash, cves), group_df in grouped_files:
 			
 			topological_index = int(topological_index)
-			affected = (affected == 'Yes')
+
+			if GLOBAL_CONFIG['start_at_checkout_commit_index'] is not None and topological_index < GLOBAL_CONFIG['start_at_checkout_commit_index']:
+				continue
 
 			# For any file in an affected commit (vulnerable or neutral), we know that their paths exist in that particular commit.
 			# When we look at the files that weren't affected, we are now dealing with multiple changes across different commits.
 			# Because of this, we must checkout the next commit (i.e. the next vulnerable commit) so that we can guarantee that
 			# those files exist. For example, if we checked out the first commit in the project, we would be missing any files
 			# that were added or changed between that commit and the next vulnerable one.
+
+			affected = (affected == 'Yes')
 
 			if affected:
 				commit_hash_to_checkout = commit_hash
