@@ -163,7 +163,7 @@ class UnderstandSat(Sat):
 				metrics = pd.read_csv(output_csv_path, dtype=str)
 			except pd.errors.ParserError as error:
 				log.warning(f'Could not parse the metrics in "{output_csv_path}" with the error: {repr(error)}')
-				metrics = pd.read_csv(output_csv_path, dtype=str, on_bad_lines='warn')
+				metrics = pd.read_csv(output_csv_path, dtype=str, warn_bad_lines=True)
 
 			# Ideally, we'd just set the "DeclaredInFileDisplayMode" option to "RelativePath" and skip this step. However, doing that would
 			# lead to a few cases where the relative path to the file in the repository was incorrect.
