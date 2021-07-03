@@ -52,7 +52,7 @@ for project in project_list:
 
 				try:
 					metrics = pd.read_csv(output_csv_path, dtype=str)
-				except pd.errors.ParserError as error:
+				except Exception as error:
 					log.warning(f'Could not parse the metrics in "{output_csv_path}" with the error: {repr(error)}')
 					metrics = pd.read_csv(output_csv_path, dtype=str, on_bad_lines='warn')
 
