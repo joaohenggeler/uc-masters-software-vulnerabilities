@@ -164,11 +164,11 @@ class Project:
 		if subdirectory is not None:
 			csv_path = os.path.join(csv_path, subdirectory)
 
-		csv_path = os.path.join(self.output_directory_path, f'{prefix}-{self.database_id}-*')
+		csv_path = os.path.join(csv_path, fr'{prefix}*-{self.database_id}-{self.short_name}-*')
 
 		return glob.glob(csv_path)
 
-	def create_output_subdirectory(self, subdirectory: str) -> None:
+	def create_output_subdirectory(self, subdirectory: str = '') -> None:
 		""" Creates a subdirectory in the project's output directory. """
 		path = os.path.join(self.output_directory_path, subdirectory)
 		os.makedirs(path, exist_ok=True)

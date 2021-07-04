@@ -40,7 +40,7 @@ for project in project_list:
 		'SVN URLs', 'SVN Revision Numbers'
 	]
 	
-	os.makedirs(project.output_directory_path, exist_ok=True)
+	project.create_output_subdirectory()
 
 	output_csv_path = project.get_base_output_csv_path('cve')
 

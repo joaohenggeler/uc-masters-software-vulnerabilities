@@ -11,6 +11,8 @@
 	This script uses each CSV file generated after running "generate_metrics.py" to create three CSV files, one for each code unit.
 """
 
+import os
+
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
@@ -141,19 +143,24 @@ for project in project_list:
 
 		##########
 
-		def write_code_unit_csv(kind_regex: str, replacement_csv_prefix: str) -> None:
+		def write_code_unit_csv(kind_regex: str, kind_name: str) -> None:
 			""" Writes the rows of a specific kind of code unit to a CSV file. """
 			
 			is_code_unit = metrics['Kind'].str.contains(kind_regex)
 			code_unit_metrics = metrics.loc[is_code_unit]
 			code_unit_metrics = code_unit_metrics.dropna(axis=1, how='all')
 			
-			output_csv_path = replace_in_filename(input_csv_path, 'metrics', replacement_csv_prefix)
+			directory_path, filename = os.path.split(input_csv_path)
+			directory_path = os.path.join(directory_path, kind_name)
+			filename = replace_in_filename(filename, 'metrics', f'{kind_name}-metrics')
+
+			os.makedirs(directory_path, exist_ok=True)
+			output_csv_path = os.path.join(directory_path, filename)
 			code_unit_metrics.to_csv(output_csv_path, index=False)
 
-		write_code_unit_csv(r'File', 'file-metrics')
-		write_code_unit_csv(r'Function', 'function-metrics')
-		write_code_unit_csv(r'Class|Struct|Union', 'class-metrics')
+		write_code_unit_csv(r'File', 'file')
+		write_code_unit_csv(r'Function', 'function')
+		write_code_unit_csv(r'Class|Struct|Union', 'class')
 
 	log.info(f'Finished running for the project "{project}".')
 	
