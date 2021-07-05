@@ -737,18 +737,24 @@ class Project:
 														'Commit Hash', 'Affected Functions', 'Affected Classes', 'CVEs'], dtype=str)
 
 		timeline = timeline.replace({np.nan: None})
+		timeline['Topological Index'] = pd.to_numeric(timeline['Topological Index'])
 		
+		if GLOBAL_CONFIG['start_at_checkout_commit_index'] is not None:
+			
+			is_allowed_commit = timeline['Topological Index'] >= GLOBAL_CONFIG['start_at_checkout_commit_index']
+			timeline = timeline[is_allowed_commit]
+
+		if GLOBAL_CONFIG['checkout_commit_index_list'] is not None:
+
+			is_allowed_commit = timeline['Topological Index'].isin(GLOBAL_CONFIG['checkout_commit_index_list'])
+			timeline = timeline[is_allowed_commit]
+
 		grouped_files = timeline.groupby(by=['Topological Index', 'Affected', 'Vulnerable', 'Commit Hash', 'CVEs'], dropna=False)
 
 		ChangedFiles = namedtuple('ChangedFiles', [	'TopologicalIndex', 'Affected', 'Vulnerable', 'CommitHash', 'Cves',
 													'AbsoluteFilePaths', 'RelativeFilePaths', 'FilePathToFunctions', 'FilePathToClasses'])
 
 		for (topological_index, affected, vulnerable, commit_hash, cves), group_df in grouped_files:
-			
-			topological_index = int(topological_index)
-
-			if GLOBAL_CONFIG['start_at_checkout_commit_index'] is not None and topological_index < GLOBAL_CONFIG['start_at_checkout_commit_index']:
-				continue
 
 			# For any file in an affected commit (vulnerable or neutral), we know that their paths exist in that particular commit.
 			# When we look at the files that weren't affected, we are now dealing with multiple changes across different commits.
@@ -762,7 +768,7 @@ class Project:
 				commit_hash_to_checkout = commit_hash
 
 			else:
-				is_next_commit = (timeline['Topological Index'] == str(topological_index + 1)) | (timeline['Topological Index'] == str(topological_index + 2))
+				is_next_commit = (timeline['Topological Index'] == topological_index + 1) | (timeline['Topological Index'] == topological_index + 2)
 				
 				if is_next_commit.any():
 					next_group = timeline[is_next_commit].iloc[0]

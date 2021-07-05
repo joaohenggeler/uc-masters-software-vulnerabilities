@@ -27,6 +27,7 @@
 	"neutral_before_author_date": "<YYYY-MM-DD>",
 
 	"start_at_checkout_commit_index": null,
+	"checkout_commit_index_list": null,
 
 	"clang_lib_path": "<Replace with path>",
 

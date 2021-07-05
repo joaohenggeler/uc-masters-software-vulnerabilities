@@ -49,7 +49,7 @@ class Sat():
 
 		arguments = [self.executable_path] + [arg for arg in args]
 		result = subprocess.run(arguments, capture_output=True, text=True)
-		success = result.returncode == 0
+		success = (result.returncode == 0)
 
 		if not success:
 			command_line_arguments = ' '.join(arguments)
