@@ -744,9 +744,18 @@ class Project:
 			is_allowed_commit = timeline['Topological Index'] >= GLOBAL_CONFIG['start_at_checkout_commit_index']
 			timeline = timeline[is_allowed_commit]
 
+		filter_commit_using_config = {}
 		if GLOBAL_CONFIG['checkout_commit_index_list'] is not None:
 
-			is_allowed_commit = timeline['Topological Index'].isin(GLOBAL_CONFIG['checkout_commit_index_list'])
+			filter_commit_using_config = {topological_index: True for topological_index in GLOBAL_CONFIG['checkout_commit_index_list']}
+
+			allowed_commit_list = []
+			for topological_index in GLOBAL_CONFIG['checkout_commit_index_list']:
+				allowed_commit_list.append(topological_index)
+				allowed_commit_list.append(topological_index + 1)
+				allowed_commit_list.append(topological_index + 2)
+
+			is_allowed_commit = timeline['Topological Index'].isin(allowed_commit_list)
 			timeline = timeline[is_allowed_commit]
 
 		grouped_files = timeline.groupby(by=['Topological Index', 'Affected', 'Vulnerable', 'Commit Hash', 'CVEs'], dropna=False)
@@ -755,6 +764,9 @@ class Project:
 													'AbsoluteFilePaths', 'RelativeFilePaths', 'FilePathToFunctions', 'FilePathToClasses'])
 
 		for (topological_index, affected, vulnerable, commit_hash, cves), group_df in grouped_files:
+
+			if filter_commit_using_config and not filter_commit_using_config.get(topological_index):
+				continue
 
 			# For any file in an affected commit (vulnerable or neutral), we know that their paths exist in that particular commit.
 			# When we look at the files that weren't affected, we are now dealing with multiple changes across different commits.
