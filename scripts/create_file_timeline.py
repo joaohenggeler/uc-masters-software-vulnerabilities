@@ -76,6 +76,9 @@ for project in project_list:
 
 		for index, (from_commit, to_commit) in enumerate(zip(commit_list, commit_list[1:])):
 
+			if GLOBAL_CONFIG['start_at_timeline_index'] is not None and index < GLOBAL_CONFIG['start_at_timeline_index']:
+				continue
+
 			assert (from_commit.Vulnerable and not to_commit.Vulnerable) or (not from_commit.Vulnerable and to_commit.Vulnerable)
 
 			for file_path, from_changed_lines, to_changed_lines in project.find_changed_source_files_and_lines_between_git_commits(from_commit.CommitHash, to_commit.CommitHash):

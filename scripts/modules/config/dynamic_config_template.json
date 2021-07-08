@@ -26,6 +26,8 @@
 	"neutral_after_author_date": "<YYYY-MM-DD>",
 	"neutral_before_author_date": "<YYYY-MM-DD>",
 
+	"start_at_timeline_index": null,
+
 	"start_at_checkout_commit_index": null,
 	"checkout_commit_index_list": null,
 
