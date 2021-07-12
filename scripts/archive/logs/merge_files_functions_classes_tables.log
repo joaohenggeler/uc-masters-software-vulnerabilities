@@ -1,0 +1,48 @@
+[2021-06-18 00:47:34] [INFO] [common.py:73] <module>: Initializing the common module.
+[2021-06-18 00:47:34] [INFO] [common.py:133] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-06-18 00:47:34] [INFO] [project.py:33] <module>: Loading libclang from "/usr/lib/x86_64-linux-gnu/libclang-10.so.1".
+[2021-06-18 00:47:34] [INFO] [project.py:42] <module>: Loaded libclang successfully.
+[2021-06-18 00:47:34] [INFO] [database.py:34] __init__: Connecting to the database with the following configurations: {'host': '127.0.0.1', 'port': '3306', 'user': 'admin', 'password': '', 'database': 'software'}
+[2021-06-18 00:47:34] [INFO] [database.py:42] __init__: Autocommit is False.
+[2021-06-18 00:47:34] [INFO] [project.py:123] get_project_list_from_config: Loading the project "glibc" with the following configurations: {'short_name': 'glibc', 'database_id': 5, 'database_name': 'glibc', 'vendor_id': 72, 'product_id': 767, 'url_pattern': 'sourceware', 'master_branch': 'master', 'language': 'c', 'include_directory_path': 'include', 'repository_path': '/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/glibc', 'output_directory_path': 'output/final', 'scrape_all_branches': False}
+[2021-06-18 00:47:34] [INFO] [project.py:85] __init__: Loaded the project "Glibc" located in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/glibc".
+[2021-06-18 00:47:34] [INFO] [project.py:123] get_project_list_from_config: Loading the project "apache" with the following configurations: {'short_name': 'apache', 'database_id': 4, 'database_name': 'httpd', 'vendor_id': 45, 'product_id': 66, 'url_pattern': 'apache', 'master_branch': 'trunk', 'language': 'c', 'include_directory_path': 'include', 'repository_path': '/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/httpd', 'output_directory_path': 'output/final', 'scrape_all_branches': False}
+[2021-06-18 00:47:34] [INFO] [project.py:85] __init__: Loaded the project "Apache HTTP Server" located in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/httpd".
+[2021-06-18 00:47:34] [INFO] [project.py:123] get_project_list_from_config: Loading the project "xen" with the following configurations: {'short_name': 'xen', 'database_id': 3, 'database_name': 'xen', 'vendor_id': 6276, 'product_id': None, 'url_pattern': 'xen', 'master_branch': 'master', 'language': 'c', 'include_directory_path': 'xen/include', 'repository_path': '/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/xen', 'output_directory_path': 'output/final', 'scrape_all_branches': False}
+[2021-06-18 00:47:34] [INFO] [project.py:85] __init__: Loaded the project "Xen" located in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/xen".
+[2021-06-18 00:47:34] [INFO] [project.py:123] get_project_list_from_config: Loading the project "kernel" with the following configurations: {'short_name': 'kernel', 'database_id': 2, 'database_name': 'kernel', 'vendor_id': 33, 'product_id': 47, 'url_pattern': 'linux|kernel|redhat', 'master_branch': 'master', 'language': 'c', 'include_directory_path': 'include', 'repository_path': '/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/linux', 'output_directory_path': 'output/final', 'scrape_all_branches': False}
+[2021-06-18 00:47:34] [INFO] [project.py:85] __init__: Loaded the project "Linux Kernel" located in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/linux".
+[2021-06-18 00:47:34] [INFO] [project.py:123] get_project_list_from_config: Loading the project "mozilla" with the following configurations: {'short_name': 'mozilla', 'database_id': 1, 'database_name': 'mozilla', 'vendor_id': 452, 'product_id': None, 'url_pattern': 'mozilla', 'master_branch': 'master', 'language': 'c++', 'include_directory_path': None, 'repository_path': '/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/gecko-dev', 'output_directory_path': 'output/final', 'scrape_all_branches': False}
+[2021-06-18 00:47:34] [INFO] [project.py:85] __init__: Loaded the project "Mozilla" located in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/gecko-dev".
+[2021-06-18 00:47:34] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FILES_5" tables for the project "Glibc".
+[2021-06-18 00:47:34] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 1 tables.
+[2021-06-18 00:47:37] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FUNCTIONS_5" tables for the project "Glibc".
+[2021-06-18 00:47:37] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 1 tables.
+[2021-06-18 00:47:39] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "CLASSES_5" tables for the project "Glibc".
+[2021-06-18 00:47:39] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 1 tables.
+[2021-06-18 00:47:39] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FILES_4" tables for the project "Apache HTTP Server".
+[2021-06-18 00:47:39] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 1 tables.
+[2021-06-18 00:47:40] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FUNCTIONS_4" tables for the project "Apache HTTP Server".
+[2021-06-18 00:47:40] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 1 tables.
+[2021-06-18 00:47:42] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "CLASSES_4" tables for the project "Apache HTTP Server".
+[2021-06-18 00:47:42] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 1 tables.
+[2021-06-18 00:47:42] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FILES_3" tables for the project "Xen".
+[2021-06-18 00:47:42] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 3 tables.
+[2021-06-18 00:47:43] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FUNCTIONS_3" tables for the project "Xen".
+[2021-06-18 00:47:43] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 3 tables.
+[2021-06-18 00:47:49] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "CLASSES_3" tables for the project "Xen".
+[2021-06-18 00:47:49] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 3 tables.
+[2021-06-18 00:47:50] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FILES_2" tables for the project "Linux Kernel".
+[2021-06-18 00:47:50] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 6 tables.
+[2021-06-18 00:49:10] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FUNCTIONS_2" tables for the project "Linux Kernel".
+[2021-06-18 00:49:10] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 6 tables.
+[2021-06-18 01:05:10] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "CLASSES_2" tables for the project "Linux Kernel".
+[2021-06-18 01:05:10] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 6 tables.
+[2021-06-18 01:06:21] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FILES_1" tables for the project "Mozilla".
+[2021-06-18 01:06:21] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 11 tables.
+[2021-06-18 01:07:10] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "FUNCTIONS_1" tables for the project "Mozilla".
+[2021-06-18 01:07:10] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 11 tables.
+[2021-06-18 01:22:15] [INFO] [merge_files_functions_classes_in_database.py:25] merge_files_functions_classes_in_database: Merging the "CLASSES_1" tables for the project "Mozilla".
+[2021-06-18 01:22:15] [INFO] [merge_files_functions_classes_in_database.py:46] merge_files_functions_classes_in_database: Merging a total of 11 tables.
+[2021-06-18 01:27:06] [INFO] [merge_files_functions_classes_in_database.py:70] merge_files_functions_classes_in_database: Committing changes.
+[2021-06-18 01:27:06] [INFO] [merge_files_functions_classes_in_database.py:75] <module>: Finished running.
