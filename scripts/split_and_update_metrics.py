@@ -12,6 +12,8 @@
 """
 
 import os
+import re
+from typing import Tuple
 
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
@@ -25,9 +27,18 @@ project_list = Project.get_project_list_from_config()
 
 Project.debug_ensure_all_project_repositories_were_loaded(project_list)
 
+OUTPUT_SUBDIRECTORIES = {
+	'file': 'file_metrics',
+	'function': 'function_metrics',
+	'class': 'class_metrics',
+}
+
 for project in project_list:
 
-	for input_csv_path in project.find_output_csv_files('metrics', 'metrics'):
+	for output_subdirectory in OUTPUT_SUBDIRECTORIES.values():
+		project.create_output_subdirectory(output_subdirectory)
+
+	for input_csv_path in project.find_output_csv_files('metrics', subdirectory='metrics'):
 
 		log.info(f'Splitting and updating metrics for the project "{project}" using the information in "{input_csv_path}".')
 
@@ -38,10 +49,88 @@ for project in project_list:
 		metrics.iloc[:, first_metric_index:] = metrics.iloc[:, first_metric_index:].fillna(-1.0).astype(int)
 		metrics = metrics.replace({np.nan: None, -1: None})
 
-		def insert_new_column(new_column: str, after_column: str):
+		affected_commit = metrics['Affected Commit'].iloc[0] == 'Yes'
+		vulnerable_commit = metrics['Vulnerable Commit'].iloc[0] == 'Yes'
+
+		def insert_new_column(new_column: str, after_column: str) -> None:
 			""" Inserts a new column after another one. """
 			after_index = metrics.columns.get_loc(after_column) + 1
 			metrics.insert(after_index, new_column, None)
+
+		def extract_visibility_and_complement_from_code_unit(kind: str) -> Tuple[str, str]:
+			""" Retrieves a function or class' visibility and complement in a way that's consistent with the values in the original database. """
+
+			"""
+			In the database:
+
+			SELECT DISTINCT Visibility FROM FUNCTIONS_1;
+			- default, public, private, protected
+
+			SELECT DISTINCT Visibility FROM CLASSES_1;
+			- default, public, private, protected
+
+			SELECT DISTINCT Complement FROM FUNCTIONS_1;
+			- none, Virtual, Static, Const, Template, VirtualConst, Explicit, ConstTemplate, StaticTemplate, ExplicitTemplate, ConstVolatile, Volatile
+
+			SELECT DISTINCT Complement FROM CLASSES_1;
+			- none, Struct, StructTemplate, Abstract, Union, Template, AbstractStruct, AbstractTemplate, UnionTemplate, AbstractStructTemplate
+			
+			Some examples from Understand:
+
+			Function
+			Static Function Template
+			Public Virtual Function
+			Private Const Function
+			Explicit Protected Function
+
+			Class
+			Struct
+			Union
+			Public Class
+			Protected Struct
+			Abstract Class
+			Struct Template
+			"""
+
+			visibility = 'default'
+			complement = 'none'
+
+			tokens = kind.split()
+			
+			for unit_type in ['Function', 'Class']:
+				if unit_type in tokens:
+					tokens.remove(unit_type)
+
+			for visibility_type in ['Public', 'Private', 'Protected']:
+				if visibility_type in tokens:
+					tokens.remove(visibility_type)
+					visibility = visibility_type.lower()
+					break
+
+			if tokens:
+				complement = ''.join(tokens)
+
+			return (visibility, complement)
+
+		insert_new_column('Patched', 'Vulnerable Code Unit')
+
+		vulnerable_metrics = None
+
+		if not affected_commit or vulnerable_commit:
+			metrics['Patched'] = metrics['Vulnerable Code Unit']
+		else:
+			try:
+				topological_index = int(re.findall(r'-t(\d+)-', input_csv_path)[0])
+				vulnerable_input_csv_path = input_csv_path.replace('-v0-', '-v1-')
+				vulnerable_input_csv_path = re.sub(r'-t\d+-', f'-t{topological_index - 1}-', vulnerable_input_csv_path)
+				
+				vulnerable_metrics = pd.read_csv(vulnerable_input_csv_path, usecols=['Vulnerable Code Unit', 'Kind', 'Name', 'File'], dtype=str)
+			except FileNotFoundError as error:
+				metrics['Patched'] = 'Unknown'
+				log.warning(f'Could not find the vulnerable metrics CSV file "{vulnerable_input_csv_path}".')
+
+		insert_new_column('Complement', 'Code Unit Lines')
+		insert_new_column('Visibility', 'Code Unit Lines')
 
 		insert_new_column('SumCountPath', 'CountPath')
 
@@ -59,9 +148,33 @@ for project in project_list:
 
 		insert_new_column('HenryKafura', 'MaxMaxNesting')
 
+		# Remove column name spaces for itertuples().
+		metrics.columns = metrics.columns.str.replace(' ', '')
+
 		for row in metrics.itertuples():
 
 			kind = row.Kind
+
+			if vulnerable_metrics is not None:
+				
+				is_vulnerable_code_unit = (vulnerable_metrics['Kind'] == kind) & (vulnerable_metrics['Name'] == row.Name) & (vulnerable_metrics['File'] == row.File)
+				if is_vulnerable_code_unit.any():
+
+					"""
+					Possible Cases:
+
+					Vulnerable -> Neutral (current row) -> Expected Patched Value
+					
+					Yes 	-> No 		-> Yes
+					No 		-> No 		-> No
+					'' 		-> No 		-> ''
+					Unknown -> No 		-> Unknown
+					Unknown -> Unknown	-> Unknown
+					Unknown -> ''		-> Unknown
+					"""
+
+					vulnerable_row = vulnerable_metrics[is_vulnerable_code_unit].iloc[0]
+					metrics.at[row.Index, 'Patched'] = vulnerable_row['Vulnerable Code Unit']
 
 			if kind == 'File':
 
@@ -134,12 +247,11 @@ for project in project_list:
 
 				metrics.at[row.Index, 'HenryKafura'] = int( ( count_line_code_exe * (count_input * count_output) ** 2 ).sum() )
 
-			elif 'Function' in kind:
-				pass
-			elif 'Class' in kind or 'Struct' in kind or 'Union' in kind:
-				pass
 			else:
-				assert False, f'Unhandled code unit kind "{kind}".'
+
+				visibility, complement = extract_visibility_and_complement_from_code_unit(kind)
+				metrics.at[row.Index, 'Visibility'] = visibility
+				metrics.at[row.Index, 'Complement'] = complement
 
 		##########
 
@@ -151,11 +263,9 @@ for project in project_list:
 			code_unit_metrics = code_unit_metrics.dropna(axis=1, how='all')
 			
 			directory_path, filename = os.path.split(input_csv_path)
-			directory_path = os.path.join(directory_path, kind_name)
 			filename = replace_in_filename(filename, 'metrics', f'{kind_name}-metrics')
+			output_csv_path = os.path.join(directory_path, '..', OUTPUT_SUBDIRECTORIES[kind_name], filename)
 
-			os.makedirs(directory_path, exist_ok=True)
-			output_csv_path = os.path.join(directory_path, filename)
 			code_unit_metrics.to_csv(output_csv_path, index=False)
 
 		write_code_unit_csv(r'File', 'file')
