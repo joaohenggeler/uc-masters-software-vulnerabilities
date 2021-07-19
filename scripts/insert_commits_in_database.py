@@ -20,8 +20,8 @@ with Database(buffered=True) as db:
 		
 		success, error_code = db.execute_query(	'''
 												SELECT
-												(SELECT MAX(REGEXP_SUBSTR(P_ID, '[0-9]+') + 0) + 1 FROM PATCHES WHERE R_ID = %(R_ID)s) AS NEXT_ID,
-												(SELECT REGEXP_REPLACE(P_ID, '[0-9]+', '<ID>') FROM PATCHES WHERE R_ID = %(R_ID)s LIMIT 1) AS ID_TEMPLATE;
+													(SELECT MAX(REGEXP_SUBSTR(P_ID, '[0-9]+') + 0) + 1 FROM PATCHES WHERE R_ID = %(R_ID)s) AS NEXT_ID,
+													(SELECT REGEXP_REPLACE(P_ID, '[0-9]+', '<ID>') FROM PATCHES WHERE R_ID = %(R_ID)s LIMIT 1) AS ID_TEMPLATE;
 												''',
 												params={'R_ID': project.database_id})
 
@@ -40,7 +40,7 @@ with Database(buffered=True) as db:
 			continue
 
 		def get_next_patches_table_id() -> str:
-			""" @TODO """
+			""" Retrieves the next primary key value of the P_ID column for the current project. """
 			global next_id, id_template
 			result = id_template.replace('<ID>', str(next_id))
 			next_id += 1

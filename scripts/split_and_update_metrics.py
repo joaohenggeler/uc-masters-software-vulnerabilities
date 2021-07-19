@@ -112,12 +112,12 @@ for project in project_list:
 
 			return (visibility, complement)
 
-		insert_new_column('Patched', 'Vulnerable Code Unit')
+		insert_new_column('Patched Code Unit', 'Vulnerable Code Unit')
 
 		vulnerable_metrics = None
 
 		if not affected_commit or vulnerable_commit:
-			metrics['Patched'] = metrics['Vulnerable Code Unit']
+			metrics['Patched Code Unit'] = metrics['Vulnerable Code Unit']
 		else:
 			try:
 				topological_index = int(re.findall(r'-t(\d+)-', input_csv_path)[0])
@@ -126,7 +126,7 @@ for project in project_list:
 				
 				vulnerable_metrics = pd.read_csv(vulnerable_input_csv_path, usecols=['Vulnerable Code Unit', 'Kind', 'Name', 'File'], dtype=str)
 			except FileNotFoundError as error:
-				metrics['Patched'] = 'Unknown'
+				metrics['Patched Code Unit'] = 'Unknown'
 				log.warning(f'Could not find the vulnerable metrics CSV file "{vulnerable_input_csv_path}".')
 
 		insert_new_column('Complement', 'Code Unit Lines')
@@ -149,6 +149,7 @@ for project in project_list:
 		insert_new_column('HenryKafura', 'MaxMaxNesting')
 
 		# Remove column name spaces for itertuples().
+		original_columns = metrics.columns
 		metrics.columns = metrics.columns.str.replace(' ', '')
 
 		for row in metrics.itertuples():
@@ -174,7 +175,7 @@ for project in project_list:
 					"""
 
 					vulnerable_row = vulnerable_metrics[is_vulnerable_code_unit].iloc[0]
-					metrics.at[row.Index, 'Patched'] = vulnerable_row['Vulnerable Code Unit']
+					metrics.at[row.Index, 'Patched Code Unit'] = vulnerable_row['Vulnerable Code Unit']
 
 			if kind == 'File':
 
@@ -254,6 +255,8 @@ for project in project_list:
 				metrics.at[row.Index, 'Complement'] = complement
 
 		##########
+
+		metrics.columns = original_columns
 
 		def write_code_unit_csv(kind_regex: str, kind_name: str) -> None:
 			""" Writes the rows of a specific kind of code unit to a CSV file. """
