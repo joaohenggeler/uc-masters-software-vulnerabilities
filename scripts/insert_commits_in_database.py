@@ -50,64 +50,74 @@ with Database(buffered=True) as db:
 
 			log.info(f'Inserting the commits for the project "{project}" using the information in "{input_csv_path}".')
 
-			commits = pd.read_csv(input_csv_path, usecols=['Affected', 'Commit Hash', 'Tag Name', 'Author Date', 'CVEs'], dtype=str)
-			commits.drop_duplicates(subset=['Commit Hash'], inplace=True)
+			commits = pd.read_csv(input_csv_path, usecols=['Topological Index', 'Affected', 'Commit Hash', 'Tag Name', 'Author Date', 'CVEs'], dtype=str)
+			commits.drop_duplicates(subset=['Topological Index'], inplace=True)
+			
 			is_affected_commit = commits['Affected'] == 'Yes'
 			commits = commits[is_affected_commit]
 			commits = commits.replace({np.nan: None})
 
 			for _, row in commits.iterrows():
 
+				topological_index = row['Topological Index']
 				commit_hash = row['Commit Hash']
 
 				success, error_code = db.execute_query('SELECT * FROM PATCHES WHERE P_COMMIT = %(P_COMMIT)s LIMIT 1;', params={'P_COMMIT': commit_hash})
 
 				if db.cursor.rowcount > 0:
-					log.info(f'Skipping the commit {commit_hash} for the project "{project}" since it already exists.')
+					log.info(f'Skipping the commit {commit_hash} ({topological_index}) for the project "{project}" since it already exists.')
 					continue
 
 				commit_tag_name = row['Tag Name']
 				commit_author_date = row['Author Date']
 				cve_list = deserialize_json_container(row['CVEs'], [None])
 
-				# @TODO: Does this have to insert NxM times, where N are the CVEs and M the various V_IDs associated with each one?
 				for cve in cve_list:
 
-					success, error_code = db.execute_query(	'''
-															INSERT INTO PATCHES
-															(
-																P_ID, P_URL, R_ID, P_COMMIT,
-																ERROR_SIMILARITY, SITUATION, RELEASES, DATE, Observations,
+					success, error_code = db.execute_query('SELECT V_ID FROM VULNERABILITIES WHERE CVE = %(CVE)s;', params={'CVE': cve})
 
-																V_ID
-															)
-															VALUES
-															(
-																%(P_ID)s, %(P_URL)s, %(R_ID)s, %(P_COMMIT)s,
-																%(ERROR_SIMILARITY)s, %(SITUATION)s, %(RELEASES)s, %(DATE)s, %(Observations)s,
+					if success and db.cursor.rowcount > 0:
 
-																(SELECT V_ID FROM VULNERABILITIES WHERE CVE = %(CVE)s LIMIT 1)
-															);
-															''',
-															
-															params={
-																'P_ID': get_next_patches_table_id(),
-																'P_URL': 'TBD',
-																'R_ID': project.database_id,
-																'P_COMMIT': commit_hash,
-																'ERROR_SIMILARITY': 'TBD',
-																'SITUATION': -1,
-																'RELEASES': commit_tag_name,
-																'DATE': commit_author_date,
-																'Observations': 'TBD',
-																'CVE': cve,
-															}
-														)
+						for database_row in db.cursor:
 
-					if success:
-						log.info(f'Inserted the commit {commit_hash} ({commit_tag_name}, {commit_author_date}, {cve}) for the project "{project}".')
+							v_id = database_row['V_ID']
+
+							success, error_code = db.execute_query(	'''
+																	INSERT INTO PATCHES
+																	(
+																		P_ID, P_URL, R_ID, P_COMMIT,
+																		ERROR_SIMILARITY, SITUATION, RELEASES, DATE, Observations,
+																		V_ID
+																	)
+																	VALUES
+																	(
+																		%(P_ID)s, %(P_URL)s, %(R_ID)s, %(P_COMMIT)s,
+																		%(ERROR_SIMILARITY)s, %(SITUATION)s, %(RELEASES)s, %(DATE)s, %(Observations)s,
+																		%(V_ID)s
+																	);
+																	''',
+																	
+																	params={
+																		'P_ID': get_next_patches_table_id(),
+																		'P_URL': 'TBD',
+																		'R_ID': project.database_id,
+																		'P_COMMIT': commit_hash,
+																		'ERROR_SIMILARITY': 'TBD',
+																		'SITUATION': -1,
+																		'RELEASES': commit_tag_name,
+																		'DATE': commit_author_date,
+																		'Observations': 'TBD',
+																		'V_ID': v_id,
+																	}
+																)
+
+							if success:
+								log.info(f'Inserted the commit {commit_hash} ({topological_index}, {commit_tag_name}, {commit_author_date}, {cve}, {v_id}) for the project "{project}".')
+							else:
+								log.error(f'Failed to insert the commit {commit_hash} ({topological_index}, {commit_tag_name}, {commit_author_date}, {cve}, {v_id}) for the project "{project}" with the error code {error_code}.')
+
 					else:
-						log.error(f'Failed to insert the commit {commit_hash} ({commit_tag_name}, {commit_author_date}, {cve}) for the project "{project}" with the error code {error_code}.')
+						log.error(f'Could not list the existing vulnerability IDs for {cve} when attempting to insert the commit {commit_hash} ({topological_index}, {commit_tag_name}, {commit_author_date}) for the project "{project}" with the error code {error_code} ({db.cursor.rowcount}).')
 
 	##################################################
 

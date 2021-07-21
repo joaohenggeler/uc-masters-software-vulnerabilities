@@ -117,14 +117,14 @@ for project in project_list:
 		vulnerable_metrics = None
 
 		if not affected_commit or vulnerable_commit:
-			metrics['Patched Code Unit'] = metrics['Vulnerable Code Unit']
+			metrics['Patched Code Unit'] = 'No'
 		else:
 			try:
 				topological_index = int(re.findall(r'-t(\d+)-', input_csv_path)[0])
 				vulnerable_input_csv_path = input_csv_path.replace('-v0-', '-v1-')
 				vulnerable_input_csv_path = re.sub(r'-t\d+-', f'-t{topological_index - 1}-', vulnerable_input_csv_path)
 				
-				vulnerable_metrics = pd.read_csv(vulnerable_input_csv_path, usecols=['Vulnerable Code Unit', 'Kind', 'Name', 'File'], dtype=str)
+				vulnerable_metrics = pd.read_csv(vulnerable_input_csv_path, usecols=['Vulnerable Code Unit', 'Name', 'File'], dtype=str)
 			except FileNotFoundError as error:
 				metrics['Patched Code Unit'] = 'Unknown'
 				log.warning(f'Could not find the vulnerable metrics CSV file "{vulnerable_input_csv_path}".')
@@ -149,7 +149,7 @@ for project in project_list:
 		insert_new_column('HenryKafura', 'MaxMaxNesting')
 
 		# Remove column name spaces for itertuples().
-		original_columns = metrics.columns
+		original_columns = metrics.columns.tolist()
 		metrics.columns = metrics.columns.str.replace(' ', '')
 
 		for row in metrics.itertuples():
@@ -158,7 +158,7 @@ for project in project_list:
 
 			if vulnerable_metrics is not None:
 				
-				is_vulnerable_code_unit = (vulnerable_metrics['Kind'] == kind) & (vulnerable_metrics['Name'] == row.Name) & (vulnerable_metrics['File'] == row.File)
+				is_vulnerable_code_unit = (vulnerable_metrics['Name'] == row.Name) & (vulnerable_metrics['File'] == row.File)
 				if is_vulnerable_code_unit.any():
 
 					"""
@@ -175,7 +175,9 @@ for project in project_list:
 					"""
 
 					vulnerable_row = vulnerable_metrics[is_vulnerable_code_unit].iloc[0]
-					metrics.at[row.Index, 'Patched Code Unit'] = vulnerable_row['Vulnerable Code Unit']
+					metrics.at[row.Index, 'PatchedCodeUnit'] = vulnerable_row['Vulnerable Code Unit']
+				else:
+					log.warning(f'Could not find the vulnerable version of the code unit "{row.Name}" from "{row.File}".')
 
 			if kind == 'File':
 
@@ -256,15 +258,15 @@ for project in project_list:
 
 		##########
 
-		metrics.columns = original_columns
+		# Setting metrics.columns back to original_columns would sometimes fails due to a length mismatch...
+		metrics.rename(columns={name.replace(' ', ''): name for name in original_columns}, inplace=True)
 
 		def write_code_unit_csv(kind_regex: str, kind_name: str) -> None:
 			""" Writes the rows of a specific kind of code unit to a CSV file. """
 			
 			is_code_unit = metrics['Kind'].str.contains(kind_regex)
-			code_unit_metrics = metrics.loc[is_code_unit]
-			code_unit_metrics = code_unit_metrics.dropna(axis=1, how='all')
-			
+			code_unit_metrics = metrics[is_code_unit].dropna(axis=1, how='all')
+
 			directory_path, filename = os.path.split(input_csv_path)
 			filename = replace_in_filename(filename, 'metrics', f'{kind_name}-metrics')
 			output_csv_path = os.path.join(directory_path, '..', OUTPUT_SUBDIRECTORIES[kind_name], filename)

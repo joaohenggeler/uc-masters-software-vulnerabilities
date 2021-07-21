@@ -84,6 +84,7 @@ with Database(buffered=True) as db:
 				affected_commit = metrics['Affected'].iloc[0] == 'Yes'
 				vulnerable_commit = metrics['Vulnerable'].iloc[0] == 'Yes'
 
+				# @TODO: Change this query to list multiple patch IDs.
 				success, error_code = db.execute_query(f'''
 														SELECT
 															(SELECT P_ID FROM PATCHES
@@ -106,13 +107,12 @@ with Database(buffered=True) as db:
 				row = db.cursor.fetchone()
 				patch_id = row['P_ID']
 
-				# @TODO: Recheck the patch/commit logic. When do we really want to skip it?
 				if patch_id is None:
-					log.warning(f'Skipping the {unit_info.Kind} metrics for the commit {commit_hash} ({topological_index}, {affected_commit}, {vulnerable_commit}) in the project "{project}" since this commit does not exist in the database.')
+					log.error(f'Could not find any patch with the commit {commit_hash} ({topological_index}, {affected_commit}, {vulnerable_commit}) in the project "{project}".')
 					continue
 
 				if row['PATCH_METRICS_ALREADY_EXIST'] == 1:
-					log.info(f'Skipping the {unit_info.Kind} metrics for the commit {commit_hash} ({topological_index}, {patch_id}, {affected_commit}, {vulnerable_commit}) in the project "{project}" since it already exists.')
+					log.info(f'Skipping the {unit_info.Kind} metrics for any patch with the commit {commit_hash} ({topological_index}, {patch_id}, {affected_commit}, {vulnerable_commit}) in the project "{project}" since they already exist.')
 					continue
 
 				# Remove column name spaces for itertuples().
@@ -130,15 +130,21 @@ with Database(buffered=True) as db:
 				for row in metrics.itertuples():
 
 					# @TODO:
-					# - Handle row.VulnerableCodeUnit being NA.
+					# - Format the patch ID list for the P_ID column if the code unit's commit is associated with more than one vulnerability.
 
 					# File: ID_File, R_ID, P_ID, FilePath, Patched, Occurrence, Affected, [METRICS]
 					# Function: ID_Function, R_ID, P_ID, ID_Class, ID_File, Visibility, Complement, NameMethod, FilePath, Patched, Occurrence, Affected, [METRICS]
 					# Class: ID_Class, R_ID, P_ID, ID_File, Visibility, Complement, NameClass, FilePath, Patched, Occurrence, Affected, [METRICS]
 
 					vulnerable_code_unit = (row.VulnerableCodeUnit == 'Yes')
-					patched_code_unit = (row.PatchedCodeUnit == 'Yes')
 					unit_id = get_next_unit_metrics_table_id()
+
+					if row.PatchedCodeUnit == 'Yes':
+						patched = 1
+					elif row.PatchedCodeUnit == 'No':
+						patched = 0
+					else:
+						patched = 2
 
 					# Columns in common:
 					query_params = {
@@ -146,7 +152,7 @@ with Database(buffered=True) as db:
 						'R_ID': project.database_id,
 						'P_ID': patch_id if affected_commit else None,
 						'FilePath': row.File,
-						'Patched': 1 if patched_code_unit else 0, # If the code unit was changed.
+						'Patched': patched, # If the code unit was changed.
 						'Occurrence': 'before' if vulnerable_commit else 'after', # Whether or not this code unit exists before (vulnerable) or after (neutral) the patch.
 						'Affected': 1 if vulnerable_code_unit else 0, # If the code unit is vulnerable or not.
 					}
