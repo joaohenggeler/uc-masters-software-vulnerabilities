@@ -18,7 +18,7 @@ from typing import Tuple
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
-from modules.common import log, replace_in_filename
+from modules.common import log, deserialize_json_container, replace_in_filename
 from modules.project import Project
 
 ####################################################################################################
@@ -38,9 +38,17 @@ for project in project_list:
 	for output_subdirectory in OUTPUT_SUBDIRECTORIES.values():
 		project.create_output_subdirectory(output_subdirectory)
 
+	timeline_csv_path = project.find_output_csv_files('file-timeline')[0]
+	timeline = pd.read_csv(timeline_csv_path, dtype=str)
+	timeline.dropna(subset=['Affected Functions', 'Affected Classes'], how='all', inplace=True)
+	
+	timeline['Topological Index'] = pd.to_numeric(timeline['Topological Index'])
+	timeline['Affected Functions'] = timeline['Affected Functions'].map(lambda x: deserialize_json_container(x, []))
+	timeline['Affected Classes'] = timeline['Affected Classes'].map(lambda x: deserialize_json_container(x, []))
+
 	for input_csv_path in project.find_output_csv_files('metrics', subdirectory='metrics'):
 
-		log.info(f'Splitting and updating metrics for the project "{project}" using the information in "{input_csv_path}".')
+		log.info(f'Splitting and updating metrics using the information in "{input_csv_path}".')
 
 		metrics = pd.read_csv(input_csv_path)
 
@@ -114,20 +122,10 @@ for project in project_list:
 
 		insert_new_column('Patched Code Unit', 'Vulnerable Code Unit')
 
-		vulnerable_metrics = None
-
-		if not affected_commit or vulnerable_commit:
-			metrics['Patched Code Unit'] = 'No'
+		if affected_commit and not vulnerable_commit:
+			metrics['Patched Code Unit'] = 'Unknown'
 		else:
-			try:
-				topological_index = int(re.findall(r'-t(\d+)-', input_csv_path)[0])
-				vulnerable_input_csv_path = input_csv_path.replace('-v0-', '-v1-')
-				vulnerable_input_csv_path = re.sub(r'-t\d+-', f'-t{topological_index - 1}-', vulnerable_input_csv_path)
-				
-				vulnerable_metrics = pd.read_csv(vulnerable_input_csv_path, usecols=['Vulnerable Code Unit', 'Name', 'File'], dtype=str)
-			except FileNotFoundError as error:
-				metrics['Patched Code Unit'] = 'Unknown'
-				log.warning(f'Could not find the vulnerable metrics CSV file "{vulnerable_input_csv_path}".')
+			metrics['Patched Code Unit'] = 'No'
 
 		insert_new_column('Complement', 'Code Unit Lines')
 		insert_new_column('Visibility', 'Code Unit Lines')
@@ -156,28 +154,30 @@ for project in project_list:
 
 			kind = row.Kind
 
-			if vulnerable_metrics is not None:
-				
-				is_vulnerable_code_unit = (vulnerable_metrics['Name'] == row.Name) & (vulnerable_metrics['File'] == row.File)
-				if is_vulnerable_code_unit.any():
+			if affected_commit and not vulnerable_commit:
 
-					"""
-					Possible Cases:
+				is_vulnerable_file = (timeline['Topological Index'] == row.TopologicalIndex - 1) & (timeline['File Path'] == row.File)
+				if is_vulnerable_file.any():
 
-					Vulnerable -> Neutral (current row) -> Expected Patched Value
-					
-					Yes 	-> No 		-> Yes
-					No 		-> No 		-> No
-					'' 		-> No 		-> ''
-					Unknown -> No 		-> Unknown
-					Unknown -> Unknown	-> Unknown
-					Unknown -> ''		-> Unknown
-					"""
+					vulnerable_file = timeline[is_vulnerable_file].iloc[0]
 
-					vulnerable_row = vulnerable_metrics[is_vulnerable_code_unit].iloc[0]
-					metrics.at[row.Index, 'PatchedCodeUnit'] = vulnerable_row['Vulnerable Code Unit']
+					if kind == 'File':
+						metrics.at[row.Index, 'PatchedCodeUnit'] = vulnerable_file['Vulnerable']
+					else:
+						name = row.Name.lower().split('(', 1)[0]
+						name = name.rsplit('::', 1)[-1]
+
+						column_name = 'Affected Functions' if 'Function' in kind else 'Affected Classes'
+
+						for unit in vulnerable_file[column_name]:
+							if unit['Name'].lower() == name:
+								metrics.at[row.Index, 'PatchedCodeUnit'] = unit['Vulnerable']
+								break
+						else:
+							log.warning(f'Could not determine if the unit "{row.Name}" in the file "{row.File}" ({row.TopologicalIndex}) was patched.')
+
 				else:
-					log.warning(f'Could not find the vulnerable version of the code unit "{row.Name}" from "{row.File}".')
+					log.warning(f'Could not find the vulnerable version of the file "{row.File}" ({row.TopologicalIndex}) when processing the unit "{row.Name}".')
 
 			if kind == 'File':
 
