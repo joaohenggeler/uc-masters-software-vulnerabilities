@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import tempfile
+from collections import namedtuple
 from typing import Optional, Tuple, Union
 
 import bs4 # type: ignore
@@ -78,6 +79,23 @@ class Sat():
 			log.error(f'Failed to write the list to a temporary file with the error: {repr(error)}')
 
 		return result
+
+	@staticmethod
+	def get_sat_info_from_config() -> list:
+		""" Creates a list of SAT information given the current configuration. """
+
+		template = list(GLOBAL_CONFIG['sats'].values())
+		template = template[0]
+		SatInfo = namedtuple('SatInfo', template)
+		
+		sat_list = []
+		for name, items in GLOBAL_CONFIG['sats'].items():
+			
+			if items['database_name'] is not None:
+				info = SatInfo(**items)
+				sat_list.append(info)
+
+		return sat_list
 
 ####################################################################################################
 

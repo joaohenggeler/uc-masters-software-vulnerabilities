@@ -127,7 +127,6 @@ def alter_vulnerabilities_in_database() -> None:
 			log.error(f'Failed to set the new vulnerability ID values with the error code {error_code}.')
 			return
 
-
 		success, error_code = db.execute_query(	'''
 												ALTER TABLE PATCHES
 												DROP INDEX FK_RESPECTIVE_VULNERABILITY,

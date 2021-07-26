@@ -72,6 +72,44 @@
 		}
 	},
 
+	"sats":
+	{
+		"Understand":
+		{
+			"database_name": null,
+			"github_data_name": null
+		},
+
+		"Cppcheck":
+		{
+			"database_name": "Cppcheck",
+			"github_data_name": "cppcheck"
+		},
+
+		"Flawfinder":
+		{
+			"database_name": "Flawfinder",
+			"github_data_name": "flawfinder"
+		}
+	},
+
+	"vulnerability_categories":
+	{
+		"Memory Management": 			[119, 399, 362, 416, 476, 824],
+		"Input Validation": 			[20, 78, 79, 91, 94, 134, 189],
+		"Permission": 					[264, 255, 269, 284, 287, 352],
+		"Data Protection": 				[199, 200],
+		"Coding Practices": 			[17, 254, 19],
+		"Cryptography": 				[310],
+		"System Configuration": 		[16],
+		"File Management": 				[22, 59],
+		
+		"Output Encoding": 				[],
+		"Error Handling and Logging": 	[],
+		"Communication Security": 		[],
+		"Database Security": 			[]
+	},
+
 	"http_headers":
 	{
 		"Chrome":

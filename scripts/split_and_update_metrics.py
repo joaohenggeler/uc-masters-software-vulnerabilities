@@ -38,6 +38,7 @@ for project in project_list:
 	for output_subdirectory in OUTPUT_SUBDIRECTORIES.values():
 		project.create_output_subdirectory(output_subdirectory)
 
+	# @Hack: Doesn't handle multiple versions that were scraped at different times, though that's not really necessary for now.
 	timeline_csv_path = project.find_output_csv_files('file-timeline')[0]
 	timeline = pd.read_csv(timeline_csv_path, dtype=str)
 	timeline.dropna(subset=['Affected Functions', 'Affected Classes'], how='all', inplace=True)

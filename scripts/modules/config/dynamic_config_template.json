@@ -37,7 +37,8 @@
 
 	"extra_time_tables_to_import": ["files", "functions", "class"],
 
-	"github_token": null,
+	"github_token": "<Replace with valid token>",
+	"github_data_repository": "<Replace with path>",
 
 	"projects":
 	{
