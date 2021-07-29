@@ -18,7 +18,7 @@ project_list = Project.get_project_list_from_config()
 Project.debug_ensure_all_project_repositories_were_loaded(project_list)
 
 for project in project_list:
-	for input_csv_path in project.find_output_csv_files('affected-files') + project.find_output_csv_files('neutral-files'):
+	for input_csv_path in project.find_output_csv_files('affected-files'):
 
 		log.info(f'Finding neutral commits for the project "{project}" using the information in "{input_csv_path}".')
 		
@@ -34,7 +34,7 @@ for project in project_list:
 		neutral_commits.drop(columns='Neutral Author Date', inplace=True)
 		neutral_commits.insert(1, 'status', 0)
 
-		output_csv_path = replace_in_filename(input_csv_path, '-files', '-commits')
+		output_csv_path = replace_in_filename(input_csv_path, '-files', f'-commits-{after_date}-to-{before_date}')
 		neutral_commits.to_csv(output_csv_path, index=False)
 
 	log.info(f'Finished running for the project "{project}".')

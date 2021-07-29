@@ -9,7 +9,7 @@ from collections import namedtuple
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
-from modules.common import log
+from modules.common import log, deserialize_json_container
 from modules.database import Database
 from modules.project import Project
 
@@ -22,6 +22,8 @@ with Database(buffered=True) as db:
 	FILE_UNIT_INFO = 		CodeUnit('file', 		'EXTRA_TIME_FILES', 		'FILES_', 		'ID_File')
 	FUNCTION_UNIT_INFO = 	CodeUnit('function', 	'EXTRA_TIME_FUNCTIONS', 	'FUNCTIONS_', 	'ID_Function')
 	CLASS_UNIT_INFO = 		CodeUnit('class', 		'EXTRA_TIME_CLASS', 		'CLASSES_', 	'ID_Class')
+
+	UNIT_INFO_LIST = [FILE_UNIT_INFO, FUNCTION_UNIT_INFO, CLASS_UNIT_INFO]
 
 	UNDERSTAND_TO_DATABASE_COLUMN = {
 		'HenryKafura': 'HK',
@@ -38,12 +40,12 @@ with Database(buffered=True) as db:
 		
 		file_metrics_table = FILE_UNIT_INFO.MetricsTablePrefix + project.database_id
 		SELECT_FILE_ID_QUERY = f'''
-							SELECT F.ID_File FROM {file_metrics_table} AS F
-							INNER JOIN EXTRA_TIME_FILES AS E ON F.ID_File = E.ID_File
-							INNER JOIN PATCHES AS P ON E.P_ID = P.P_ID
-							WHERE P.R_ID = %(R_ID)s AND P.P_COMMIT = %(P_COMMIT)s
-							AND F.FilePath = %(FilePath)s AND F.Occurrence = %(Occurrence)s;
-							'''
+								SELECT F.ID_File FROM {file_metrics_table} AS F
+								INNER JOIN EXTRA_TIME_FILES AS E ON F.ID_File = E.ID_File
+								INNER JOIN PATCHES AS P ON E.P_ID = P.P_ID
+								WHERE P.R_ID = %(R_ID)s AND P.P_COMMIT = %(P_COMMIT)s
+								AND F.FilePath = %(FilePath)s AND F.Occurrence = %(Occurrence)s;
+								'''
 
 		# @Hack: Doesn't handle multiple versions that were scraped at different times, though that's not really necessary for now.
 		timeline_csv_path = project.find_output_csv_files('file-timeline')[0]
@@ -52,17 +54,28 @@ with Database(buffered=True) as db:
 		first_vulnerable_commit = timeline.loc[is_first_vulnerable_commit, 'Topological Index'].iloc[0]
 		del timeline_csv_path, timeline, is_first_vulnerable_commit
 
-		for unit_info in [FILE_UNIT_INFO, FUNCTION_UNIT_INFO, CLASS_UNIT_INFO]:
+		for unit_info in UNIT_INFO_LIST:
 
 			is_function = (unit_info.Kind == 'function')
 			is_class = (unit_info.Kind == 'class')
 			unit_metrics_table = unit_info.MetricsTablePrefix + project.database_id
 
+			EXTRA_TIME_INSERT_QUERY = 	f'''
+										INSERT INTO {unit_info.ExtraTimeTable}
+										(
+											P_ID, {unit_info.MetricsTablePrimaryKey}
+										)
+										VALUES
+										(
+											%(P_ID)s, %({unit_info.MetricsTablePrimaryKey})s
+										);
+										'''
+
 			success, error_code = db.execute_query(f'SELECT MAX({unit_info.MetricsTablePrimaryKey} DIV 100) + 1 AS NEXT_ID FROM {unit_metrics_table};')
 
 			assert db.cursor.rowcount != -1, 'The database cursor must be buffered.'
 
-			next_id = None
+			next_id = -1
 
 			if success and db.cursor.rowcount > 0:
 				row = db.cursor.fetchone()
@@ -78,6 +91,8 @@ with Database(buffered=True) as db:
 				result = next_id * 100 + project.database_id
 				next_id += 1
 				return result
+
+			cached_insert_queries: dict = {}
 
 			for input_csv_path in project.find_output_csv_files(f'{unit_info.Kind}-metrics', subdirectory=f'{unit_info.Kind}_metrics'):
 
@@ -116,18 +131,19 @@ with Database(buffered=True) as db:
 
 				if any(patch_row['PATCH_METRICS_ALREADY_EXIST'] == 1 for patch_row in patch_row_list):
 					
-					log.info(f'Skipping the {unit_info.Kind} metrics for the patches "{patch_row}" with the commit {commit_hash} ({topological_index}, {affected_commit}, {vulnerable_commit}) in the project "{project}" since they already exist.')
+					log.info(f'Skipping the {unit_info.Kind} metrics for the patches "{patch_row_list}" with the commit {commit_hash} ({topological_index}, {affected_commit}, {vulnerable_commit}) in the project "{project}" since they already exist.')
 					
 					if any(patch_row['PATCH_METRICS_ALREADY_EXIST'] == 0 for patch_row in patch_row_list):
-						log.warning(f'The patches "{patch_row}" to be skipped have one or more {unit_info.Kind} metric values already inserted.')
+						log.warning(f'The patches "{patch_row_list}" to be skipped have one or more {unit_info.Kind} metric values that were not previously inserted.')
 
 					continue
 
-				metrics_p_id = None
+				patch_list = [patch_row['P_ID'] for patch_row in patch_row_list]
+				patch_list_string = '[' + ', '.join(patch_list) + ']'
 
-				# @TODO: When exactly does this happen?
-				if affected_commit:
-					metrics_p_id = '[' + ', '.join( [patch_row['P_ID'] for patch_row in patch_row_list] ) + ']'
+				cached_file_ids: dict = {}
+
+				##################################################
 
 				# Remove column name spaces for itertuples().
 				metrics.columns = metrics.columns.str.replace(' ', '')
@@ -139,118 +155,140 @@ with Database(buffered=True) as db:
 				# E.g. "CountInput" -> "CountInput"" or "MaxInheritanceTree" -> "DIT".
 				database_metric_names = [UNDERSTAND_TO_DATABASE_COLUMN.get(name, name) for name in csv_metric_names]
 
-				cached_file_ids = {}
+				# Due to the way metrics are divided by code units, the CVEs and CodeUnitLines columns may only exist
+				# in CSV related to affected commits (vulnerable or neutral).
+				has_code_unit_lines = 'CodeUnitLines' in metrics.columns
 
+				def convert_string_status_to_number(status: str) -> int:
+					""" @TODO """
+					if status == 'Yes':
+						return 1
+					elif status == 'No':
+						return 0
+					else:
+						return 2
+
+				##################################################
+				
 				for row in metrics.itertuples():
 
-					# File: ID_File, R_ID, P_ID, FilePath, Patched, Occurrence, Affected, [METRICS]
-					# Function: ID_Function, R_ID, P_ID, ID_Class, ID_File, Visibility, Complement, NameMethod, FilePath, Patched, Occurrence, Affected, [METRICS]
-					# Class: ID_Class, R_ID, P_ID, ID_File, Visibility, Complement, NameClass, FilePath, Patched, Occurrence, Affected, [METRICS]
+					affected_status = convert_string_status_to_number(row.VulnerableCodeUnit)
 
-					def convert_string_status_to_number(status: str) -> int:
-						if status == 'Yes':
-							return 1
-						elif status == 'No':
-							return 0
-						else:
-							return 2
+					if not affected_commit:
+						p_id_list = [None]
+					elif affected_status != 0:
+						p_id_list = [patch_list_string]
+					else:
+						p_id_list = patch_list
 
-					unit_id = get_next_unit_metrics_table_id()
+					for p_id in p_id_list:
 
-					# Columns in common:
-					query_params = {
-						unit_info.MetricsTablePrimaryKey: unit_id,
-						'R_ID': project.database_id,
-						'P_ID':  metrics_p_id,
-						'FilePath': row.File,
-						'Patched': convert_string_status_to_number(row.PatchedCodeUnit), # If the code unit was changed.
-						'Occurrence': 'before' if vulnerable_commit else 'after', # Whether or not this code unit exists before (vulnerable) or after (neutral) the patch.
-						'Affected': convert_string_status_to_number(row.VulnerableCodeUnit), # If the code unit is vulnerable or not.
-					}
+						# Columns:
+						# - File: ID_File, R_ID, P_ID, FilePath, Patched, Occurrence, Affected, [METRICS]
+						# - Function: ID_Function, R_ID, P_ID, ID_Class, ID_File, Visibility, Complement, NameMethod, FilePath, Patched, Occurrence, Affected, [METRICS]
+						# - Class: ID_Class, R_ID, P_ID, ID_File, Visibility, Complement, NameClass, FilePath, Patched, Occurrence, Affected, [METRICS]
 
-					if is_function or is_class:
-						query_params['Visibility'] = row.Visibility
-						query_params['Complement'] = row.Complement
+						unit_id = get_next_unit_metrics_table_id()
 
-						file_id = cached_file_ids.get(row.File, -1)
-						if file_id == -1:
+						# Columns in common:
+						query_params = {
+							unit_info.MetricsTablePrimaryKey: unit_id,
+							'R_ID': project.database_id,
+							'P_ID':  p_id,
+							'FilePath': row.File,
+							'Patched': convert_string_status_to_number(row.PatchedCodeUnit), # If the code unit was changed.
+							'Occurrence': 'before' if vulnerable_commit else 'after', # Whether or not this code unit exists before (vulnerable) or after (neutral) the patch.
+							'Affected': affected_status, # If the code unit is vulnerable or not.
+						}
 
-							success, error_code = db.execute_query(SELECT_FILE_ID_QUERY, params={
-																	'R_ID': query_params['R_ID'],
-																	'P_COMMIT': commit_hash,
-																	'FilePath': query_params['FilePath'],
-																	'Occurrence': query_params['Occurrence']
-																	})
+						if is_function or is_class:
+							query_params['Visibility'] = row.Visibility
+							query_params['Complement'] = row.Complement
 
-							if success:
-								row = db.cursor.fetchone()
-								file_id = row[FILE_UNIT_INFO.MetricsTablePrimaryKey]
-							else:
-								file_id = None
-								log.warning(f'Failed to find the ID for the file "{row.File}" when inserting the {unit_info.Kind} metrics for the unit "{row.Name}" in the commit {commit_hash} ({topological_index}, {patch_row}, {affected_commit}, {vulnerable_commit}).')
+							if has_code_unit_lines:
+								lines = deserialize_json_container(row.CodeUnitLines, [None, None])
+								query_params['BeginLine'] = lines[0] # type: ignore[index]
+								query_params['EndLine'] = lines[1] # type: ignore[index]
 
-							cached_file_ids[row.File] = file_id
+							file_id = cached_file_ids.get(row.File, -1)
+							if file_id == -1:
 
-						query_params[FILE_UNIT_INFO.MetricsTablePrimaryKey] = file_id
+								success, error_code = db.execute_query(SELECT_FILE_ID_QUERY, params={
+																		'R_ID': query_params['R_ID'],
+																		'P_COMMIT': commit_hash,
+																		'FilePath': query_params['FilePath'],
+																		'Occurrence': query_params['Occurrence']
+																		})
 
-					if is_function:
-						query_params['NameMethod'] = row.Name
-						query_params[CLASS_UNIT_INFO.MetricsTablePrimaryKey] = -1
-					elif is_class:
-						query_params['NameClass'] = row.Name
+								if success:
+									row = db.cursor.fetchone()
+									file_id = row[FILE_UNIT_INFO.MetricsTablePrimaryKey]
+								else:
+									file_id = None
+									log.warning(f'Failed to find the ID for the file "{row.File}" when inserting the {unit_info.Kind} metrics for the unit "{row.Name}" in the commit {commit_hash} ({topological_index}, {p_id}, {affected_commit}, {vulnerable_commit}).')
 
-					for database_name, csv_name in zip(database_metric_names, csv_metric_names):
-						query_params[database_name] = getattr(row, csv_name)
+								cached_file_ids[row.File] = file_id
+
+							query_params[FILE_UNIT_INFO.MetricsTablePrimaryKey] = file_id
+
+						if is_function:
+							query_params['NameMethod'] = row.Name
+							query_params[CLASS_UNIT_INFO.MetricsTablePrimaryKey] = -1
+						elif is_class:
+							query_params['NameClass'] = row.Name
+
+						for database_name, csv_name in zip(database_metric_names, csv_metric_names):
+							query_params[database_name] = getattr(row, csv_name)
 						
-					query = f'INSERT INTO {unit_metrics_table} ( '
+						query = cached_insert_queries.get(unit_info.Kind)
 
-					for name in query_params:
-						query += f'{name},'
+						if query is None:
 
-					query = query.rstrip(',')
-					query += ') VALUES ( '
+							query = f'INSERT INTO {unit_metrics_table} ( '
 
-					for name in query_params:
-						query += f'%({name})s,'
+							for name in query_params:
+								query += f'{name},'
 
-					query = query.rstrip(',')
-					query += ');'
+							query = query.rstrip(',')
+							query += ') VALUES ( '
 
-					success, error_code = db.execute_query(query, params=query_params)
+							for name in query_params:
+								query += f'%({name})s,'
 
-					if success:
-					
-						for patch_row in patch_row_list:
+							query = query.rstrip(',')
+							query += ');'
 
-							patch_id = patch_row['P_ID']
+							cached_insert_queries[unit_info.Kind] = query
 
-							success, error_code = db.execute_query(f'''
-																	INSERT INTO {unit_info.ExtraTimeTable}
-																	(
-																		P_ID, {unit_info.MetricsTablePrimaryKey}
-																	)
-																	VALUES
-																	(
-																		%(P_ID)s, %({unit_info.MetricsTablePrimaryKey})s
-																	);
-																	''',
-																	
+						success, error_code = db.execute_query(query, params=query_params)
+
+						def insert_patch_and_unit_ids_in_extra_time_table(patch_id: str) -> None:
+							""" @TODO """
+
+							success, error_code = db.execute_query(EXTRA_TIME_INSERT_QUERY,
 																	params={
 																		'P_ID': patch_id,
-																		unit_info.MetricsTablePrimaryKey: unit_id
+																		unit_info.MetricsTablePrimaryKey: unit_id,
 																	}
 																)
 
 							if not success:
 								log.error(f'Failed to insert the {unit_info.Kind} metrics ID in the {unit_info.ExtraTimeTable} table for the unit "{row.Name}" ({unit_id}) in the file "{row.File}" and commit {commit_hash} ({topological_index}, {patch_id}, {affected_commit}, {vulnerable_commit}) with the error code {error_code}.')
 
-					else:
-						log.error(f'Failed to insert the {unit_info.Kind} metrics for the unit "{row.Name}" ({unit_id}) in the file "{row.File}" and commit {commit_hash} ({topological_index}, {patch_row}, {affected_commit}, {vulnerable_commit}) with the error code {error_code}.')
 
-		##################################################
+						if success:
+							if affected_commit and affected_status == 0:
+								insert_patch_and_unit_ids_in_extra_time_table(p_id)
+							else:
+								for p_id in patch_list:
+									insert_patch_and_unit_ids_in_extra_time_table(p_id)
+						else:
+							log.error(f'Failed to insert the {unit_info.Kind} metrics for the unit "{row.Name}" ({unit_id}) in the file "{row.File}" and commit {commit_hash} ({topological_index}, {p_id}, {affected_commit}, {vulnerable_commit}) with the error code {error_code}.')
 
-		log.info(f'Committing changes for the project "{project}".')
-		db.commit()
+			##################################################
+
+			log.info(f'Committing changes for the {unit_info.Kind} metrics in the project "{project}".')
+			db.commit()
 
 log.info('Finished running.')
 print('Finished running.')

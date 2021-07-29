@@ -88,6 +88,18 @@ class Database:
 
 		return success
 
+	def rollback(self) -> bool:
+		""" Rolls back the current transaction. """
+
+		try:
+			self.connection.rollback()
+			success = True
+		except MySQLError as error:
+			success = False
+			log.error(f'Failed to perform the rollback with the error: {repr(error)}')
+
+		return success
+
 	def execute_script(self, script_path: str) -> Tuple[bool, str]:
 		""" Executes one or more SQL queries inside a file and returns the output of the MySQL command. """
 
