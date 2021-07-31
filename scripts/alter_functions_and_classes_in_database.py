@@ -21,7 +21,7 @@ def alter_functions_and_classes_in_database() -> None:
 
 			for table_prefix in ['FUNCTIONS_', 'CLASSES_']:
 
-				table_name = table_prefix + project.database_id
+				table_name = table_prefix + str(project.database_id)
 
 				log.info(f'Adding the BeginLine and EndLine columns to the {table_name} table.')
 				
@@ -29,7 +29,7 @@ def alter_functions_and_classes_in_database() -> None:
 
 				success, error_code = db.execute_query(f'''
 														ALTER TABLE {table_name}
-														ADD COLUMN EndLine INTEGER AFTER Complement
+														ADD COLUMN EndLine INTEGER AFTER Complement,
 														ADD COLUMN BeginLine INTEGER AFTER Complement;
 														''')
 
