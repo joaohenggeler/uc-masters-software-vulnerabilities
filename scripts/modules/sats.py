@@ -5,16 +5,16 @@
 """
 
 import os
-import re
 import subprocess
 import tempfile
 from collections import namedtuple
-from typing import Optional, Tuple, Union
+from typing import cast, Optional, Tuple, Union
 
 import bs4 # type: ignore
+import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
-from .common import log, GLOBAL_CONFIG, delete_directory, delete_file, get_path_in_data_directory
+from .common import log, GLOBAL_CONFIG, delete_directory, delete_file, extract_numeric, get_path_in_data_directory
 from .project import Project
 
 ####################################################################################################
@@ -84,15 +84,14 @@ class Sat():
 	def get_sat_info_from_config() -> list:
 		""" Creates a list of SAT information given the current configuration. """
 
-		template = list(GLOBAL_CONFIG['sats'].values())
-		template = template[0]
-		SatInfo = namedtuple('SatInfo', template)
+		template_list = list(GLOBAL_CONFIG['sats'].values())
+		SatInfo = namedtuple('SatInfo', template_list[0]) # type: ignore[misc]
 		
 		sat_list = []
 		for name, items in GLOBAL_CONFIG['sats'].items():
 			
 			if items['database_name'] is not None:
-				info = SatInfo(**items)
+				info = SatInfo(**items) # type: ignore[call-arg]
 				sat_list.append(info)
 
 		return sat_list
@@ -110,8 +109,8 @@ class UnderstandSat(Sat):
 		
 		version_success, build_number = self.run('version')
 		if version_success:
-			
-			build_number = re.findall(r'\d+', build_number)[0]
+
+			build_number = cast(str, extract_numeric(build_number))
 			self.version = build_number
 			
 			self.use_new_database_format = int(build_number) >= 1039 # Understand 6.0 or later.
@@ -209,8 +208,7 @@ class CppcheckSat(Sat):
 
 		version_success, version_number = self.run('--version')
 		if version_success:
-			version_number = re.findall(r'\d+\.\d+', version_number)[0]
-			self.version = version_number
+			self.version = cast(Optional[str], extract_numeric(version_number, r'\d+\.\d+'))
 
 		if not CppcheckSat.mapped_rules_to_cwes:
 			CppcheckSat.mapped_rules_to_cwes = True
@@ -292,10 +290,39 @@ class CppcheckSat(Sat):
 				dictionary_list.append({'File': file_path, 'Line': line, 'Severity': severity, 'Rule': rule, 'Message': message})
 
 		alerts = pd.DataFrame.from_dict(dictionary_list, dtype=str)
+		alerts.dropna(subset=['File', 'Line'], inplace=True)
+		alerts = alerts.replace({np.nan: None})
 
 		alerts['File'] = alerts['File'].map(lambda x: None if x == 'nofile' else self.project.get_relative_path_in_repository(x))
-		alerts['CWE'] = alerts['Rule'].map(lambda x: CppcheckSat.RULE_TO_CWE.get(x, ''))
+		alerts['CWE'] = alerts['Rule'].map(lambda x: CppcheckSat.RULE_TO_CWE.get(x, None))
 		
+		return alerts
+
+####################################################################################################
+
+class FlawfinderSat(Sat):
+	""" Represents the Flawfinder tool, which is used to generate security alerts given a project's source files. """
+
+	def __init__(self, project: Project):
+		super().__init__('Flawfinder', project)
+
+		version_success, version_number = self.run('--version')
+		if version_success:
+			self.version = cast(Optional[str], extract_numeric(version_number))
+
+	def generate_project_alerts(self, file_path_list: Union[list, bool], output_csv_path: str) -> bool:
+		""" Generates the project's alerts given list of files. """
+		raise NotImplementedError('Cannot yet generate alerts using Flawfinder.')
+
+	def read_and_convert_output_csv_in_default_format(self, csv_file_path: str) -> pd.DataFrame:
+		""" Reads a CSV file generated using Flawfinder's default output parameters and converts it to a more convenient format. """
+
+		alerts = pd.read_csv(csv_file_path, dtype=str)
+		alerts.dropna(subset=['File', 'Line', 'Level', 'Category', 'Name'], inplace=True)
+		alerts = alerts.replace({np.nan: None})
+	
+		alerts['File'] = alerts['File'].map(lambda x: self.project.get_relative_path_in_repository(x))
+
 		return alerts
 
 if __name__ == '__main__':

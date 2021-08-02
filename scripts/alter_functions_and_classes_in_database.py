@@ -2,6 +2,8 @@
 
 """
 	This script adds two columns (BeginLine and EndLine) to the FUNCTIONS_* and CLASSES_* tables in the database.
+
+	Before running this script, the code unit tables must be merged using "merge_files_functions_classes_in_database.py".
 """
 
 from mysql.connector.errorcode import ER_DUP_FIELDNAME # type: ignore

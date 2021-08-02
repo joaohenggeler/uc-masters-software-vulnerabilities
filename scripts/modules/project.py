@@ -114,15 +114,16 @@ class Project:
 
 			short_name = info['short_name']
 
-			if short_name in GLOBAL_CONFIG['ignored_projects']:
-				log.info(f'Ignoring the project "{short_name}".')
+			should_be_allowed = GLOBAL_CONFIG['allowed_projects'].get(short_name)
+			if not should_be_allowed:
+				log.info(f'Ignoring the project "{full_name}" ({short_name}).')
 				continue
 
 			info['output_directory_path'] = output_directory_path
 			info['scrape_all_branches'] = scrape_all_branches
 			project: Project
 		
-			log.info(f'Loading the project "{short_name}" with the following configurations: {info}')
+			log.info(f'Loading the project "{full_name}" ({short_name}) with the following configurations: {info}')
 
 			if short_name == 'mozilla':
 				project = MozillaProject(full_name, info)

@@ -6,6 +6,8 @@
 	"insert_vulnerabilities_in_database.py".
 """
 
+from typing import cast
+
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
@@ -29,8 +31,8 @@ with Database(buffered=True) as db:
 
 		assert db.cursor.rowcount != -1, 'The database cursor must be buffered.'
 
-		next_id = None
-		id_template = None
+		next_id = -1
+		id_template = ''
 
 		if success and db.cursor.rowcount > 0:
 			row = db.cursor.fetchone()
@@ -72,7 +74,7 @@ with Database(buffered=True) as db:
 
 				commit_tag_name = row['Tag Name']
 				commit_author_date = row['Author Date']
-				cve_list = deserialize_json_container(row['CVEs'], [None])
+				cve_list = cast(list, deserialize_json_container(row['CVEs'], [None]))
 
 				for cve in cve_list:
 

@@ -5,6 +5,8 @@
 	Before running this script, the table must be first modified by running "alter_vulnerabilities_in_database.py".
 """
 
+from typing import cast
+
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
@@ -66,8 +68,8 @@ with Database(buffered=True) as db:
 				del cvss
 
 				cwe = row['CWE']
-				advisory_id_list = deserialize_json_container(row['Advisory IDs'], [None])
-				bugzilla_url_list = deserialize_json_container(row['Bugzilla URLs'], [None])
+				advisory_id_list = cast(list, deserialize_json_container(row['Advisory IDs'], [None]))
+				bugzilla_url_list = cast(list, deserialize_json_container(row['Bugzilla URLs'], [None]))
 
 				for advisory_id in advisory_id_list:
 

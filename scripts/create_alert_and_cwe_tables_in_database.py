@@ -1,8 +1,21 @@
 #!/usr/bin/env python3
 
 """
-	@TODO
+	This script creates the following tables, most of which are necessary to insert any security alerts:
+	
+	- VULNERABILITY_CATEGORY, which stores each vulnerability category. These are set to the values from the configuration file;
+	- CWE_INFO, which stores each CWE and maps them with the previous categories;
+	- SAT, which stores each static analysis tool (SAT);
+	- RULE, which stores each SAT's rules;
+	- RULE_CWE_INFO, which maps each SAT rule to zero or more CWEs;
+	- ALERT, which stores the generated security alerts;
+	- ALERT_FUNCTION, which maps an alert to zero or more functions.
+	- ALERT_CLASS, which maps an alert to zero or more classes.
+
+	Before running this script, the code unit tables must be merged using "merge_files_functions_classes_in_database.py".
 """
+
+from mysql.connector.errorcode import ER_FK_DUP_NAME # type: ignore
 
 from modules.common import log, GLOBAL_CONFIG
 from modules.database import Database
@@ -15,10 +28,10 @@ def create_alert_and_cwe_tables_in_database() -> None:
 
 	with Database() as db:
 		
-		log.info('Creating the VULNERABILITY_CATEGORIES table.')
+		log.info('Creating the VULNERABILITY_CATEGORY table.')
 
 		success, error_code = db.execute_query(	'''
-												CREATE TABLE IF NOT EXISTS VULNERABILITY_CATEGORIES
+												CREATE TABLE IF NOT EXISTS VULNERABILITY_CATEGORY
 												(
 													ID_CATEGORY INTEGER AUTO_INCREMENT PRIMARY KEY,
 													NAME VARCHAR(50) NOT NULL UNIQUE
@@ -26,7 +39,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 												''')
 
 		if not success:
-			log.error(f'Failed to create the VULNERABILITY_CATEGORIES table with the error code {error_code}.')
+			log.error(f'Failed to create the VULNERABILITY_CATEGORY table with the error code {error_code}.')
 			return
 
 		##################################################
@@ -40,7 +53,9 @@ def create_alert_and_cwe_tables_in_database() -> None:
 													DESCRIPTION VARCHAR(1000),
 													ID_CATEGORY INTEGER,
 
-													FOREIGN KEY (ID_CATEGORY) REFERENCES VULNERABILITY_CATEGORIES(ID_CATEGORY) ON DELETE RESTRICT ON UPDATE RESTRICT
+													UNIQUE KEY (V_CWE, ID_CATEGORY),
+
+													FOREIGN KEY (ID_CATEGORY) REFERENCES VULNERABILITY_CATEGORY(ID_CATEGORY) ON DELETE RESTRICT ON UPDATE RESTRICT
 												);
 												''')
 
@@ -48,6 +63,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 			log.error(f'Failed to create the CWE_INFO table with the error code {error_code}.')
 			return
 
+		"""
 		log.info('Changing the V_CWE foreign key in the VULNERABILITIES table.')
 
 		success, error_code = db.execute_query(	'''
@@ -56,17 +72,18 @@ def create_alert_and_cwe_tables_in_database() -> None:
 												FOREIGN KEY (V_CWE) REFERENCES CWE_INFO (V_CWE);
 												''')
 
-		if not success:
+		if not success and error_code != ER_FK_DUP_NAME:
 			log.error(f'Failed to change the V_CWE foreign key in the VULNERABILITIES table with the error code {error_code}.')
 			return
+		"""
 
 		##################################################
 
-		log.info('Inserting the default values in the VULNERABILITY_CATEGORIES and CWE_INFO tables.')
+		log.info('Inserting the default values in the VULNERABILITY_CATEGORY and CWE_INFO tables.')
 
 		for category, cwe_list in GLOBAL_CONFIG['vulnerability_categories'].items():
 							
-			success, error_code = db.execute_query(	'INSERT INTO VULNERABILITY_CATEGORIES (NAME) VALUES (%(NAME)s);',
+			success, error_code = db.execute_query(	'INSERT IGNORE INTO VULNERABILITY_CATEGORY (NAME) VALUES (%(NAME)s);',
 													params={'NAME': category})
 
 			if not success:
@@ -77,7 +94,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 
 			for cwe in cwe_list:
 
-				success, error_code = db.execute_query(	'INSERT INTO CWE_INFO (V_CWE, ID_CATEGORY) VALUES (%(V_CWE)s, %(ID_CATEGORY)s);',
+				success, error_code = db.execute_query(	'INSERT IGNORE INTO CWE_INFO (V_CWE, ID_CATEGORY) VALUES (%(V_CWE)s, %(ID_CATEGORY)s);',
 														params={'V_CWE': cwe, 'ID_CATEGORY': category_id})
 
 				if not success:
@@ -106,7 +123,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 
 		for sat in sat_list:
 
-			success, error_code = db.execute_query(	'INSERT INTO SAT (SAT_NAME) VALUES (%(SAT_NAME)s);',
+			success, error_code = db.execute_query(	'INSERT IGNORE INTO SAT (SAT_NAME) VALUES (%(SAT_NAME)s);',
 													params={'SAT_NAME': sat.database_name})
 
 			if not success:
@@ -144,9 +161,9 @@ def create_alert_and_cwe_tables_in_database() -> None:
 												CREATE TABLE IF NOT EXISTS RULE_CWE_INFO
 												(
 													RULE_ID INTEGER,
-													V_CWE INTEGER,
+													V_CWE VARCHAR(10),
 													
-													PRIMARY KEY (RULE_ID, V_CWE),
+													UNIQUE KEY (RULE_ID, V_CWE),
 
 													FOREIGN KEY (RULE_ID) REFERENCES RULE(RULE_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
 													FOREIGN KEY (V_CWE) REFERENCES CWE_INFO(V_CWE) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -181,12 +198,13 @@ def create_alert_and_cwe_tables_in_database() -> None:
 													ALERT_LINE INTEGER NOT NULL,
 													ALERT_MESSAGE VARCHAR(1000),
 
-													R_ID INTEGER NOT NULL,
+													R_ID TINYINT NOT NULL,
 													P_COMMIT VARCHAR(200) NOT NULL,
 
 													RULE_ID INTEGER NOT NULL,
 													ID_File INTEGER NOT NULL,
 													
+													FOREIGN KEY (R_ID) REFERENCES REPOSITORIES_SAMPLE(R_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
 													FOREIGN KEY (RULE_ID) REFERENCES RULE(RULE_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
 													{file_foreign_key}
 												);
@@ -198,8 +216,6 @@ def create_alert_and_cwe_tables_in_database() -> None:
 
 		##################################################
 
-		# @TODO: Two junction tables that associate the ALERT to multiple functions and classes (ALERT_ID <-> ID_Function, ALERT_ID <-> ID_Class).
-
 		log.info('Creating the ALERT_FUNCTION table.')
 
 		function_foreign_key = foreign_key_template.replace('<UNIT_ID>', 'ID_Function').replace('<UNIT_TABLE>', 'FUNCTIONS')
@@ -210,7 +226,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 													ALERT_ID INTEGER,
 													ID_Function INTEGER,
 													
-													PRIMARY KEY (ALERT_ID, ID_Function),
+													UNIQUE KEY (ALERT_ID, ID_Function),
 
 													FOREIGN KEY (ALERT_ID) REFERENCES ALERT(ALERT_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
 													{function_foreign_key}
@@ -233,7 +249,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 													ALERT_ID INTEGER,
 													ID_Class INTEGER,
 													
-													PRIMARY KEY (ALERT_ID, ID_Class),
+													UNIQUE KEY (ALERT_ID, ID_Class),
 
 													FOREIGN KEY (ALERT_ID) REFERENCES ALERT(ALERT_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
 													{class_foreign_key}

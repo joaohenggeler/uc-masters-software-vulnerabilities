@@ -9,6 +9,7 @@ import json
 import locale
 import logging
 import os
+import re
 import shutil
 import sys
 from copy import deepcopy
@@ -250,6 +251,23 @@ def check_range_overlap(range_1: List[int], range_2: List[int]) -> bool:
 def lists_have_elements_in_common(a: list, b: list) -> bool:
 	""" Checks if two lists have at least one element in common. """
 	return len( set(a).intersection(set(b)) ) > 0
+
+NUMERIC_REGEX = re.compile(r'\d+')
+
+def extract_numeric(string: str, pattern: Optional[str] = None, convert: bool = False, all: bool = False) -> Optional[Union[int, str, list]]:
+	""" Extracts zero or more numeric values from a string. """
+
+	result = None
+	regex = NUMERIC_REGEX if pattern is None else re.compile(pattern)	
+
+	result = regex.findall(string)
+	if convert:
+		result = [int(match) for match in result]
+
+	if not all:
+		result = result[0] if result else None
+
+	return result
 
 ####################################################################################################
 

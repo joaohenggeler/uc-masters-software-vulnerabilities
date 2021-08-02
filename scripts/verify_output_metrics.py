@@ -6,10 +6,11 @@
 
 import os
 import re
+from typing import Union
 
 import pandas as pd # type: ignore
 
-from modules.common import log
+from modules.common import log, extract_numeric
 from modules.project import Project
 
 ####################################################################################################
@@ -31,9 +32,10 @@ for project in project_list:
 		for metrics_csv_path in project.find_output_csv_files('metrics', subdirectory='metrics'):
 
 			filename = os.path.basename(metrics_csv_path)
-			topological_index = int(re.findall(r'-t(\d+)-', filename)[0])
+			topological_index = extract_numeric(filename, r'-t(\d+)-', convert=True)
 			index_list.append(topological_index)
 
+		missing_index_list: Union[list, set]
 		missing_index_list = set(range(0, expected_num_commits)).difference(index_list)
 		missing_index_list = sorted(missing_index_list)
 

@@ -206,6 +206,7 @@ with Database(buffered=True) as db:
 					# - (No, No) -> Set to NULL.
 					# - (Yes, Yes) -> Set to the string "[P_ID_1, P_ID_2, ..., P_ID_N]", for N patches.
 					# - (Yes, No) -> Set to the current P_ID, for N patches.
+					p_id_list: list
 
 					if not affected_commit:
 						p_id_list = [None]

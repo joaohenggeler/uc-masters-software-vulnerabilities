@@ -14,7 +14,14 @@
 
 	"recursion_limit": null,
 
-	"ignored_projects": ["<Put zero or more project short names from the static config here>"],
+	"allowed_projects":
+	{
+		"glibc": true,
+		"apache": true,
+		"xen": true,
+		"kernel": true,
+		"mozilla": true
+	},
 
 	"output_directory_path": "output",
 
