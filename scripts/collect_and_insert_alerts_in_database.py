@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 
 """
-	@TODO
+	This script inserts the data from any CSV files present in the GitHub repository specified in the 'github_data_repository'
+	configuration option into the RULE, CWE_INFO, RULE_CWE_INFO, ALERT, ALERT_FUNCTION, and ALERT_CLASS tables in the database.
+	The 'github_token' option must also contain a valid personal access token (see the page: Settings > Developer settings >
+	Personal access tokens).
+
+	Before running this script, the follow scripts must be first run:
+	- "insert_metrics_in_database.py" to insert the previously collected code unit metrics into the database;
+	- "create_alert_and_cwe_tables_in_database.py" to create the tables mentioned above.
 """
 
 import os
@@ -156,7 +163,8 @@ def collect_and_insert_alerts_in_database() -> None:
 								##################################################
 
 								def insert_rule_and_cwe_info(alert_params: dict, cwe_list: list) -> Tuple[bool, Optional[int]]:
-									""" @TODO """
+									""" Inserts a security alert's rule and CWEs in the database. This function is successful and returns the rule's primary
+									key if a new row was inserted or if the rule already exists. """
 
 									total_success = True
 									rule_id = None
@@ -217,7 +225,8 @@ def collect_and_insert_alerts_in_database() -> None:
 									return total_success, rule_id
 
 								def insert_alert(alert_params: dict, cwe_list: list) -> None:
-									""" @TODO """
+									""" Inserts a security alert in the database given its parameters: RULE_NAME, RULE_CATEGORY, ALERT_SEVERITY_LEVEL,
+									ALERT_LINE, ALERT_MESSAGE, FILE_PATH, and a list of CWEs. """
 
 									alert_params['R_ID'] = project.database_id
 									alert_params['P_COMMIT'] = commit_hash

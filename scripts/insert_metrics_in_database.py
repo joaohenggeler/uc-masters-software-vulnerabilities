@@ -6,7 +6,7 @@
 
 	Before running this script, the follow scripts must be first run:
 	- "split_and_update_metrics.py" to split and aggregate metrics by their code unit type;
-	- "insert_patches_in_database.py" to insert the previosuly collected commits into the database;
+	- "insert_patches_in_database.py" to insert the previously collected commits into the database;
 	- "alter_functions_and_classes_in_database.py" to add the BeginLine and EndLine columns to the FUNCTIONS_* and CLASSES_* tables.
 
 	The following file metrics are not inserted by this script:
