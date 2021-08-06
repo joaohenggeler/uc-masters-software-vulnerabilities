@@ -25,7 +25,7 @@ from typing import cast
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
-from modules.common import log, deserialize_json_container, extract_numeric
+from modules.common import log, deserialize_json_container, extract_numeric, index_list_or_default
 from modules.database import Database
 from modules.project import Project
 
@@ -195,7 +195,10 @@ with Database(buffered=True) as db:
 				metrics.columns = metrics.columns.str.replace(' ', '')
 
 				csv_metric_names = metrics.columns.values.tolist()
-				first_metric_index = csv_metric_names.index('File') + 1
+
+				first_metric_index = index_list_or_default(csv_metric_names, 'File') or index_list_or_default(csv_metric_names, 'Name') or index_list_or_default(csv_metric_names, 'Kind')
+				first_metric_index += 1
+
 				csv_metric_names = csv_metric_names[first_metric_index:]
 
 				# E.g. "SumCyclomatic" -> "SumCyclomatic"" or "HenryKafura" -> "HK".

@@ -269,6 +269,13 @@ def extract_numeric(string: str, pattern: Optional[str] = None, convert: bool = 
 
 	return result
 
+def index_list_or_default(my_list: list, value: Any, default: Any = None) -> Any:
+	""" Retrieves the index of a given item or a default value if it doesn't exist. """
+	try:
+		return my_list.index(value)
+	except ValueError:
+		return default
+
 ####################################################################################################
 
 if __name__ == '__main__':
