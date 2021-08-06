@@ -18,12 +18,14 @@
 	- LCOM (PercentLackOfCohesion)
 """
 
+import os
 from collections import namedtuple
+from typing import cast
 
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
-from modules.common import log, deserialize_json_container
+from modules.common import log, deserialize_json_container, extract_numeric
 from modules.database import Database
 from modules.project import Project
 
@@ -64,11 +66,13 @@ with Database(buffered=True) as db:
 								'''
 
 		# @Hack: Doesn't handle multiple versions that were scraped at different times, though that's not really necessary for now.
-		timeline_csv_path = project.find_output_csv_files('file-timeline')[0]
-		timeline = pd.read_csv(timeline_csv_path, dtype=str)
-		is_first_vulnerable_commit = timeline['Topological Index'] == '1'
-		first_vulnerable_commit = timeline.loc[is_first_vulnerable_commit, 'Commit Hash'].iloc[0]
-		del timeline_csv_path, timeline, is_first_vulnerable_commit
+		commits_csv_path = project.find_output_csv_files('affected-files')[0]
+		commits = pd.read_csv(commits_csv_path, usecols=['Topological Index', 'Vulnerable Commit Hash', 'Neutral Commit Hash'], dtype=str)
+
+		# Only neutral commits are stored in the PATCHES table. We need to convert from vulnerable to neutral commits so we can find the correct P_IDs.
+		vulnerable_to_neutral_commit = {row['Vulnerable Commit Hash']: row['Neutral Commit Hash'] for _, row in commits.iterrows()}
+		
+		del commits_csv_path, commits
 
 		for unit_info in UNIT_INFO_LIST:
 
@@ -110,7 +114,18 @@ with Database(buffered=True) as db:
 
 			cached_insert_queries: dict = {}
 
-			for input_csv_path in project.find_output_csv_files(f'{unit_info.Kind}-metrics', subdirectory=f'{unit_info.Kind}_metrics'):
+			output_csv_prefix = f'{unit_info.Kind}-metrics'
+			output_csv_subdirectory = f'{unit_info.Kind}_metrics'
+
+			def output_csv_sort_key(csv_path: str) -> int:
+				""" Called when sorting the CSV list by each file path. We want units that weren't affected by a vulnerability (affected = 0, vulnerable = 0) 
+				to be sorted before the vulnerable and neutral ones (affected = 1, vulnerable = 0 or 1). This is because the query that checks if the metrics
+				were already inserted only works if the units whose P_ID columns will be NULL are inserted first. """
+				commit_params = cast(list, extract_numeric(os.path.basename(csv_path), convert=True, all=True))
+				topological_index, affected, vulnerable, *_ = commit_params # (0 to N, 0 or 1, 0 or 1)
+				return topological_index * 100 + affected * 10 + vulnerable
+
+			for input_csv_path in project.find_output_csv_files(output_csv_prefix, subdirectory=output_csv_subdirectory, sort_key=output_csv_sort_key):
 
 				log.info(f'Inserting the {unit_info.Kind} metrics using the information in "{input_csv_path}".')
 
@@ -128,19 +143,27 @@ with Database(buffered=True) as db:
 				affected_commit = metrics['Affected Commit'].iloc[0] == 'Yes'
 				vulnerable_commit = metrics['Vulnerable Commit'].iloc[0] == 'Yes'
 
-				# The first commit in the project is not in the PATCHES table, so we'll associate it with the first vulnerable one.
+				# The first commit (neutral) in the project is not in the PATCHES table, so we'll skip its metrics for now.
 				if topological_index == '0':
-					log.info(f'Changing the first commit from {commit_hash} to {first_vulnerable_commit}.')
-					commit_hash = first_vulnerable_commit
+					log.info(f'Skipping the first commit {commit_hash}.')
+					continue
 
+				commit_hash = vulnerable_to_neutral_commit.get(commit_hash, commit_hash)
+				occurrence = 'before' if vulnerable_commit else 'after'
+
+				# Since only neutral commits are stored in the PATCHES table, we need to use the occurrence (before and after a patch)
+				# to determine if a commit's metrics (vulnerable or neutral) already exist in the database.
 				success, error_code = db.execute_query(f'''
 														SELECT
 															P_ID,
-															(SELECT COUNT(*) > 0 FROM {unit_info.ExtraTimeTable} AS E WHERE E.P_ID = P.P_ID) AS PATCH_METRICS_ALREADY_EXIST
+															(
+																SELECT COUNT(*) > 0 FROM {unit_metrics_table} AS U
+																WHERE U.P_ID LIKE CONCAT('%', P.P_ID, '%') AND Occurrence = %(Occurrence)s
+															) AS COMMIT_METRICS_ALREADY_EXIST
 														FROM PATCHES AS P
 														WHERE R_ID = %(R_ID)s AND P_COMMIT = %(P_COMMIT)s;
 														''',
-														params={'R_ID': project.database_id, 'P_COMMIT': commit_hash})
+														params={'R_ID': project.database_id, 'P_COMMIT': commit_hash, 'Occurrence': occurrence})
 
 				if not success:
 					log.error(f'Failed to query any existing {unit_info.Kind} metrics for the commit {commit_hash} ({topological_index}, {affected_commit}, {vulnerable_commit}) in the project "{project}" with the error code {error_code}.')
@@ -152,11 +175,11 @@ with Database(buffered=True) as db:
 					log.error(f'Could not find any patch with the commit {commit_hash} ({topological_index}, {affected_commit}, {vulnerable_commit}) in the project "{project}".')
 					continue
 
-				if any(patch_row['PATCH_METRICS_ALREADY_EXIST'] == 1 for patch_row in patch_row_list):
+				if any(patch_row['COMMIT_METRICS_ALREADY_EXIST'] == 1 for patch_row in patch_row_list):
 					
 					log.info(f'Skipping the {unit_info.Kind} metrics for the patches "{patch_row_list}" with the commit {commit_hash} ({topological_index}, {affected_commit}, {vulnerable_commit}) in the project "{project}" since they already exist.')
 					
-					if any(patch_row['PATCH_METRICS_ALREADY_EXIST'] == 0 for patch_row in patch_row_list):
+					if any(patch_row['COMMIT_METRICS_ALREADY_EXIST'] == 0 for patch_row in patch_row_list):
 						log.warning(f'The patches "{patch_row_list}" to be skipped have one or more {unit_info.Kind} metric values that were not previously inserted.')
 
 					continue
@@ -231,7 +254,7 @@ with Database(buffered=True) as db:
 							'P_ID':  p_id,
 							'FilePath': file_path,
 							'Patched': convert_string_status_to_number(row.PatchedCodeUnit), # If the code unit was changed.
-							'Occurrence': 'before' if vulnerable_commit else 'after', # Whether or not this code unit exists before (vulnerable) or after (neutral) the patch.
+							'Occurrence': occurrence, # Whether or not this code unit exists before (vulnerable) or after (neutral) the patch.
 							'Affected': affected_status, # If the code unit is vulnerable or not.
 						}
 
@@ -240,9 +263,9 @@ with Database(buffered=True) as db:
 							query_params['Complement'] = row.Complement
 
 							if has_code_unit_lines:
-								lines = deserialize_json_container(row.CodeUnitLines, [None, None])
-								query_params['BeginLine'] = lines[0] # type: ignore[index]
-								query_params['EndLine'] = lines[1] # type: ignore[index]
+								lines = cast(list, deserialize_json_container(row.CodeUnitLines, [None, None]))
+								query_params['BeginLine'] = lines[0]
+								query_params['EndLine'] = lines[1]
 
 							file_id = cached_file_ids.get(file_path, -1)
 							if file_id == -1:
@@ -309,7 +332,6 @@ with Database(buffered=True) as db:
 
 							if not success:
 								log.error(f'Failed to insert the {unit_info.Kind} metrics ID in the {unit_info.ExtraTimeTable} table for the unit "{row.Name}" ({unit_id}) in the file "{file_path}" and commit {commit_hash} ({topological_index}, {patch_id}, {affected_commit}, {vulnerable_commit}) with the error code {error_code}.')
-
 
 						if success:
 							if affected_commit and affected_status == 0:

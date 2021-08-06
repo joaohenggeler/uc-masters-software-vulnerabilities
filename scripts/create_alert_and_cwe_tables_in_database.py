@@ -200,6 +200,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 
 													R_ID TINYINT NOT NULL,
 													P_COMMIT VARCHAR(200) NOT NULL,
+													P_OCCURRENCE VARCHAR(7) NOT NULL,
 
 													RULE_ID INTEGER NOT NULL,
 													ID_File INTEGER NOT NULL,

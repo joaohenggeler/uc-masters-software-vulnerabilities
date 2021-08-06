@@ -11,7 +11,7 @@ import random
 import re
 import sys
 from collections import defaultdict, namedtuple
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Callable, Iterator, List, Optional, Tuple, Union
 
 import bs4 # type: ignore
 import clang.cindex # type: ignore
@@ -157,7 +157,7 @@ class Project:
 		filename = prefix + f'-{self.database_id}-{self.short_name}-{used_branches}-{CURRENT_TIMESTAMP}.csv'
 		return os.path.join(self.output_directory_path, filename)
 
-	def find_output_csv_files(self, prefix: str, subdirectory: Optional[str] = None) -> List[str]:
+	def find_output_csv_files(self, prefix: str, subdirectory: Optional[str] = None, sort_key: Optional[Callable] = None) -> List[str]:
 		""" Finds the paths to any CSV files that belong to this project by looking at their prefix. """
 		
 		csv_path = self.output_directory_path
@@ -166,8 +166,10 @@ class Project:
 			csv_path = os.path.join(csv_path, subdirectory)
 
 		csv_path = os.path.join(csv_path, fr'{prefix}*-{self.database_id}-{self.short_name}-*')
+		csv_file_list = glob.glob(csv_path)
+		csv_file_list = sorted(csv_file_list, key=sort_key)
 
-		return glob.glob(csv_path)
+		return csv_file_list
 
 	def create_output_subdirectory(self, subdirectory: str = '') -> None:
 		""" Creates a subdirectory in the project's output directory. """

@@ -58,7 +58,7 @@ def collect_and_insert_alerts_in_database() -> None:
 									INNER JOIN EXTRA_TIME_FILES AS E ON F.ID_File = E.ID_File
 									INNER JOIN PATCHES AS P ON E.P_ID = P.P_ID
 									WHERE P.R_ID = %(R_ID)s AND P.P_COMMIT = %(P_COMMIT)s
-									AND F.FilePath = %(FILE_PATH)s AND F.Occurrence = %(OCCURRENCE)s;
+									AND F.FilePath = %(FILE_PATH)s AND F.Occurrence = %(P_OCCURRENCE)s;
 									'''
 
 			with TemporaryDirectory() as temporary_directory_path:
@@ -77,7 +77,6 @@ def collect_and_insert_alerts_in_database() -> None:
 
 						# E.g. "mozilla/cppcheck/complete_scan/current_commit/part1/cppcheck-195-305babb41123e575e6fd6bf4ea4dab2716ce1ecc.csv.zip"
 						# E.g. "linux/flawfinder/complete_scan/previous_commit/part4/flawfinder-358-fc1ca73b3758f0c419b46cfeb2a951de22007d90-1.csv.zip"
-						# Note the "-1" in the previous_commit.
 						base_directory = f'{project.github_data_name}/{sat.github_data_name}/complete_scan/{commit_type.GithubDataName}'
 						
 						try:
@@ -102,22 +101,39 @@ def collect_and_insert_alerts_in_database() -> None:
 								log.info(f'Collecting and inserting the alerts from "{file.path}".')
 								
 								# E.g. "cppcheck-195-305babb41123e575e6fd6bf4ea4dab2716ce1ecc.csv.zip"
+								# E.g. "flawfinder-358-fc1ca73b3758f0c419b46cfeb2a951de22007d90-1.csv.zip"
+								# Note the "-1" in the previous_commit. This means we are in "previous_commit" and the real commit hash
+								# is the one immediately before the one shown here.
 								_, _, commit_hash = file.name.split('-', 2)
 								commit_hash, _, _ = commit_hash.rsplit('.', 2)
+								commit_hash = commit_hash.rstrip('-1')
 
-								# @TODO: Check if the commit exists in the PATCHES table, if not log a warning.
+								occurrence = 'before' if commit_type.Vulnerable else 'after'
 
-								success, error_code = db.execute_query('SELECT COUNT(*) > 0 AS ALERTS_ALREADY_EXIST FROM ALERT WHERE R_ID = %(R_ID)s AND P_COMMIT = %(P_COMMIT)s;',
-																		params={'R_ID': project.database_id, 'P_COMMIT': commit_hash})
+								success, error_code = db.execute_query(	'''
+																		SELECT
+																			(SELECT COUNT(*) > 0 FROM PATCHES WHERE R_ID = %(R_ID)s AND P_COMMIT = %(P_COMMIT)s) AS PATCH_EXISTS,
+																			(
+																				SELECT COUNT(*) > 0 FROM ALERT WHERE SAT_ID = %(SAT_ID)s AND R_ID = %(R_ID)s
+																				AND P_COMMIT = %(P_COMMIT)s AND P_OCCURRENCE = %(P_OCCURRENCE)s
+																			) AS SAT_ALERTS_ALREADY_EXIST_FOR_THIS_COMMIT
+																		;
+																		''',
+																		params={'SAT_ID': sat_id, 'R_ID': project.database_id,
+																				'P_COMMIT': commit_hash, 'P_OCCURRENCE': occurrence})
 
 								if not success:
-									log.error(f'Failed to query any existing alerts for the commit {commit_hash} ("{file.name}") in the project "{project}" with the error code {error_code}.')
+									log.error(f'Failed to query any existing patches with the commit {commit_hash} ({occurrence}, "{file.name}") in the project "{project}" with the error code {error_code}.')
 									continue
 
 								alert_row = db.cursor.fetchone()
+								
+								if alert_row['PATCH_EXISTS'] == 0:
+									log.warning(f'Skipping the patch with the commit {commit_hash} ({occurrence}, "{file.name}") in the project "{project}" since it does not exist in the database.')
+									continue
 
-								if alert_row['ALERTS_ALREADY_EXIST'] == 1:
-									log.info(f'Skipping the alerts for the commit {commit_hash} ("{file.name}") in the project "{project}" since they already exist.')
+								if alert_row['SAT_ALERTS_ALREADY_EXIST_FOR_THIS_COMMIT'] == 1:
+									log.info(f'Skipping the alerts for the commit {commit_hash} ({occurrence}, "{file.name}") in the project "{project}" since they already exist.')
 									continue
 
 								zip_file_path = os.path.join(temporary_directory_path, file.name)
@@ -202,7 +218,7 @@ def collect_and_insert_alerts_in_database() -> None:
 
 									alert_params['R_ID'] = project.database_id
 									alert_params['P_COMMIT'] = commit_hash
-									alert_params['OCCURRENCE'] = 'before' if commit_type.Vulnerable else 'after'
+									alert_params['P_OCCURRENCE'] = occurrence
 
 									success, rule_id = insert_rule_and_cwe_info(alert_params)
 
@@ -230,13 +246,13 @@ def collect_and_insert_alerts_in_database() -> None:
 																				INSERT INTO ALERT
 																				(
 																					ALERT_SEVERITY_LEVEL, ALERT_LINE, ALERT_MESSAGE,
-																					R_ID, P_COMMIT,
+																					R_ID, P_COMMIT, P_OCCURRENCE,
 																					RULE_ID, ID_File
 																				)
 																				VALUES
 																				(
 																					%(ALERT_SEVERITY_LEVEL)s, %(ALERT_LINE)s, %(ALERT_MESSAGE)s,
-																					%(R_ID)s, %(P_COMMIT)s,
+																					%(R_ID)s, %(P_COMMIT)s, %(P_OCCURRENCE)s,
 																					%(RULE_ID)s, %(ID_File)s
 																				);
 																				''', params=alert_params)

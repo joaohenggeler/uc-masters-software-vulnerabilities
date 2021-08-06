@@ -50,21 +50,20 @@ with Database(buffered=True) as db:
 			next_id += 1
 			return result
 
-		for input_csv_path in project.find_output_csv_files('file-timeline'):
+		for input_csv_path in project.find_output_csv_files('affected-files'):
 
 			log.info(f'Inserting the patches for the project "{project}" using the information in "{input_csv_path}".')
 
-			commits = pd.read_csv(input_csv_path, usecols=['Topological Index', 'Affected', 'Commit Hash', 'Tag Name', 'Author Date', 'CVEs'], dtype=str)
+			# We only want the neutral commits since the vulnerable ones are identified relative to neutral commits
+			# by using the Occurrence column in the metrics table (vulnerable = before neutral).
+			commits = pd.read_csv(input_csv_path, usecols=['Topological Index', 'Neutral Commit Hash', 'Neutral Tag Name', 'Neutral Author Date', 'CVEs'], dtype=str)
 			commits.drop_duplicates(subset=['Topological Index'], inplace=True)
-			
-			is_affected_commit = commits['Affected'] == 'Yes'
-			commits = commits[is_affected_commit]
 			commits = commits.replace({np.nan: None})
 
 			for _, row in commits.iterrows():
 
 				topological_index = row['Topological Index']
-				commit_hash = row['Commit Hash']
+				commit_hash = row['Neutral Commit Hash']
 
 				success, error_code = db.execute_query('SELECT * FROM PATCHES WHERE P_COMMIT = %(P_COMMIT)s LIMIT 1;', params={'P_COMMIT': commit_hash})
 
@@ -72,8 +71,8 @@ with Database(buffered=True) as db:
 					log.info(f'Skipping the commit {commit_hash} ({topological_index}) for the project "{project}" since it already exists.')
 					continue
 
-				commit_tag_name = row['Tag Name']
-				commit_author_date = row['Author Date']
+				commit_tag_name = row['Neutral Tag Name']
+				commit_author_date = row['Neutral Author Date']
 				cve_list = cast(list, deserialize_json_container(row['CVEs'], [None]))
 
 				for cve in cve_list:
