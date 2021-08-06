@@ -205,9 +205,10 @@ def create_alert_and_cwe_tables_in_database() -> None:
 													RULE_ID INTEGER NOT NULL,
 													ID_File INTEGER NOT NULL,
 													
+													UNIQUE KEY (ALERT_ID, ID_File),
+													
 													FOREIGN KEY (R_ID) REFERENCES REPOSITORIES_SAMPLE(R_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-													FOREIGN KEY (RULE_ID) REFERENCES RULE(RULE_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-													{file_foreign_key}
+													FOREIGN KEY (RULE_ID) REFERENCES RULE(RULE_ID) ON DELETE RESTRICT ON UPDATE RESTRICT
 												);
 												''')
 
@@ -229,8 +230,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 													
 													UNIQUE KEY (ALERT_ID, ID_Function),
 
-													FOREIGN KEY (ALERT_ID) REFERENCES ALERT(ALERT_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-													{function_foreign_key}
+													FOREIGN KEY (ALERT_ID) REFERENCES ALERT(ALERT_ID) ON DELETE RESTRICT ON UPDATE RESTRICT
 												);
 												''')
 
@@ -252,8 +252,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 													
 													UNIQUE KEY (ALERT_ID, ID_Class),
 
-													FOREIGN KEY (ALERT_ID) REFERENCES ALERT(ALERT_ID) ON DELETE RESTRICT ON UPDATE RESTRICT,
-													{class_foreign_key}
+													FOREIGN KEY (ALERT_ID) REFERENCES ALERT(ALERT_ID) ON DELETE RESTRICT ON UPDATE RESTRICT
 												);
 												''')
 

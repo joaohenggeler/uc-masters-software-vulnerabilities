@@ -207,6 +207,7 @@ with Database(buffered=True) as db:
 				# Due to the way metrics are divided by code units, the CVEs and CodeUnitLines columns may only exist
 				# in CSV related to affected commits (vulnerable or neutral).
 				has_code_unit_lines = 'CodeUnitLines' in metrics.columns
+				has_file = 'File' in metrics.columns
 
 				def convert_string_status_to_number(status: str) -> int:
 					""" Converts a Yes/No/Unknown status from a CSV file into a numeric value used by the database. """
@@ -221,7 +222,7 @@ with Database(buffered=True) as db:
 				
 				for row in metrics.itertuples():
 
-					file_path = row.File
+					file_path = row.File if has_file else None
 
 					if file_path is None:
 						continue

@@ -48,6 +48,9 @@ class Sat():
 	def run(self, *args) -> Tuple[bool, str]:
 		""" Runs the tool with a series of command line arguments. """
 
+		if self.executable_path is None:
+			return (False, '')
+
 		arguments = [self.executable_path] + [arg for arg in args]
 		result = subprocess.run(arguments, capture_output=True, text=True)
 		success = (result.returncode == 0)

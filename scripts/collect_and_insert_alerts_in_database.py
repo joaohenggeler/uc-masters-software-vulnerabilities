@@ -114,8 +114,10 @@ def collect_and_insert_alerts_in_database() -> None:
 																		SELECT
 																			(SELECT COUNT(*) > 0 FROM PATCHES WHERE R_ID = %(R_ID)s AND P_COMMIT = %(P_COMMIT)s) AS PATCH_EXISTS,
 																			(
-																				SELECT COUNT(*) > 0 FROM ALERT WHERE SAT_ID = %(SAT_ID)s AND R_ID = %(R_ID)s
-																				AND P_COMMIT = %(P_COMMIT)s AND P_OCCURRENCE = %(P_OCCURRENCE)s
+																				SELECT COUNT(*) > 0 FROM ALERT AS A
+ 																				INNER JOIN RULE AS R ON A.RULE_ID = R.RULE_ID
+																				WHERE R.SAT_ID = %(SAT_ID)s AND A.R_ID = %(R_ID)s
+																				AND A.P_COMMIT = %(P_COMMIT)s AND A.P_OCCURRENCE = %(P_OCCURRENCE)s
 																			) AS SAT_ALERTS_ALREADY_EXIST_FOR_THIS_COMMIT
 																		;
 																		''',
@@ -153,7 +155,7 @@ def collect_and_insert_alerts_in_database() -> None:
 
 								##################################################
 
-								def insert_rule_and_cwe_info(alert_params: dict) -> Tuple[bool, Optional[int]]:
+								def insert_rule_and_cwe_info(alert_params: dict, cwe_list: list) -> Tuple[bool, Optional[int]]:
 									""" @TODO """
 
 									total_success = True
@@ -170,7 +172,7 @@ def collect_and_insert_alerts_in_database() -> None:
 										total_success = False
 										log.error(f'Failed to insert the rule with the error code {error_code} and the parameters: {alert_params}.')
 
-									for cwe in alert_params['CWE_LIST']:
+									for cwe in cwe_list:
 
 										success, error_code = db.execute_query('INSERT IGNORE INTO CWE_INFO (V_CWE) VALUES (%(V_CWE)s);', params={'V_CWE': cwe})
 										if not success:
@@ -181,10 +183,11 @@ def collect_and_insert_alerts_in_database() -> None:
 									rule_id = cached_rule_ids.get(rule_key, -1)
 									if rule_id == -1:
 									
-										success, error_code = db.execute_query('SELECT RULE_ID FROM RULE WHERE RULE_NAME = %(RULE_NAME)s AND SAT_ID = %(SAT_ID)s);')
+										success, error_code = db.execute_query(	'SELECT RULE_ID FROM RULE WHERE RULE_NAME = %(RULE_NAME)s AND SAT_ID = %(SAT_ID)s;',
+																				params=alert_params)
 
 										if success and db.cursor.rowcount > 0:
-											rule_row = db.fetchone()
+											rule_row = db.cursor.fetchone()
 											rule_id = rule_row['RULE_ID']
 										else:
 											rule_id = None
@@ -196,7 +199,7 @@ def collect_and_insert_alerts_in_database() -> None:
 									if rule_id is None:
 										total_success = False
 									else:
-										for cwe in alert_params['CWE_LIST']:
+										for cwe in cwe_list:
 
 											success, error_code = db.execute_query(	'''
 																					INSERT IGNORE INTO RULE_CWE_INFO (RULE_ID, V_CWE)
@@ -213,14 +216,14 @@ def collect_and_insert_alerts_in_database() -> None:
 
 									return total_success, rule_id
 
-								def insert_alert(alert_params: dict) -> None:
+								def insert_alert(alert_params: dict, cwe_list: list) -> None:
 									""" @TODO """
 
 									alert_params['R_ID'] = project.database_id
 									alert_params['P_COMMIT'] = commit_hash
 									alert_params['P_OCCURRENCE'] = occurrence
 
-									success, rule_id = insert_rule_and_cwe_info(alert_params)
+									success, rule_id = insert_rule_and_cwe_info(alert_params, cwe_list)
 
 									if success:
 										alert_params['RULE_ID'] = rule_id
@@ -240,49 +243,51 @@ def collect_and_insert_alerts_in_database() -> None:
 
 											cached_file_ids[file_path] = file_id
 
-										alert_params['ID_File'] = file_id
+										if file_id is not None:
+											
+											alert_params['ID_File'] = file_id
 
-										success, error_code = db.execute_query(	'''
-																				INSERT INTO ALERT
-																				(
-																					ALERT_SEVERITY_LEVEL, ALERT_LINE, ALERT_MESSAGE,
-																					R_ID, P_COMMIT, P_OCCURRENCE,
-																					RULE_ID, ID_File
-																				)
-																				VALUES
-																				(
-																					%(ALERT_SEVERITY_LEVEL)s, %(ALERT_LINE)s, %(ALERT_MESSAGE)s,
-																					%(R_ID)s, %(P_COMMIT)s, %(P_OCCURRENCE)s,
-																					%(RULE_ID)s, %(ID_File)s
-																				);
-																				''', params=alert_params)
-
-										if success:
-
-											alert_params['ALERT_ID'] = db.cursor.lastrowid
-
-											success, error_code = db.execute_query(f'''
-																					INSERT IGNORE INTO ALERT_FUNCTION (ALERT_ID, ID_Function)
-																					SELECT A.ALERT_ID, F.ID_Function FROM {function_metrics_table} AS F
-																					INNER JOIN ALERT AS A ON F.ID_File = A.ID_File
-																					WHERE A.ALERT_ID = %(ALERT_ID)s AND A.ALERT_LINE BETWEEN F.BeginLine AND F.EndLine;
+											success, error_code = db.execute_query(	'''
+																					INSERT INTO ALERT
+																					(
+																						ALERT_SEVERITY_LEVEL, ALERT_LINE, ALERT_MESSAGE,
+																						R_ID, P_COMMIT, P_OCCURRENCE,
+																						RULE_ID, ID_File
+																					)
+																					VALUES
+																					(
+																						%(ALERT_SEVERITY_LEVEL)s, %(ALERT_LINE)s, %(ALERT_MESSAGE)s,
+																						%(R_ID)s, %(P_COMMIT)s, %(P_OCCURRENCE)s,
+																						%(RULE_ID)s, %(ID_File)s
+																					);
 																					''', params=alert_params)
 
-											if not success:
-												log.error(f'Failed to insert the functions IDs where the alert appears with the error code {error_code} and the parameters: {alert_params}.')
+											if success:
 
-											success, error_code = db.execute_query(f'''
-																					INSERT IGNORE INTO ALERT_CLASS (ALERT_ID, ID_Class)
-																					SELECT A.ALERT_ID, C.ID_Class FROM {class_metrics_table} AS C
-																					INNER JOIN ALERT AS A ON C.ID_File = A.ID_File
-																					WHERE A.ALERT_ID = %(ALERT_ID)s AND A.ALERT_LINE BETWEEN C.BeginLine AND C.EndLine;
-																					''', params=alert_params)
+												alert_params['ALERT_ID'] = db.cursor.lastrowid
 
-											if not success:
-												log.error(f'Failed to insert the class IDs where the alert appears with the error code {error_code} and the parameters: {alert_params}.')
+												success, error_code = db.execute_query(f'''
+																						INSERT IGNORE INTO ALERT_FUNCTION (ALERT_ID, ID_Function)
+																						SELECT A.ALERT_ID, F.ID_Function FROM {function_metrics_table} AS F
+																						INNER JOIN ALERT AS A ON F.ID_File = A.ID_File
+																						WHERE A.ALERT_ID = %(ALERT_ID)s AND A.ALERT_LINE BETWEEN F.BeginLine AND F.EndLine;
+																						''', params=alert_params)
 
-										else:
-											log.error(f'Failed to insert the alert with the error code {error_code} and the parameters: {alert_params}.')
+												if not success:
+													log.error(f'Failed to insert the functions IDs where the alert appears with the error code {error_code} and the parameters: {alert_params}.')
+
+												success, error_code = db.execute_query(f'''
+																						INSERT IGNORE INTO ALERT_CLASS (ALERT_ID, ID_Class)
+																						SELECT A.ALERT_ID, C.ID_Class FROM {class_metrics_table} AS C
+																						INNER JOIN ALERT AS A ON C.ID_File = A.ID_File
+																						WHERE A.ALERT_ID = %(ALERT_ID)s AND A.ALERT_LINE BETWEEN C.BeginLine AND C.EndLine;
+																						''', params=alert_params)
+
+												if not success:
+													log.error(f'Failed to insert the class IDs where the alert appears with the error code {error_code} and the parameters: {alert_params}.')
+
+											else:
+												log.error(f'Failed to insert the alert with the error code {error_code} and the parameters: {alert_params}.')
 
 								##################################################
 
@@ -297,7 +302,6 @@ def collect_and_insert_alerts_in_database() -> None:
 
 										alert_params['RULE_NAME'] = row.Rule
 										alert_params['RULE_CATEGORY'] = row.Severity
-										alert_params['CWE_LIST'] = cwe_list
 
 										alert_params['ALERT_SEVERITY_LEVEL'] = None
 										alert_params['ALERT_LINE'] = row.Line
@@ -305,7 +309,7 @@ def collect_and_insert_alerts_in_database() -> None:
 
 										alert_params['FILE_PATH'] = row.File
 
-										insert_alert(alert_params)
+										insert_alert(alert_params, cwe_list)
 
 								else:
 									alerts = flawfinder.read_and_convert_output_csv_in_default_format(csv_file_path)
@@ -323,7 +327,6 @@ def collect_and_insert_alerts_in_database() -> None:
 
 										alert_params['RULE_NAME'] = row.Name
 										alert_params['RULE_CATEGORY'] = row.Category
-										alert_params['CWE_LIST'] = cwe_list
 
 										alert_params['ALERT_SEVERITY_LEVEL'] = row.Level
 										alert_params['ALERT_LINE'] = row.Line
@@ -331,7 +334,7 @@ def collect_and_insert_alerts_in_database() -> None:
 
 										alert_params['FILE_PATH'] = row.File
 
-										insert_alert(alert_params)
+										insert_alert(alert_params, cwe_list)
 
 								##################################################
 
