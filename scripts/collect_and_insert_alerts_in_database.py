@@ -12,6 +12,7 @@
 """
 
 import os
+import re
 from base64 import b64decode
 from collections import namedtuple
 from tempfile import TemporaryDirectory
@@ -38,6 +39,8 @@ def collect_and_insert_alerts_in_database() -> None:
 
 	CommitType = namedtuple('CommitType', ['Vulnerable', 'GithubDataName'])
 	commit_type_list = [CommitType(True, 'previous_commit'), CommitType(False, 'current_commit')]
+
+	ALERT_CSV_REGEX = re.compile(r'^.*\.csv\.zip$', re.IGNORECASE)
 
 	with Database(buffered=True) as db:
 
@@ -104,6 +107,10 @@ def collect_and_insert_alerts_in_database() -> None:
 								directory_file_list = cast(list, directory_file_list)
 								file_list.extend(directory_file_list)
 							else:
+
+								if not ALERT_CSV_REGEX.match(file.name):
+									log.error(f'Skipping the file "{file.path}" since it does not match the expected alert CSV file extension.')
+									continue
 
 								log.info(f'Collecting and inserting the alerts from "{file.path}".')
 								
