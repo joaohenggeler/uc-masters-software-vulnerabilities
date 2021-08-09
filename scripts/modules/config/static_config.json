@@ -20,7 +20,7 @@
 			"short_name": "apache",
 			"database_id": 4,
 			"database_name": "httpd",
-			"github_data_name": "apache",
+			"github_data_name": "httpd",
 			"vendor_id": 45,
 			"product_id": 66,
 			"url_pattern": "apache",
