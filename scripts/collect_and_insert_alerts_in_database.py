@@ -255,7 +255,6 @@ def collect_and_insert_alerts_in_database() -> None:
 												file_id = file_id_row['ID_File']
 											else:
 												file_id = None
-												log.warning(f'Failed to find the ID for the file "{file_path}" when inserting the alert with the parameters: {alert_params}.')
 
 											cached_file_ids[file_path] = file_id
 

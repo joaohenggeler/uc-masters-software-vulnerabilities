@@ -286,7 +286,6 @@ with Database(buffered=True) as db:
 									file_id = file_id_row[FILE_UNIT_INFO.MetricsTablePrimaryKey]
 								else:
 									file_id = None
-									log.warning(f'Failed to find the ID for the file "{file_path}" when inserting the {unit_info.Kind} metrics for the unit "{row.Name}" in the commit {commit_hash} ({topological_index}, {p_id}, {affected_commit}, {vulnerable_commit}).')
 
 								cached_file_ids[file_path] = file_id
 
