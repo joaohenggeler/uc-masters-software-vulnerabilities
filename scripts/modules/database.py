@@ -124,3 +124,16 @@ class Database:
 			log.error(f'Failed to execute the script "{script_path}" with the error: {repr(error)}')
 
 		return (success, output)
+
+	def call_procedure(self, name: str, *args) -> Tuple[bool, tuple]:
+		""" Calls a previously created stored procedure. """
+
+		try:
+			output = self.cursor.callproc(name, args)
+			success = True
+		except Exception as error:
+			success = False
+			output = ()
+			log.error(f'Failed to call the procedure "{name}" with the error: {repr(error)}')
+
+		return (success, output)

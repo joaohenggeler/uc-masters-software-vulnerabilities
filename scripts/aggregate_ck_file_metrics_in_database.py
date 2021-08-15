@@ -27,7 +27,7 @@ def aggregate_ck_file_metrics_in_database() -> None:
 
 			success, error_code = db.execute_query(	f'''
 														UPDATE {file_metrics_table} F
-														INNER JOIN
+														LEFT JOIN
 														(
 															SELECT
 																ID_File,
@@ -38,30 +38,17 @@ def aggregate_ck_file_metrics_in_database() -> None:
 															GROUP BY ID_File
 														) C ON F.ID_File = C.ID_File
 														SET
-														DIT = SumMaxInheritanceTree, 	NOC = SumCountClassDerived,
-														CBC = SumCountClassBase, 		RFC = SumCountDeclMethodAll,
-														CBO = SumCountClassCoupled, 	LCOM = SumPercentLackOfCohesion
+														DIT = IFNULL(SumMaxInheritanceTree, 0), 	NOC = IFNULL(SumCountClassDerived, 0),
+														CBC = IFNULL(SumCountClassBase, 0), 		RFC = IFNULL(SumCountDeclMethodAll, 0),
+														CBO = IFNULL(SumCountClassCoupled, 0), 		LCOM = IFNULL(SumPercentLackOfCohesion, 0)
 														WHERE DIT IS NULL OR NOC IS NULL OR CBC IS NULL OR RFC IS NULL OR CBO IS NULL OR LCOM IS NULL;
 													''')
 
 			if not success:
-				log.error(f'Failed to aggregate the non-NULL metrics with the error code {error_code}.')
+				log.error(f'Failed to aggregate the CK metrics with the error code {error_code}.')
 				return
 
-			num_updated_rows = db.cursor.rowcount
-
-			success, error_code = db.execute_query(	f'''
-														UPDATE {file_metrics_table}
-														SET DIT = 0, NOC = 0, CBC = 0, RFC = 0, CBO = 0, LCOM = 0
-														WHERE DIT IS NULL OR NOC IS NULL OR CBC IS NULL OR RFC IS NULL OR CBO IS NULL OR LCOM IS NULL;
-													''')
-
-			if not success:
-				log.error(f'Failed to aggregate the NULL metrics with the error code {error_code}.')
-				return
-
-			num_updated_rows += db.cursor.rowcount
-			log.info(f'Updated {num_updated_rows} rows in the table {file_metrics_table} for the project "{project}".')
+			log.info(f'Updated {db.cursor.rowcount} rows in the table {file_metrics_table} for the project "{project}".')
 
 		log.info('Committing changes.')
 		db.commit()
