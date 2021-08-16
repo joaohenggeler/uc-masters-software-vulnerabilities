@@ -47,6 +47,13 @@
 	"github_token": "<Replace with valid token>",
 	"github_data_repository": "<Replace with path>",
 
+	"allowed_metrics_code_units":
+	{
+		"file": true,
+		"function": true,
+		"class": true
+	},
+
 	"projects":
 	{
 		"Glibc":
