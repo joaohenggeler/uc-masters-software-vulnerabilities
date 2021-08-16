@@ -203,7 +203,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 													P_OCCURRENCE VARCHAR(7) NOT NULL,
 
 													RULE_ID INTEGER NOT NULL,
-													ID_File INTEGER NOT NULL,
+													ID_File BIGINT NOT NULL,
 													
 													UNIQUE KEY (ALERT_ID, ID_File),
 													
@@ -226,7 +226,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 												CREATE TABLE IF NOT EXISTS ALERT_FUNCTION
 												(
 													ALERT_ID INTEGER,
-													ID_Function INTEGER,
+													ID_Function BIGINT,
 													
 													UNIQUE KEY (ALERT_ID, ID_Function),
 
@@ -248,7 +248,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 												CREATE TABLE IF NOT EXISTS ALERT_CLASS
 												(
 													ALERT_ID INTEGER,
-													ID_Class INTEGER,
+													ID_Class BIGINT,
 													
 													UNIQUE KEY (ALERT_ID, ID_Class),
 

@@ -8,6 +8,8 @@
 	- "split_and_update_metrics.py" to split and aggregate metrics by their code unit type;
 	- "insert_patches_in_database.py" to insert the previously collected commits into the database;
 	- "alter_functions_and_classes_in_database.py" to add the BeginLine and EndLine columns to the FUNCTIONS_* and CLASSES_* tables.
+	- "alter_int_primary_keys_to_big_int_in_database.py" to modify the data type of the code unit primary keys (ID_File, ID_Function,
+	and ID_Class). This prevents an error where new rows cannot be added because the maximum integer value (2147483647) is reached.
 
 	The following file metrics are not inserted by this script:
 	- DIT (MaxInheritanceTree)
@@ -25,7 +27,7 @@ from typing import cast
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
-from modules.common import log, deserialize_json_container, extract_numeric, get_list_index_or_default
+from modules.common import log, GLOBAL_CONFIG, deserialize_json_container, extract_numeric, get_list_index_or_default
 from modules.database import Database
 from modules.project import Project
 
@@ -75,6 +77,10 @@ with Database(buffered=True) as db:
 		del commits_csv_path, commits
 
 		for unit_info in UNIT_INFO_LIST:
+
+			if GLOBAL_CONFIG['allowed_metrics_code_units'] is not None and not GLOBAL_CONFIG['allowed_metrics_code_units'].get(unit_info.Kind):
+				log.info(f'Skipping the {unit_info.Kind} metrics for the project "{project}" at the user\'s request')
+				continue
 
 			is_function = (unit_info.Kind == 'function')
 			is_class = (unit_info.Kind == 'class')
