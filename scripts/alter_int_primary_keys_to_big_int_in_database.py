@@ -20,14 +20,19 @@ def alter_int_primary_keys_to_big_int_in_database() -> None:
 		project_list = Project.get_project_list_from_config()
 		for project in project_list:
 
-			for table_prefix, primary_key in [('FILES_', 'ID_File'), ('FUNCTIONS_', 'ID_Function'), ('CLASSES_', 'ID_Class')]:
+			for table_prefix, primary_key, foreign_key_list in [('FILES_', 'ID_File', []), ('FUNCTIONS_', 'ID_Function', ['ID_File', 'ID_Class']), ('CLASSES_', 'ID_Class', ['ID_File'])]:
 
 				table_name = table_prefix + str(project.database_id)
 
 				log.info(f'Modifying the primary key {primary_key} in the table "{table_name}".')
 				
+				modify_foreign_keys = ''
+				for foreign_key in foreign_key_list:
+					modify_foreign_keys += f'MODIFY COLUMN {foreign_key} BIGINT,'
+
 				success, error_code = db.execute_query(f'''
 														ALTER TABLE {table_name}
+														{modify_foreign_keys}
 														MODIFY COLUMN {primary_key} BIGINT;
 														''')
 
