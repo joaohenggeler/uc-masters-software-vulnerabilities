@@ -193,7 +193,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 		success, error_code = db.execute_query(f'''
 												CREATE TABLE IF NOT EXISTS ALERT
 												(
-													ALERT_ID INTEGER AUTO_INCREMENT PRIMARY KEY,
+													ALERT_ID BIGINT AUTO_INCREMENT PRIMARY KEY,
 													ALERT_SEVERITY_LEVEL INTEGER,
 													ALERT_LINE INTEGER NOT NULL,
 													ALERT_MESSAGE VARCHAR(1000),
@@ -225,7 +225,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 		success, error_code = db.execute_query(f'''
 												CREATE TABLE IF NOT EXISTS ALERT_FUNCTION
 												(
-													ALERT_ID INTEGER,
+													ALERT_ID BIGINT,
 													ID_Function BIGINT,
 													
 													UNIQUE KEY (ALERT_ID, ID_Function),
@@ -247,7 +247,7 @@ def create_alert_and_cwe_tables_in_database() -> None:
 		success, error_code = db.execute_query(f'''
 												CREATE TABLE IF NOT EXISTS ALERT_CLASS
 												(
-													ALERT_ID INTEGER,
+													ALERT_ID BIGINT,
 													ID_Class BIGINT,
 													
 													UNIQUE KEY (ALERT_ID, ID_Class),

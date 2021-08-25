@@ -25,8 +25,7 @@ def build_dataset_from_database() -> None:
 		FUNCTION_UNIT_INFO = CodeUnit('function', 	'FUNCTIONS_', 	'BUILD_FUNCTION_DATASET', 	get_path_in_data_directory('create_build_function_dataset_procedure.sql'))
 		CLASS_UNIT_INFO = 	 CodeUnit('class', 		'CLASSES_', 	'BUILD_CLASS_DATASET', 		get_path_in_data_directory('create_build_class_dataset_procedure.sql'))
 
-		# @TODO: Add the function and class scripts.
-		UNIT_INFO_LIST = [FILE_UNIT_INFO]
+		UNIT_INFO_LIST = [FILE_UNIT_INFO, FUNCTION_UNIT_INFO, CLASS_UNIT_INFO]
 
 		for unit_info in UNIT_INFO_LIST:
 			success, _ = db.execute_script(unit_info.ProcedureScriptPath)
@@ -74,7 +73,7 @@ def build_dataset_from_database() -> None:
 						label = int(row['Affected'])
 
 						if label == 1:
-							category_index = get_list_index_or_default(vulnerability_categories, row['CVE_CATEGORY'])
+							category_index = get_list_index_or_default(vulnerability_categories, row['VULNERABILITY_CATEGORY'])
 							if category_index is not None:
 								label = category_index + 2
 
@@ -87,7 +86,8 @@ def build_dataset_from_database() -> None:
 					columns_to_remove = [	'ID_File', 'ID_Function', 'ID_Class', 'P_ID', 'FilePath',
 											'Patched', 'Occurrence', 'Affected', 'R_ID', 'Visibility',
 											'Complement', 'BeginLine', 'EndLine', 'NameMethod', 'NameClass',
-											'P_COMMIT', 'P_DATE', 'CVE_YEAR', 'CVE_CWE', 'CVE_CATEGORY',
+											'COMMIT_HASH', 'COMMIT_DATE', 'COMMIT_YEAR', 'VULNERABILITY_CVE',
+											'VULNERABILITY_YEAR', 'VULNERABILITY_CWE', 'VULNERABILITY_CATEGORY',
 											'TOTAL_ALERTS']
 
 					dataset.drop(columns=columns_to_remove, errors='ignore', inplace=True)
