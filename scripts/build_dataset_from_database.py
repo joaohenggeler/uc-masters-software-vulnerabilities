@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 
 """
-	@TODO
+	This script exports a raw dataset from the database and uses it to create a specific version that can be parsed by the Propheticus tool.
+	This is done for all three code unit kinds (file, functions, and classes) for each project.
+
+	Before running this script, the follow scripts must be first run:
+	- "insert_metrics_in_database.py" to insert the previously collected metrics into the database;
+	- "aggregate_ck_file_metrics_in_database.py" to aggregate and add any missing metrics to the database;
+	- "collect_and_insert_alerts_in_database.py" to download and insert the previously collected alerts into the database.
 """
 
 import json
