@@ -11,6 +11,7 @@
 """
 
 import json
+import os
 from collections import namedtuple
 
 import pandas as pd # type: ignore
@@ -44,6 +45,8 @@ def build_dataset_from_database() -> None:
 			
 			for unit_info in UNIT_INFO_LIST:
 
+				log.info(f'Building the {unit_info.Kind} dataset for the project "{project}".')
+
 				unit_metrics_table = unit_info.MetricsTablePrefix + str(project.database_id)
 				output_csv_path = project.get_base_output_csv_path('raw-dataset-' + unit_info.Kind)
 
@@ -51,8 +54,6 @@ def build_dataset_from_database() -> None:
 				success, _ = db.call_procedure(unit_info.ProcedureName, unit_metrics_table, escaped_output_csv_path)
 
 				if success:
-					log.info(f'Built the raw dataset to "{output_csv_path}" successfully.')
-
 					"""
 					We need to create the following text files. Taken from: https://eden.dei.uc.pt/~josep/EDCC2021/
 					1. Info (suffix .info.txt): contains the number of samples per dataset;
@@ -87,21 +88,48 @@ def build_dataset_from_database() -> None:
 
 					dataset = pd.read_csv(output_csv_path, dtype=str)
 
-					dataset['label'] = dataset.apply(assign_label, axis=1)
+					dataset['multiclass_label'] = dataset.apply(assign_label, axis=1)
+	
+					dataset['binary_label'] = dataset['multiclass_label']
+					is_category = dataset['multiclass_label'] > 1
+					dataset.loc[is_category, 'binary_label'] = 1
+
+					dataset['grouped_multiclass_label'] = dataset['multiclass_label']
+					# The next value after the non-vulnerable (0), vulnerable (1), and the category (2 to N) labels.
+					grouped_class_label = len(vulnerability_categories) + 2
+					label_threshold = GLOBAL_CONFIG['dataset_label_threshold']
+
+					label_ratio = dataset['multiclass_label'].value_counts(normalize=True)
+					log.info(f'The label ratio is: {label_ratio.tolist()}')
+
+					for label, ratio in label_ratio.items():
+
+						# The non-vulnerable and vulnerable (no category) should not be grouped.
+						if label <= 1:
+							continue
+
+						if ratio < label_threshold:
+							has_label = dataset['multiclass_label'] == label
+							dataset.loc[has_label, 'grouped_multiclass_label'] = grouped_class_label
+							log.info(f'Grouped the label {label} since its ratio {ratio} falls under the threshold {label_threshold}.')
+
+					# Add the label columns to the original CSV file.
+					dataset.to_csv(output_csv_path, index=False)
+					log.info(f'Built the raw dataset to "{output_csv_path}" successfully.')
 
 					columns_to_remove = [	'ID_File', 'ID_Function', 'ID_Class', 'P_ID', 'FilePath',
 											'Patched', 'Occurrence', 'Affected', 'R_ID', 'Visibility',
 											'Complement', 'BeginLine', 'EndLine', 'NameMethod', 'NameClass',
 											'COMMIT_HASH', 'COMMIT_DATE', 'COMMIT_YEAR', 'VULNERABILITY_CVE',
 											'VULNERABILITY_YEAR', 'VULNERABILITY_CWE', 'VULNERABILITY_CATEGORY',
-											'TOTAL_ALERTS']
+											'TOTAL_ALERTS', 'multiclass_label']
 
 					dataset.drop(columns=columns_to_remove, errors='ignore', inplace=True)
 
-					output_propheticus_path = replace_in_filename(output_csv_path, 'raw', 'propheticus')
-					output_info_path = replace_in_filename(output_propheticus_path, '.csv', '.info.txt')
-					output_headers_path = replace_in_filename(output_propheticus_path, '.csv', '.headers.txt')
-					output_data_path = replace_in_filename(output_propheticus_path, '.csv', '.data.txt')
+					output_path_prefix = os.path.join(project.output_directory_path, f'{project.short_name}.{unit_info.Kind}')
+					output_info_path = output_path_prefix + '.info.txt'
+					output_headers_path = output_path_prefix + '.headers.txt'
+					output_data_path = output_path_prefix + '.data.txt'
 
 					with open(output_info_path, 'w') as info_file:
 						num_samples = str(len(dataset))
@@ -111,7 +139,7 @@ def build_dataset_from_database() -> None:
 					headers = [{'name': column, 'type': column_types.get(column, 'int64')} for column in dataset.columns]
 
 					with open(output_headers_path, 'w') as headers_file:
-						json_headers = json.dumps(headers)
+						json_headers = json.dumps(headers, indent=4)
 						headers_file.write(json_headers)
 
 					dataset.to_csv(output_data_path, sep=' ', header=False, index=False)

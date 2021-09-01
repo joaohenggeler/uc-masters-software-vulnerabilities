@@ -35,7 +35,7 @@ BEGIN
 		
 		UNION ALL
 		
-		SELECT 	CONCAT(U.FilePath, "_", JV.COMMIT_HASH) AS Description,
+		SELECT 	REPLACE(CONCAT(U.R_ID, "_", JV.COMMIT_HASH, "_", U.FilePath), " ", "_") AS Description,
 				
 				JV.COMMIT_HASH,
 				JV.COMMIT_DATE,
@@ -80,6 +80,8 @@ BEGIN
 			GROUP BY E.ID_File
 	    ) JV ON U.ID_File = JV.ID_File
 	    
+	    WHERE JV.COMMIT_HASH IS NOT NULL
+
 	    INTO OUTFILE "', OUTPUT_CSV_PATH, '"
 		FIELDS TERMINATED BY ","
 		OPTIONALLY ENCLOSED BY """"
