@@ -35,11 +35,11 @@ from modules.project import Project
 
 with Database(buffered=True) as db:
 
-	CodeUnit = namedtuple('CodeUnit', ['Kind', 'ExtraTimeTable', 'MetricsTablePrefix', 'MetricsTablePrimaryKey', 'ExtraTimeTableForeignKey'])
+	CodeUnit = namedtuple('CodeUnit', ['Kind', 'ExtraTimeTable', 'MetricsTablePrefix', 'MetricsTablePrimaryKey'])
 
-	FILE_UNIT_INFO = 		CodeUnit('file', 		'EXTRA_TIME_FILES', 		'FILES_', 		'ID_File', 		'ID_File')
-	FUNCTION_UNIT_INFO = 	CodeUnit('function', 	'EXTRA_TIME_FUNCTIONS', 	'FUNCTIONS_', 	'ID_Function', 	'ID_Functions') # Note the 's'.
-	CLASS_UNIT_INFO = 		CodeUnit('class', 		'EXTRA_TIME_CLASS', 		'CLASSES_', 	'ID_Class', 	'ID_Class')
+	FILE_UNIT_INFO = 		CodeUnit('file', 		'EXTRA_TIME_FILES', 		'FILES_', 		'ID_File')
+	FUNCTION_UNIT_INFO = 	CodeUnit('function', 	'EXTRA_TIME_FUNCTIONS', 	'FUNCTIONS_', 	'ID_Function')
+	CLASS_UNIT_INFO = 		CodeUnit('class', 		'EXTRA_TIME_CLASS', 		'CLASSES_', 	'ID_Class')
 
 	UNIT_INFO_LIST = [FILE_UNIT_INFO, FUNCTION_UNIT_INFO, CLASS_UNIT_INFO]
 
@@ -89,11 +89,11 @@ with Database(buffered=True) as db:
 			EXTRA_TIME_INSERT_QUERY = 	f'''
 										INSERT INTO {unit_info.ExtraTimeTable}
 										(
-											P_ID, {unit_info.ExtraTimeTableForeignKey}
+											P_ID, {unit_info.MetricsTablePrimaryKey}
 										)
 										VALUES
 										(
-											%(P_ID)s, %({unit_info.ExtraTimeTableForeignKey})s
+											%(P_ID)s, %({unit_info.MetricsTablePrimaryKey})s
 										);
 										'''
 
@@ -335,7 +335,7 @@ with Database(buffered=True) as db:
 							success, error_code = db.execute_query(EXTRA_TIME_INSERT_QUERY,
 																	params={
 																		'P_ID': patch_id,
-																		unit_info.ExtraTimeTableForeignKey: unit_id,
+																		unit_info.MetricsTablePrimaryKey: unit_id,
 																	}
 																)
 
