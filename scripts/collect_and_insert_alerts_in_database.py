@@ -111,8 +111,6 @@ def collect_and_insert_alerts_in_database() -> None:
 								if not ALERT_CSV_REGEX.match(file.name):
 									log.error(f'Skipping the file "{file.path}" since it does not match the expected alert CSV file extension.')
 									continue
-
-								log.info(f'Collecting and inserting the alerts from "{file.path}".')
 								
 								# E.g. "cppcheck-195-305babb41123e575e6fd6bf4ea4dab2716ce1ecc.csv.zip"
 								# E.g. "flawfinder-358-fc1ca73b3758f0c419b46cfeb2a951de22007d90-1.csv.zip"
@@ -151,6 +149,8 @@ def collect_and_insert_alerts_in_database() -> None:
 								if alert_row['SAT_ALERTS_ALREADY_EXIST_FOR_THIS_COMMIT'] == 1:
 									log.info(f'Skipping the alerts for the commit {commit_hash} ({occurrence}, "{file.name}") in the project "{project}" since they already exist.')
 									continue
+
+								log.info(f'Inserting the alerts from "{file.path}".')
 
 								zip_file_path = os.path.join(temporary_directory_path, file.name)
 
