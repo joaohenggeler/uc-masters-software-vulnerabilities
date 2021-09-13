@@ -152,10 +152,16 @@ def collect_and_insert_alerts_in_database() -> None:
 
 								log.info(f'Inserting the alerts from "{file.path}".')
 
+								try:
+									file_contents = cast(str, file.content)
+								except GithubException as error:
+									log.info(f'Retrieving the file "{file.path}" as a Git blob since its size ({file.size}) is too large to request via the API.')
+									file_blob = data_repository.get_git_blob(file.sha)
+									file_contents = file_blob.content
+
 								zip_file_path = os.path.join(temporary_directory_path, file.name)
 
 								with open(zip_file_path, 'wb') as zip_file:
-									file_contents = cast(str, file.content)
 									zip_data = b64decode(file_contents)
 									zip_file.write(zip_data)
 
