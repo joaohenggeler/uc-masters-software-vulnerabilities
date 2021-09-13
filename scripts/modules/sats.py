@@ -93,9 +93,16 @@ class Sat():
 		sat_list = []
 		for name, items in GLOBAL_CONFIG['sats'].items():
 			
-			if items['database_name'] is not None:
-				info = SatInfo(**items) # type: ignore[call-arg]
-				sat_list.append(info)
+			sat_database_name = items['database_name']
+			if sat_database_name is not None:
+
+				should_be_allowed = GLOBAL_CONFIG['allowed_sats'].get(sat_database_name)
+				
+				if should_be_allowed:
+					info = SatInfo(**items) # type: ignore[call-arg]
+					sat_list.append(info)
+				else:
+					log.info(f'Ignoring the SAT "{sat_database_name}".')
 
 		return sat_list
 
@@ -118,6 +125,8 @@ class UnderstandSat(Sat):
 			
 			self.use_new_database_format = int(build_number) >= 1039 # Understand 6.0 or later.
 			self.database_extension = '.und' if self.use_new_database_format else '.udb'
+
+			log.info(f'Loaded {self} version {self.version}.')
 
 	def generate_project_metrics(self, file_path_list: Union[list, bool], output_csv_path: str) -> bool:
 		""" Generates the project's metrics using the files and any other options defined in the database directory. """
@@ -212,6 +221,7 @@ class CppcheckSat(Sat):
 		version_success, version_number = self.run('--version')
 		if version_success:
 			self.version = cast(Optional[str], extract_numeric(version_number, r'\d+\.\d+'))
+			log.info(f'Loaded {self} version {self.version}.')
 
 		if not CppcheckSat.mapped_rules_to_cwes:
 			CppcheckSat.mapped_rules_to_cwes = True
@@ -286,6 +296,11 @@ class CppcheckSat(Sat):
 		with open(csv_file_path, 'r') as csv_file:
 
 			for line in csv_file:
+				
+				# Some rare cases showed only "Segmentation fault (core dumped)" in the line.
+				if not ':' in line:
+					continue
+
 				# We'll assume that a source file's path never has a colon so we don't accidentally
 				# break paths with commas. In some rare cases the following can appear as the first
 				# value: ":,[ETC]". Since there's no file path or line number, we'll discard it below.
@@ -316,7 +331,8 @@ class FlawfinderSat(Sat):
 
 		version_success, version_number = self.run('--version')
 		if version_success:
-			self.version = cast(Optional[str], extract_numeric(version_number))
+			self.version = version_number.strip()
+			log.info(f'Loaded {self} version {self.version}.')
 
 	def generate_project_alerts(self, file_path_list: Union[list, bool], output_csv_path: str) -> bool:
 		""" Generates the project's alerts given list of files. """

@@ -54,6 +54,12 @@
 		"class": true
 	},
 
+	"allowed_sats":
+	{
+		"Cppcheck": true,
+		"Flawfinder": true
+	},
+
 	"projects":
 	{
 		"Glibc":
