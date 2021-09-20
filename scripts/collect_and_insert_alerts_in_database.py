@@ -4,7 +4,7 @@
 	This script inserts the data from any CSV files present in the GitHub repository specified in the 'github_data_repository'
 	configuration option into the RULE, CWE_INFO, RULE_CWE_INFO, ALERT, ALERT_FUNCTION, and ALERT_CLASS tables in the database.
 	The 'github_token' option must also contain a valid personal access token (see the page: Settings > Developer settings >
-	Personal access tokens).
+	Personal access tokens). Alternatively, this data repository may be cloned locally and specified in 'data_repository_path'.
 
 	Before running this script, the follow scripts must be first run:
 	- "insert_metrics_in_database.py" to insert the previously collected code unit metrics into the database;
@@ -150,20 +150,39 @@ def collect_and_insert_alerts_in_database() -> None:
 									log.info(f'Skipping the alerts for the commit {commit_hash} ({occurrence}, "{file.name}") in the project "{project}" since they already exist.')
 									continue
 
-								log.info(f'Inserting the alerts from "{file.path}".')
+								# If we already cloned the data repository, we will first attempt to find the zipped CSV file
+								# on disk. If it doesn't exist, we will download it from the GitHub repository. This is useful
+								# when trying to avoid the rate limits in the GitHub API. The ZIP file is considered temporary
+								# (i.e. it's deleted) if it had to be downloaded.
 
-								try:
-									file_contents = cast(str, file.content)
-								except GithubException as error:
-									log.info(f'Retrieving the file "{file.path}" as a Git blob since its size ({file.size}) is too large to request via the API.')
-									file_blob = data_repository.get_git_blob(file.sha)
-									file_contents = file_blob.content
+								local_file_path = ''
+								should_download_file = True
 
-								zip_file_path = os.path.join(temporary_directory_path, file.name)
+								if GLOBAL_CONFIG['data_repository_path'] is not None:
+									local_file_path = os.path.join(GLOBAL_CONFIG['data_repository_path'], file.path)
+									local_file_path = os.path.normpath(local_file_path)
+									should_download_file = not os.path.isfile(local_file_path) 
 
-								with open(zip_file_path, 'wb') as zip_file:
-									zip_data = b64decode(file_contents)
-									zip_file.write(zip_data)
+								
+
+								if should_download_file:
+									
+									try:
+										log.info(f'Inserting the alerts remotely from "{file.path}".')
+										file_contents = cast(str, file.content)
+									except GithubException as error:
+										log.info(f'Retrieving the file "{file.path}" as a Git blob since its size ({file.size}) is too large to request via the API.')
+										file_blob = data_repository.get_git_blob(file.sha)
+										file_contents = file_blob.content
+
+									zip_file_path = os.path.join(temporary_directory_path, file.name)
+									with open(zip_file_path, 'wb') as zip_file:
+										zip_data = b64decode(file_contents)
+										zip_file.write(zip_data)
+
+								else:
+									log.info(f'Inserting the alerts locally from "{local_file_path}".')
+									zip_file_path = local_file_path
 
 								with ZipFile(zip_file_path, 'r') as zip_file: # type: ignore[assignment]
 									filenames_in_zip = zip_file.namelist() # type: ignore[attr-defined]
@@ -332,7 +351,7 @@ def collect_and_insert_alerts_in_database() -> None:
 
 										insert_alert(alert_params, cwe_list)
 
-								else:
+								elif sat.database_name == 'Flawfinder':
 									alerts = flawfinder.read_and_convert_output_csv_in_default_format(csv_file_path)
 
 									for row in alerts.itertuples():
@@ -357,11 +376,16 @@ def collect_and_insert_alerts_in_database() -> None:
 
 										insert_alert(alert_params, cwe_list)
 
+								else:
+									log.critical(f'Cannot insert the alerts from "{file.path}" since the SAT "{sat.database_name}" is not recognized.')
+
 								##################################################
 
 								db.commit()
 
-								delete_file(zip_file_path)
+								if should_download_file:
+									delete_file(zip_file_path)
+								
 								delete_file(csv_file_path)
 
 ##################################################

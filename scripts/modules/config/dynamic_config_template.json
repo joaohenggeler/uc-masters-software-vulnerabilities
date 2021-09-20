@@ -46,6 +46,7 @@
 
 	"github_token": "<Replace with valid token>",
 	"github_data_repository": "<Replace with path>",
+	"data_repository_path": "<Replace with path>",
 
 	"allowed_metrics_code_units":
 	{

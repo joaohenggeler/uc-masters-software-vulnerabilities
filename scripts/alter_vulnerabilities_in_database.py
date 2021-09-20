@@ -3,7 +3,7 @@
 """
 	This script makes the following structural changes to the VULNERABILITIES table in the database:
 	- Adds columns that represent each vulnerability's CWE (V_CWE) and project (R_ID).
-	- Sets the values of the R_ID column and adds a foreign key relationship that references the project's in the REPOSITORIES_SAMPLE table.
+	- Sets the values of the R_ID column and adds a foreign key relationship that references the projects in the REPOSITORIES_SAMPLE table.
 	- Renames the V_ID primary key to V_ID_LEGACY and creates a new V_ID column containing numeric IDs with the AUTO_INCREMENT attribute.
 	- This last process is also applied to the PATCHES table since it contains a foreign key to VULNERABILITIES.
 """
