@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-	This module defines a class that represents any third-party tool used to perform static analysis on a project's source files.
+	This module defines any classes that represent third-party tools used to perform static analysis on a project's source files.
 """
 
 import os

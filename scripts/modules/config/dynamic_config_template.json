@@ -48,7 +48,7 @@
 	"github_data_repository": "<Replace with path>",
 	"data_repository_path": "<Replace with path>",
 
-	"allowed_metrics_code_units":
+	"allowed_code_units":
 	{
 		"file": true,
 		"function": true,
@@ -59,6 +59,27 @@
 	{
 		"Cppcheck": true,
 		"Flawfinder": true
+	},
+
+	"dataset_label_threshold": 0.005,
+	"dataset_filter_samples_uneligible_for_alerts": true,
+
+	"propheticus":
+	{
+		"labels": ["binary_label", "grouped_multiclass_label"],
+
+		"seed_count": 30,
+		"data_split": {"n_splits": 5},
+
+		"dimensionality_reduction": [["variance"], ["correlation"]],
+		"data_balancing": [[], ["RandomUnderSampler"], ["RandomOverSampler"]],
+		
+		"classification_algorithms":
+		{
+			"random_forests": [null],
+			"bagging": [null],
+			"xgboost": [null]
+		}
 	},
 
 	"projects":

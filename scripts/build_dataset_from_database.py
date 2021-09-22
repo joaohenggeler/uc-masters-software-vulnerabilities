@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-	This script exports a raw dataset from the database and uses it to create a specific version that can be parsed by the Propheticus tool.
-	This is done for all three code unit kinds (file, functions, and classes) for each project.
+	This script exports a raw dataset as a CSV file from the database and uses it to create a specific version that can be parsed by the Propheticus tool.
+	This is done for all three code unit kinds (files, functions, and classes) for each project.
 
 	Before running this script, the follow scripts must be first run:
 	- "insert_metrics_in_database.py" to insert the previously collected metrics into the database;
@@ -44,6 +44,10 @@ def build_dataset_from_database() -> None:
 		for project in project_list:
 			
 			for unit_info in UNIT_INFO_LIST:
+
+				if not GLOBAL_CONFIG['allowed_code_units'].get(unit_info.Kind):
+					log.info(f'Skipping the {unit_info.Kind} metrics for the project "{project}" at the user\'s request')
+					continue
 
 				log.info(f'Building the {unit_info.Kind} dataset for the project "{project}".')
 
@@ -117,12 +121,18 @@ def build_dataset_from_database() -> None:
 					dataset.to_csv(output_csv_path, index=False)
 					log.info(f'Built the raw dataset to "{output_csv_path}" successfully.')
 
+					if GLOBAL_CONFIG['dataset_filter_samples_uneligible_for_alerts'] and 'ELIGIBLE_FOR_ALERTS' in dataset.columns:
+						is_eligible_for_alerts = dataset['ELIGIBLE_FOR_ALERTS'] == '1'
+						num_removed = len(dataset) - len(dataset[is_eligible_for_alerts])
+						dataset = dataset[is_eligible_for_alerts]
+						log.info(f'Removed {num_removed} samples that were uneligible for alerts. {len(dataset)} samples remain.')
+
 					columns_to_remove = [	'ID_File', 'ID_Function', 'ID_Class', 'P_ID', 'FilePath',
 											'Patched', 'Occurrence', 'Affected', 'R_ID', 'Visibility',
 											'Complement', 'BeginLine', 'EndLine', 'NameMethod', 'NameClass',
 											'COMMIT_HASH', 'COMMIT_DATE', 'COMMIT_YEAR', 'VULNERABILITY_CVE',
 											'VULNERABILITY_YEAR', 'VULNERABILITY_CWE', 'VULNERABILITY_CATEGORY',
-											'TOTAL_ALERTS', 'multiclass_label']
+											'ELIGIBLE_FOR_ALERTS', 'TOTAL_ALERTS', 'multiclass_label']
 
 					dataset.drop(columns=columns_to_remove, errors='ignore', inplace=True)
 
@@ -144,7 +154,7 @@ def build_dataset_from_database() -> None:
 
 					dataset.to_csv(output_data_path, sep=' ', header=False, index=False)
 
-					log.info(f'Built the Propheticus dataset to "{output_data_path}" successfully (plus the info and header files).')
+					log.info(f'Built the Propheticus dataset to "{output_data_path}" successfully (including the info and header files).')
 
 				else:
 					log.error(f'Failed to build the raw dataset to "{output_csv_path}".')
