@@ -11,7 +11,6 @@
 
 import glob
 import os
-import re
 from collections import namedtuple
 from tempfile import TemporaryDirectory
 from typing import cast, Optional, Tuple
@@ -27,14 +26,12 @@ from modules.sats import Sat, CppcheckSat, FlawfinderSat
 
 ####################################################################################################
 
-def collect_and_insert_alerts_in_database() -> None:
+def insert_alerts_in_database() -> None:
 
 	sat_list = Sat.get_sat_info_from_config()
 
 	CommitType = namedtuple('CommitType', ['Vulnerable', 'GithubDataName'])
-	commit_type_list = [CommitType(True, 'previous_commit'), CommitType(False, 'current_commit')]
-
-	ALERT_ZIPPED_CSV_REGEX = re.compile(r'^.*\.csv\.zip$', re.IGNORECASE)
+	commit_type_list = [CommitType(False, 'current_commit'), CommitType(True, 'previous_commit')]
 
 	with Database(buffered=True) as db:
 
@@ -85,17 +82,12 @@ def collect_and_insert_alerts_in_database() -> None:
 						
 						# This script originally downloaded each zipped CSV file on demand from a GitHub repository.
 						# It is now expected that the data be cloned locally before running this script.
-						data_path = os.path.join(GLOBAL_CONFIG['data_repository_path'], base_directory, '**')
+						data_path = os.path.join(GLOBAL_CONFIG['data_repository_path'], base_directory, '**', '*.csv.zip')
 						data_path = os.path.normpath(data_path)
-						
-						def is_alert_zip_file(path: str) -> bool:
-							""" Checks whether a given path points to a valid zipped CSV file. """
-							filename = os.path.basename(path)
-							return os.path.isfile(path) and bool(ALERT_ZIPPED_CSV_REGEX.match(filename))
 
 						zip_file_list = glob.glob(data_path, recursive=True)
-						zip_file_list = list(filter(is_alert_zip_file, zip_file_list))
-						zip_file_list = sorted(zip_file_list)
+						zip_file_list = list(filter(os.path.isfile, zip_file_list))
+						zip_file_list = sorted(zip_file_list, reverse=True)
 
 						for i, zip_file_path in enumerate(zip_file_list):
 
@@ -344,7 +336,7 @@ def collect_and_insert_alerts_in_database() -> None:
 
 ##################################################
 
-collect_and_insert_alerts_in_database()
+insert_alerts_in_database()
 
 log.info('Finished running.')
 print('Finished running.')
