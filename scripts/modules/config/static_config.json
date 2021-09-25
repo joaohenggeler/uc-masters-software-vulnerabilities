@@ -95,11 +95,11 @@
 
 	"vulnerability_categories":
 	{
-		"Memory Management": 			[119, 399, 362, 416, 476, 824],
+		"Memory Management": 			[119, 362, 399, 416, 476, 824],
 		"Input Validation": 			[20, 78, 79, 91, 94, 134, 189],
-		"Permission": 					[264, 255, 269, 284, 287, 352],
+		"Permission": 					[255, 264, 269, 284, 287, 352],
 		"Data Protection": 				[199, 200],
-		"Coding Practices": 			[17, 254, 19],
+		"Coding Practices": 			[17, 19, 254],
 		"Cryptography": 				[310],
 		"System Configuration": 		[16],
 		"File Management": 				[22, 59],

@@ -121,11 +121,11 @@ def build_dataset_from_database() -> None:
 					dataset.to_csv(output_csv_path, index=False)
 					log.info(f'Built the raw dataset to "{output_csv_path}" successfully.')
 
-					if GLOBAL_CONFIG['dataset_filter_samples_uneligible_for_alerts'] and 'ELIGIBLE_FOR_ALERTS' in dataset.columns:
+					if GLOBAL_CONFIG['dataset_filter_samples_ineligible_for_alerts'] and 'ELIGIBLE_FOR_ALERTS' in dataset.columns:
 						is_eligible_for_alerts = dataset['ELIGIBLE_FOR_ALERTS'] == '1'
 						num_removed = len(dataset) - len(dataset[is_eligible_for_alerts])
 						dataset = dataset[is_eligible_for_alerts]
-						log.info(f'Removed {num_removed} samples that were uneligible for alerts. {len(dataset)} samples remain.')
+						log.info(f'Removed {num_removed} samples that were ineligible for alerts. {len(dataset)} samples remain.')
 
 					columns_to_remove = [	'ID_File', 'ID_Function', 'ID_Class', 'P_ID', 'FilePath',
 											'Patched', 'Occurrence', 'Affected', 'R_ID', 'Visibility',

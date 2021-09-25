@@ -22,10 +22,13 @@ scripts/modules/logs
 scripts/propheticus/*
 !scripts/propheticus/instances
 scripts/propheticus/instances/*
-!scripts/propheticus/instances_artifacts
-scripts/propheticus/instances_artifacts/*
 
 !scripts/propheticus/instances/vulnerability_prediction_final
 
+!scripts/propheticus/instances_artifacts
+scripts/propheticus/instances_artifacts/*
 !scripts/propheticus/instances_artifacts/vulnerability_prediction_final
-scripts/propheticus/instances_artifacts/vulnerability_prediction_final/data
+scripts/propheticus/instances_artifacts/vulnerability_prediction_final/*
+
+!scripts/propheticus/instances_artifacts/vulnerability_prediction_final/data
+!scripts/propheticus/instances_artifacts/vulnerability_prediction_final/generated
