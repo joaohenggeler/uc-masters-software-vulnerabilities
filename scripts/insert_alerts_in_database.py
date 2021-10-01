@@ -6,7 +6,8 @@
 
 	Before running this script, the follow scripts must be first run:
 	- "insert_metrics_in_database.py" to insert the previously collected code unit metrics into the database;
-	- "create_alert_and_cwe_tables_in_database.py" to create the tables mentioned above.
+	- "create_alert_and_cwe_tables_in_database.py" to create the tables mentioned above;
+	- "create_indexes_in_database.py" to add indexes that will speed up the alert insertion.
 """
 
 import glob

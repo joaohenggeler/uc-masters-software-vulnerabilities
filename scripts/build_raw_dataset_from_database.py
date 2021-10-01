@@ -1,28 +1,25 @@
 #!/usr/bin/env python3
 
 """
-	This script exports a raw dataset as a CSV file from the database and uses it to create a specific version that can be parsed by the Propheticus tool.
-	This is done for all three code unit kinds (files, functions, and classes) for each project.
-
+	This script exports a raw dataset as a CSV file for each project and code unit kind in the database.
+	
 	Before running this script, the follow scripts must be first run:
 	- "insert_metrics_in_database.py" to insert the previously collected metrics into the database;
 	- "aggregate_ck_file_metrics_in_database.py" to aggregate and add any missing metrics to the database;
 	- "insert_alerts_in_database.py" to download and insert the previously collected alerts into the database.
 """
 
-import json
-import os
 from collections import namedtuple
 
 import pandas as pd # type: ignore
 
-from modules.common import log, GLOBAL_CONFIG, get_list_index_or_default, get_path_in_data_directory, replace_in_filename
+from modules.common import log, GLOBAL_CONFIG, get_list_index_or_default, get_path_in_data_directory
 from modules.database import Database
 from modules.project import Project
 
 ####################################################################################################
 
-def build_dataset_from_database() -> None:
+def build_raw_dataset_from_database() -> None:
 
 	with Database() as db:
 
@@ -58,24 +55,12 @@ def build_dataset_from_database() -> None:
 				success, _ = db.call_procedure(unit_info.ProcedureName, unit_metrics_table, escaped_output_csv_path)
 
 				if success:
-					"""
-					We need to create the following text files. Taken from: https://eden.dei.uc.pt/~josep/EDCC2021/
-					1. Info (suffix .info.txt): contains the number of samples per dataset;
-					2. Headers (suffix: .headers.txt): contains a JSON object with all the features of the dataset, and its data type;
-					3. Data (suffix: .data.txt): contains the samples separated by a space.
 
-					Each sample contains:
-					1. A description of the file instance;
-					2. All the 54 software metrics;
-					3. All the 228 alert types reported by Cppcheck;
-					4. All the 123 alert types reported by Flawfinder;
-					5. A label indicating if the files is non-vulnerable (0) or vulnerable (value > 0).
-					
-					Regarding the label in the multiclass dataset:
-					- 0 represents non-vulnerable;
-					- 1 represents vulnerable without an assigned category;
-					- 2 represents memory management, followed by the remaining categories of Table 1 of the paper.
-					"""
+					# Add some class label columns to the dataset. These include:
+					# 1. Binary - neutral (0) or vulnerable (1). In this case, vulnerable samples belong to any category.
+					# 2. Multiclass - neutral (0), vulnerable without a category (1), or vulnerability with a specific category (2 to N).
+					# 3. Grouped Multiclass - same as the multiclass label, but any vulnerability category (2 to N) is set to a new
+					# label if the number of samples in each category falls below a given threshold.
 					
 					vulnerability_categories = list(GLOBAL_CONFIG['vulnerability_categories'].keys())
 
@@ -99,7 +84,7 @@ def build_dataset_from_database() -> None:
 					dataset.loc[is_category, 'binary_label'] = 1
 
 					dataset['grouped_multiclass_label'] = dataset['multiclass_label']
-					# The next value after the non-vulnerable (0), vulnerable (1), and the category (2 to N) labels.
+					# The next value (N + 1) after the non-vulnerable (0), vulnerable (1), and the category labels (2 to N).
 					grouped_class_label = len(vulnerability_categories) + 2
 					label_threshold = GLOBAL_CONFIG['dataset_label_threshold']
 
@@ -121,47 +106,12 @@ def build_dataset_from_database() -> None:
 					dataset.to_csv(output_csv_path, index=False)
 					log.info(f'Built the raw dataset to "{output_csv_path}" successfully.')
 
-					if GLOBAL_CONFIG['dataset_filter_samples_ineligible_for_alerts'] and 'ELIGIBLE_FOR_ALERTS' in dataset.columns:
-						is_eligible_for_alerts = dataset['ELIGIBLE_FOR_ALERTS'] == '1'
-						num_removed = len(dataset) - len(dataset[is_eligible_for_alerts])
-						dataset = dataset[is_eligible_for_alerts]
-						log.info(f'Removed {num_removed} samples that were ineligible for alerts. {len(dataset)} samples remain.')
-
-					columns_to_remove = [	'ID_File', 'ID_Function', 'ID_Class', 'P_ID', 'FilePath',
-											'Patched', 'Occurrence', 'Affected', 'R_ID', 'Visibility',
-											'Complement', 'BeginLine', 'EndLine', 'NameMethod', 'NameClass',
-											'COMMIT_HASH', 'COMMIT_DATE', 'COMMIT_YEAR', 'VULNERABILITY_CVE',
-											'VULNERABILITY_YEAR', 'VULNERABILITY_CWE', 'VULNERABILITY_CATEGORY',
-											'ELIGIBLE_FOR_ALERTS', 'TOTAL_ALERTS', 'multiclass_label']
-
-					dataset.drop(columns=columns_to_remove, errors='ignore', inplace=True)
-
-					output_path_prefix = os.path.join(project.output_directory_path, f'{project.short_name}.{unit_info.Kind}')
-					output_info_path = output_path_prefix + '.info.txt'
-					output_headers_path = output_path_prefix + '.headers.txt'
-					output_data_path = output_path_prefix + '.data.txt'
-
-					with open(output_info_path, 'w') as info_file:
-						num_samples = str(len(dataset))
-						info_file.write(num_samples)
-
-					column_types = {'Description': 'string', 'RatioCommentToCode': 'float64'}
-					headers = [{'name': column, 'type': column_types.get(column, 'int64')} for column in dataset.columns]
-
-					with open(output_headers_path, 'w') as headers_file:
-						json_headers = json.dumps(headers, indent=4)
-						headers_file.write(json_headers)
-
-					dataset.to_csv(output_data_path, sep=' ', header=False, index=False)
-
-					log.info(f'Built the Propheticus dataset to "{output_data_path}" successfully (including the info and header files).')
-
 				else:
 					log.error(f'Failed to build the raw dataset to "{output_csv_path}".')
 
 ##################################################
 
-build_dataset_from_database()
+build_raw_dataset_from_database()
 
 log.info('Finished running.')
 print('Finished running.')

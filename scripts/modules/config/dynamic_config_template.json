@@ -63,6 +63,7 @@
 
 	"dataset_label_threshold": 0.005,
 	"dataset_filter_samples_ineligible_for_alerts": true,
+	"dataset_filter_commits_without_alerts": true,
 
 	"propheticus":
 	{
