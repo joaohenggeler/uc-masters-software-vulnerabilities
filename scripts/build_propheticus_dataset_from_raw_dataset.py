@@ -49,17 +49,7 @@ for project in project_list:
 			Note that our raw datasets includes three class labels: binary, multiclass, and grouped multiclass.
 		"""
 
-		if GLOBAL_CONFIG['dataset_filter_samples_ineligible_for_alerts'] and 'ELIGIBLE_FOR_ALERTS' in dataset.columns:
-			is_eligible_for_alerts = dataset['ELIGIBLE_FOR_ALERTS'] == '1'
-			num_removed = len(dataset) - len(dataset[is_eligible_for_alerts])
-			dataset = dataset[is_eligible_for_alerts]
-			log.info(f'Removed {num_removed} samples that were ineligible for alerts. {len(dataset)} samples remain.')
-
-		if GLOBAL_CONFIG['dataset_filter_commits_without_alerts']:
-			commit_without_alerts = dataset['COMMIT_HAS_ALERTS'] == '0'
-			num_removed = len(dataset) - len(dataset[commit_without_alerts])
-			dataset = dataset[commit_without_alerts]
-			log.info(f'Removed {num_removed} samples whose commits did not have any alerts. {len(dataset)} samples remain.')
+		total_columns = len(dataset.columns)
 
 		columns_to_remove = [	'ID_File', 'ID_Function', 'ID_Class', 'P_ID', 'FilePath',
 								'Patched', 'Occurrence', 'Affected', 'R_ID', 'Visibility',
@@ -70,6 +60,14 @@ for project in project_list:
 								'multiclass_label']
 
 		dataset.drop(columns=columns_to_remove, errors='ignore', inplace=True)
+
+		for column_regex in GLOBAL_CONFIG['dataset_filter_propheticus_column_names']:
+			log.info(f'Removing any columns that match "{column_regex}" at the user\'s request.')
+			columns_to_remove = list(dataset.filter(regex=column_regex, axis='columns'))
+			dataset.drop(columns=columns_to_remove, inplace=True)
+
+		num_removed = total_columns - len(dataset.columns)
+		log.info(f'Removed {num_removed} columns before building the Propheticus dataset. {len(dataset.columns)} columns remain.')
 
 		output_path_prefix = os.path.join(project.output_directory_path, f'{project.short_name}.{unit_kind}')
 		output_info_path = output_path_prefix + '.info.txt'

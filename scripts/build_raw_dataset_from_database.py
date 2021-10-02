@@ -77,6 +77,18 @@ def build_raw_dataset_from_database() -> None:
 
 					dataset = pd.read_csv(output_csv_path, dtype=str)
 
+					if GLOBAL_CONFIG['dataset_filter_samples_ineligible_for_alerts'] and 'ELIGIBLE_FOR_ALERTS' in dataset.columns:
+						is_eligible_for_alerts = dataset['ELIGIBLE_FOR_ALERTS'] == '1'
+						num_removed = len(dataset) - len(dataset[is_eligible_for_alerts])
+						dataset = dataset[is_eligible_for_alerts]
+						log.info(f'Removed {num_removed} samples that were ineligible for alerts. {len(dataset)} samples remain.')
+
+					if GLOBAL_CONFIG['dataset_filter_commits_without_alerts']:
+						commit_without_alerts = dataset['COMMIT_HAS_ALERTS'] == '1'
+						num_removed = len(dataset) - len(dataset[commit_without_alerts])
+						dataset = dataset[commit_without_alerts]
+						log.info(f'Removed {num_removed} samples whose commits did not have any alerts. {len(dataset)} samples remain.')
+
 					dataset['multiclass_label'] = dataset.apply(assign_label, axis=1)
 	
 					dataset['binary_label'] = dataset['multiclass_label']
@@ -102,7 +114,7 @@ def build_raw_dataset_from_database() -> None:
 							dataset.loc[has_label, 'grouped_multiclass_label'] = grouped_class_label
 							log.info(f'Grouped the label {label} since its ratio {ratio} falls under the threshold {label_threshold}.')
 
-					# Add the label columns to the original CSV file.
+					# Overwrite the dataset on disk.
 					dataset.to_csv(output_csv_path, index=False)
 					log.info(f'Built the raw dataset to "{output_csv_path}" successfully.')
 
