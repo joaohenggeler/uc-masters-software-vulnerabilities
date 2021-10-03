@@ -9,6 +9,8 @@
 	- "insert_alerts_in_database.py" to download and insert the previously collected alerts into the database.
 """
 
+import os
+import sys
 from collections import namedtuple
 
 import pandas as pd # type: ignore
@@ -55,6 +57,15 @@ def build_raw_dataset_from_database() -> None:
 				success, _ = db.call_procedure(unit_info.ProcedureName, unit_metrics_table, escaped_output_csv_path)
 
 				if success:
+
+					# @Hack: Change the resulting CSV file's permissions and owner since it would
+					# otherwise be associated with the user running the MySQL Daemon process (mysqld).
+					if sys.platform != 'win32':
+						username = GLOBAL_CONFIG['account_username']
+						password = GLOBAL_CONFIG['account_password']
+						log.info(f'Changing the raw dataset\'s file permissions and owner to "{username}".')
+						os.system(f'echo "{password}" | sudo -S chmod 0664 "{output_csv_path}"')
+						os.system(f'echo "{password}" | sudo -S chown "{username}:{username}" "{output_csv_path}"')
 
 					# Add some class label columns to the dataset. These include:
 					# 1. Binary - neutral (0) or vulnerable (1). In this case, vulnerable samples belong to any category.
