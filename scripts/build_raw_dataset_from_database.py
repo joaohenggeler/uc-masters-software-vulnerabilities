@@ -88,6 +88,18 @@ def build_raw_dataset_from_database() -> None:
 
 					dataset = pd.read_csv(output_csv_path, dtype=str)
 
+					if GLOBAL_CONFIG['dataset_filter_column_names']:
+
+						total_columns = len(dataset.columns)
+						
+						for column_regex in GLOBAL_CONFIG['dataset_filter_column_names']:
+							log.info(f'Removing any columns that match "{column_regex}" at the user\'s request.')
+							columns_to_remove = list(dataset.filter(regex=column_regex, axis='columns'))
+							dataset.drop(columns=columns_to_remove, inplace=True)
+
+						num_removed = total_columns - len(dataset.columns)
+						log.info(f'Removed {num_removed} columns at the user\'s request. {len(dataset.columns)} columns remain.')
+
 					if GLOBAL_CONFIG['dataset_filter_samples_ineligible_for_alerts'] and 'ELIGIBLE_FOR_ALERTS' in dataset.columns:
 						is_eligible_for_alerts = dataset['ELIGIBLE_FOR_ALERTS'] == '1'
 						num_removed = len(dataset) - len(dataset[is_eligible_for_alerts])

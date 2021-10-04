@@ -49,8 +49,6 @@ for project in project_list:
 			Note that our raw datasets includes three class labels: binary, multiclass, and grouped multiclass.
 		"""
 
-		total_columns = len(dataset.columns)
-
 		columns_to_remove = [	'ID_File', 'ID_Function', 'ID_Class', 'P_ID', 'FilePath',
 								'Patched', 'Occurrence', 'Affected', 'R_ID', 'Visibility',
 								'Complement', 'BeginLine', 'EndLine', 'NameMethod', 'NameClass',
@@ -60,14 +58,6 @@ for project in project_list:
 								'multiclass_label']
 
 		dataset.drop(columns=columns_to_remove, errors='ignore', inplace=True)
-
-		for column_regex in GLOBAL_CONFIG['dataset_filter_propheticus_column_names']:
-			log.info(f'Removing any columns that match "{column_regex}" at the user\'s request.')
-			columns_to_remove = list(dataset.filter(regex=column_regex, axis='columns'))
-			dataset.drop(columns=columns_to_remove, inplace=True)
-
-		num_removed = total_columns - len(dataset.columns)
-		log.info(f'Removed {num_removed} columns before building the Propheticus dataset. {len(dataset.columns)} columns remain.')
 
 		output_path_prefix = os.path.join(project.output_directory_path, f'{project.short_name}.{unit_kind}')
 		output_info_path = output_path_prefix + '.info.txt'
