@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 import bs4 # type: ignore
 
-from .common import log, serialize_json_container
+from .common import log, remove_list_duplicates, serialize_json_container
 from .scraping import ScrapingManager, ScrapingRegex
 
 ####################################################################################################
@@ -451,21 +451,17 @@ class Cve:
 	def remove_duplicated_values(self):
 		""" Removes any duplicated values from specific CVE attributes that contain lists. """
 
-		def remove_duplicates_from_list(value_list: list) -> list:
-			""" Removes any duplicated values from a list. """
-			return list(dict.fromkeys(value_list))
+		self.vulnerability_types 	= remove_list_duplicates(self.vulnerability_types)
 
-		self.vulnerability_types 	= remove_duplicates_from_list(self.vulnerability_types)
+		self.bugzilla_urls 			= remove_list_duplicates(self.bugzilla_urls)
+		self.bugzilla_ids 			= remove_list_duplicates(self.bugzilla_ids)
+		self.advisory_urls 			= remove_list_duplicates(self.advisory_urls)
+		self.advisory_ids 			= remove_list_duplicates(self.advisory_ids)
 
-		self.bugzilla_urls 			= remove_duplicates_from_list(self.bugzilla_urls)
-		self.bugzilla_ids 			= remove_duplicates_from_list(self.bugzilla_ids)
-		self.advisory_urls 			= remove_duplicates_from_list(self.advisory_urls)
-		self.advisory_ids 			= remove_duplicates_from_list(self.advisory_ids)
-
-		self.git_urls 				= remove_duplicates_from_list(self.git_urls)
-		self.git_commit_hashes 		= remove_duplicates_from_list(self.git_commit_hashes)
-		self.svn_urls 				= remove_duplicates_from_list(self.svn_urls)
-		self.svn_revision_numbers 	= remove_duplicates_from_list(self.svn_revision_numbers)
+		self.git_urls 				= remove_list_duplicates(self.git_urls)
+		self.git_commit_hashes 		= remove_list_duplicates(self.git_commit_hashes)
+		self.svn_urls 				= remove_list_duplicates(self.svn_urls)
+		self.svn_revision_numbers 	= remove_list_duplicates(self.svn_revision_numbers)
 
 	def serialize_containers(self):
 		""" Serializes specific CVE attributes that contain lists or dictionaries using JSON. """

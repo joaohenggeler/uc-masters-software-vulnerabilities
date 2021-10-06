@@ -64,13 +64,13 @@
 	"dataset_label_threshold": 0.005,
 	"dataset_filter_samples_ineligible_for_alerts": true,
 	"dataset_filter_commits_without_alerts": true,
-	"dataset_filter_column_names": ["Cppcheck_.*"],
 
 	"account_username": "<Username>",
 	"account_password": "<Password>",
 
 	"propheticus":
 	{
+		"max_thread_count": 4,
 		"labels": ["binary_label", "grouped_multiclass_label"],
 
 		"seed_count": 30,

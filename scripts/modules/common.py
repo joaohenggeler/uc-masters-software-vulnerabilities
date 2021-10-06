@@ -5,6 +5,7 @@
 	files, and serializing data.
 """
 
+import glob
 import json
 import locale
 import logging
@@ -135,6 +136,19 @@ if GLOBAL_CONFIG['recursion_limit'] is not None:
 	sys.setrecursionlimit(recursion_limit)
 
 ####################################################################################################
+
+def get_path_in_output_directory(short_file_path: str) -> str:
+	""" Gets the absolute path of a file inside the output directory relative to the working directory. """
+	path = os.path.join(GLOBAL_CONFIG['output_directory_path'], short_file_path) 
+	return os.path.abspath(path)
+
+def find_output_csv_files(prefix: str) -> list:
+	""" Finds the paths to any CSV files inside the output directory by looking at their prefix. """
+	csv_path = os.path.join(GLOBAL_CONFIG['output_directory_path'], fr'{prefix}*-*')
+	csv_path = os.path.abspath(csv_path)
+	csv_file_list = glob.glob(csv_path)
+	csv_file_list = sorted(csv_file_list)
+	return csv_file_list
 
 def format_unix_timestamp(timestamp: str) -> Optional[str]:
 	""" Formats a Unix timestamp using the format "YYYY-MM-DD hh:mm:ss". """
@@ -275,6 +289,10 @@ def get_list_index_or_default(my_list: list, value: Any, default: Any = None) ->
 		return my_list.index(value)
 	except ValueError:
 		return default
+
+def remove_list_duplicates(my_list: list) -> list:
+	""" Removes any duplicated values from a list. """
+	return list(dict.fromkeys(my_list))
 
 ####################################################################################################
 
