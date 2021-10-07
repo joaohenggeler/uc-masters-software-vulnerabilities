@@ -7,6 +7,42 @@
 	- "insert_metrics_in_database.py" to insert the previously collected metrics into the database;
 	- "aggregate_ck_file_metrics_in_database.py" to aggregate and add any missing metrics to the database;
 	- "insert_alerts_in_database.py" to download and insert the previously collected alerts into the database.
+
+	### How to allow MySQL to create a file in a given output directory using the OUTFILE command (e.g. "C:\Path\To\File\Directory" or "/path/to/file/directory"):
+
+	# On Windows:
+	- Start the MySQL server with the secure-file-priv option: mysqld --secure-file-priv="C:\Path\To\File\Directory"
+
+	# On Linux:
+
+	1. Add the option "secure-file-priv" to the MySQL configuration file "/etc/mysql/my.cnf":
+	>> secure-file-priv = "/path/to/file/directory"
+
+	2. Add the necessary priviliges to the MySQL user:
+	mysql > GRANT ALL PRIVILEGES ON database.* TO 'user'@'localhost' IDENTIFIED BY 'password';
+	mysql > GRANT FILE ON database.* TO 'user'@'localhost' IDENTIFIED BY 'password';
+
+	3. Enable "file_priv" for the MySQL user in the "mysql.user" table:
+	mysql > UPDATE mysql.user SET file_priv = 'Y' WHERE user = 'user' AND host = 'localhost';
+
+	4. Restart the MySQL server:
+	shell > service mysql restart
+
+	5. Change the permissions of the output directory so that the user "mysql" is allowed to write to that location. For example:
+	shell > chmod -R 777 "/path/to/file/directory"
+	ou
+	shell > chown -R mysql:mysql "/path/to/file/directory"
+
+	6. Add an exception for the MySQL Daemon in AppArmor by changing the configuration file "/etc/apparmor.d/usr.sbin.mysqld":
+	>> /usr/sbin/mysqld {
+	>> 		[...]
+	>> 		/path/to/file/directory/ r,
+	>> 		/path/to/file/directory/** rw,
+	>> 		[...]
+	>> }
+
+	7. Reload AppArmor:
+	shell > sudo /etc/init.d/apparmor reload
 """
 
 import os
