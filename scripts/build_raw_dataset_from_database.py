@@ -140,11 +140,11 @@ def build_raw_dataset_from_database() -> None:
 				is_category = dataset['multiclass_label'] > 1
 				dataset.loc[is_category, 'binary_label'] = 1
 
-				dataset['grouped_multiclass_label'] = dataset['multiclass_label']
 				# The next value (N + 1) after the non-vulnerable (0), vulnerable (1), and the category labels (2 to N).
-				grouped_class_label = len(vulnerability_categories) + 2
+				dataset['grouped_multiclass_label'] = dataset['multiclass_label']
 				label_threshold = GLOBAL_CONFIG['dataset_label_threshold']
-
+				grouped_class_label = len(vulnerability_categories) + 2
+	
 				label_count = dataset['multiclass_label'].value_counts()
 				label_ratio = dataset['multiclass_label'].value_counts(normalize=True)
 				log.info(f'The multiclass label count is: {label_count.to_dict()}')
@@ -160,6 +160,11 @@ def build_raw_dataset_from_database() -> None:
 						has_label = dataset['multiclass_label'] == label
 						dataset.loc[has_label, 'grouped_multiclass_label'] = grouped_class_label
 						log.info(f'Grouped the label {label} since its ratio {ratio} falls under the threshold {label_threshold}.')
+
+				grouped_label_count = dataset['grouped_multiclass_label'].value_counts()
+				grouped_label_ratio = dataset['grouped_multiclass_label'].value_counts(normalize=True)
+				log.info(f'The grouped multiclass label count is: {grouped_label_count.to_dict()}')
+				log.info(f'The grouped multiclass label ratio is: {grouped_label_ratio.to_dict()}')
 
 				# Overwrite the dataset on disk.
 				dataset.to_csv(output_csv_path, index=False)

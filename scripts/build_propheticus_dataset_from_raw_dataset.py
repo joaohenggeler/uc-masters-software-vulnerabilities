@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 """
-	This script converts any previously generated raw dataset to a specific version that can be parsed by the Propheticus tool. For each processed dataset,
-	three files are created: *.info.txt, *.headers.txt, and *.data.txt.
+	This script converts any previously generated and merged raw datasets to a specific version that can be parsed by the Propheticus tool.
+	For each processed dataset, three files are created: *.info.txt, *.headers.txt, and *.data.txt.
 
-	Before running this script, the raw datasets must be created using "build_raw_dataset_from_database.py".
+	Before running this script, the raw datasets must be merged using "merge_raw_datasets.py".
 """
 
 import json
@@ -16,9 +16,9 @@ from modules.common import log, find_output_csv_files, replace_in_filename
 
 ####################################################################################################
 
-for input_csv_path in find_output_csv_files('raw-dataset'):
+for input_csv_path in find_output_csv_files('raw-dataset-merged'):
 
-	_, _, unit_kind, _ = os.path.basename(input_csv_path).split('-', 3)
+	_, _, _, unit_kind, _ = os.path.basename(input_csv_path).split('-', 4)
 
 	log.info(f'Generating the Propheticus version of the raw {unit_kind} dataset using the information in "{input_csv_path}".')
 
@@ -55,7 +55,7 @@ for input_csv_path in find_output_csv_files('raw-dataset'):
 
 	dataset.drop(columns=columns_to_remove, errors='ignore', inplace=True)
 	
-	output_path_template = replace_in_filename(input_csv_path, 'raw', 'propheticus')
+	output_path_template = replace_in_filename(input_csv_path, 'raw-dataset-merged', 'propheticus-dataset')
 	output_info_path = replace_in_filename(output_path_template, '.csv', '.info.txt')
 	output_headers_path = replace_in_filename(output_path_template, '.csv', '.headers.txt')
 	output_data_path = replace_in_filename(output_path_template, '.csv', '.data.txt')

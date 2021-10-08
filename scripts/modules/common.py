@@ -232,13 +232,11 @@ def delete_directory(directory_path: str) -> bool:
 
 def append_dataframe_to_csv(df: pd.DataFrame, csv_path: str) -> None:
 	""" Creates or appends a dataframe to a CSV file depending on whether it already exists. """
-
 	add_header = not os.path.exists(csv_path)
 	df.to_csv(csv_path, mode='a', header=add_header, index=False)
 
 def append_file_to_csv(file_path: str, csv_path: str, **kwargs) -> None:
 	""" Creates or appends a file to another CSV file depending on whether it already exists. """
-
 	df = pd.read_csv(file_path, dtype=str, **kwargs)
 	append_dataframe_to_csv(df, csv_path)
 
