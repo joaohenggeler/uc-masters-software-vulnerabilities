@@ -1,0 +1,26 @@
+[2021-10-08 13:53:27] [INFO] [common.py:75] <module>: Initializing the common module.
+[2021-10-08 13:53:27] [INFO] [common.py:135] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-10-08 13:53:28] [INFO] [project.py:33] <module>: Loading libclang from "/usr/lib/x86_64-linux-gnu/libclang-10.so.1".
+[2021-10-08 13:53:28] [INFO] [project.py:42] <module>: Loaded libclang successfully.
+[2021-10-08 13:53:28] [INFO] [database.py:34] __init__: Connecting to the database with the following configurations: {'host': '127.0.0.1', 'port': '3306', 'user': 'admin', 'password': '', 'database': 'software', 'sql_mode': 'ONLY_FULL_GROUP_BY,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'}
+[2021-10-08 13:53:28] [INFO] [database.py:42] __init__: Autocommit is False.
+[2021-10-08 13:53:28] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Glibc" (glibc).
+[2021-10-08 13:53:28] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Apache HTTP Server" (apache).
+[2021-10-08 13:53:28] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Xen" (xen).
+[2021-10-08 13:53:28] [INFO] [project.py:126] get_project_list_from_config: Loading the project "Linux Kernel" (kernel) with the following configurations: {'short_name': 'kernel', 'database_id': 2, 'database_name': 'kernel', 'github_data_name': 'linux', 'vendor_id': 33, 'product_id': 47, 'url_pattern': 'linux|kernel|redhat', 'master_branch': 'master', 'language': 'c', 'include_directory_path': 'include', 'repository_path': '/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/linux', 'output_directory_path': 'output/final', 'scrape_all_branches': False}
+[2021-10-08 13:53:28] [ERROR] [project.py:90] __init__: Failed to get the repository for the project "Linux Kernel"" with the error: NoSuchPathError('/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/linux')
+[2021-10-08 13:53:28] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Mozilla" (mozilla).
+[2021-10-08 13:53:28] [INFO] [sats.py:105] get_sat_info_from_config: Ignoring the SAT "Cppcheck".
+[2021-10-08 13:53:28] [INFO] [build_raw_dataset_from_database.py:85] build_raw_dataset_from_database: Skipping the file metrics at the user's request
+[2021-10-08 13:53:28] [INFO] [build_raw_dataset_from_database.py:88] build_raw_dataset_from_database: Building the function dataset.
+[2021-10-08 14:53:31] [INFO] [build_raw_dataset_from_database.py:112] build_raw_dataset_from_database: Changing the raw dataset's file permissions and owner to "admin".
+[2021-10-08 14:53:36] [INFO] [build_raw_dataset_from_database.py:150] build_raw_dataset_from_database: The multiclass label count is: {0: 73021, 2: 457, 1: 241, 3: 82, 4: 72, 5: 56, 6: 27, 7: 1}
+[2021-10-08 14:53:36] [INFO] [build_raw_dataset_from_database.py:151] build_raw_dataset_from_database: The multiclass label ratio is: {0: 0.987343997187555, 2: 0.006179266330435253, 1: 0.003258650296794083, 3: 0.0011087523831415553, 4: 0.00097353867788039, 5: 0.0007571967494625255, 6: 0.0003650770042051462, 7: 1.3521370526116528e-05}
+[2021-10-08 14:53:36] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 3 since its ratio 0.0011087523831415553 falls under the threshold 0.005.
+[2021-10-08 14:53:36] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 4 since its ratio 0.00097353867788039 falls under the threshold 0.005.
+[2021-10-08 14:53:36] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 5 since its ratio 0.0007571967494625255 falls under the threshold 0.005.
+[2021-10-08 14:53:36] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 6 since its ratio 0.0003650770042051462 falls under the threshold 0.005.
+[2021-10-08 14:53:36] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 7 since its ratio 1.3521370526116528e-05 falls under the threshold 0.005.
+[2021-10-08 14:53:39] [INFO] [build_raw_dataset_from_database.py:166] build_raw_dataset_from_database: Built the raw dataset to "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/raw-dataset-function-20211008135327.csv" successfully.
+[2021-10-08 14:53:39] [INFO] [build_raw_dataset_from_database.py:85] build_raw_dataset_from_database: Skipping the class metrics at the user's request
+[2021-10-08 14:53:39] [INFO] [build_raw_dataset_from_database.py:175] <module>: Finished running.

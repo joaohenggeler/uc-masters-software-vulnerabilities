@@ -1,0 +1,28 @@
+[2021-10-08 18:32:07] [INFO] [common.py:75] <module>: Initializing the common module.
+[2021-10-08 18:32:07] [INFO] [common.py:135] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-10-08 18:32:07] [INFO] [project.py:33] <module>: Loading libclang from "/usr/lib/x86_64-linux-gnu/libclang-10.so.1".
+[2021-10-08 18:32:07] [INFO] [project.py:42] <module>: Loaded libclang successfully.
+[2021-10-08 18:32:07] [INFO] [database.py:34] __init__: Connecting to the database with the following configurations: {'host': '127.0.0.1', 'port': '3306', 'user': 'admin', 'password': '', 'database': 'software', 'sql_mode': 'ONLY_FULL_GROUP_BY,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'}
+[2021-10-08 18:32:07] [INFO] [database.py:42] __init__: Autocommit is False.
+[2021-10-08 18:32:08] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Glibc" (glibc).
+[2021-10-08 18:32:08] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Apache HTTP Server" (apache).
+[2021-10-08 18:32:08] [INFO] [project.py:126] get_project_list_from_config: Loading the project "Xen" (xen) with the following configurations: {'short_name': 'xen', 'database_id': 3, 'database_name': 'xen', 'github_data_name': 'xen', 'vendor_id': 6276, 'product_id': None, 'url_pattern': 'xen', 'master_branch': 'master', 'language': 'c', 'include_directory_path': 'xen/include', 'repository_path': '/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/xen', 'output_directory_path': 'output/final', 'scrape_all_branches': False}
+[2021-10-08 18:32:08] [ERROR] [project.py:90] __init__: Failed to get the repository for the project "Xen"" with the error: NoSuchPathError('/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/xen')
+[2021-10-08 18:32:08] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Linux Kernel" (kernel).
+[2021-10-08 18:32:08] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Mozilla" (mozilla).
+[2021-10-08 18:32:08] [INFO] [sats.py:105] get_sat_info_from_config: Ignoring the SAT "Cppcheck".
+[2021-10-08 18:32:08] [INFO] [build_raw_dataset_from_database.py:85] build_raw_dataset_from_database: Skipping the file metrics at the user's request
+[2021-10-08 18:32:08] [INFO] [build_raw_dataset_from_database.py:88] build_raw_dataset_from_database: Building the function dataset.
+[2021-10-08 19:18:21] [INFO] [build_raw_dataset_from_database.py:112] build_raw_dataset_from_database: Changing the raw dataset's file permissions and owner to "admin".
+[2021-10-08 19:18:24] [INFO] [build_raw_dataset_from_database.py:150] build_raw_dataset_from_database: The multiclass label count is: {0: 34192, 1: 114, 4: 98, 2: 88, 3: 64, 5: 24, 6: 8}
+[2021-10-08 19:18:24] [INFO] [build_raw_dataset_from_database.py:151] build_raw_dataset_from_database: The multiclass label ratio is: {0: 0.9885509425234186, 1: 0.0032959407887128483, 4: 0.0028333526078408696, 2: 0.002544234994795883, 3: 0.001850352723487915, 5: 0.0006938822713079681, 6: 0.00023129409043598937}
+[2021-10-08 19:18:24] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 4 since its ratio 0.0028333526078408696 falls under the threshold 0.005.
+[2021-10-08 19:18:24] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 2 since its ratio 0.002544234994795883 falls under the threshold 0.005.
+[2021-10-08 19:18:24] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 3 since its ratio 0.001850352723487915 falls under the threshold 0.005.
+[2021-10-08 19:18:24] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 5 since its ratio 0.0006938822713079681 falls under the threshold 0.005.
+[2021-10-08 19:18:24] [INFO] [build_raw_dataset_from_database.py:162] build_raw_dataset_from_database: Grouped the label 6 since its ratio 0.00023129409043598937 falls under the threshold 0.005.
+[2021-10-08 19:18:24] [INFO] [build_raw_dataset_from_database.py:166] build_raw_dataset_from_database: The grouped multiclass label count is: {0: 34192, 14: 282, 1: 114}
+[2021-10-08 19:18:24] [INFO] [build_raw_dataset_from_database.py:167] build_raw_dataset_from_database: The grouped multiclass label ratio is: {0: 0.9885509425234186, 14: 0.008153116687868625, 1: 0.0032959407887128483}
+[2021-10-08 19:18:25] [INFO] [build_raw_dataset_from_database.py:171] build_raw_dataset_from_database: Built the raw dataset to "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/raw-dataset-function-20211008183207.csv" successfully.
+[2021-10-08 19:18:25] [INFO] [build_raw_dataset_from_database.py:85] build_raw_dataset_from_database: Skipping the class metrics at the user's request
+[2021-10-08 19:18:25] [INFO] [build_raw_dataset_from_database.py:180] <module>: Finished running.

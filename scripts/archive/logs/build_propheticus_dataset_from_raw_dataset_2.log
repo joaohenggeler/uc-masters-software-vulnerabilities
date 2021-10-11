@@ -1,0 +1,5 @@
+[2021-10-11 22:49:36] [INFO] [common.py:75] <module>: Initializing the common module.
+[2021-10-11 22:49:36] [INFO] [common.py:135] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-10-11 22:49:36] [INFO] [build_propheticus_dataset_from_raw_dataset.py:23] <module>: Generating the Propheticus version of the raw function dataset using the information in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/raw-dataset-merged-function-20211008025615.csv".
+[2021-10-11 22:49:40] [INFO] [build_propheticus_dataset_from_raw_dataset.py:76] <module>: Built the Propheticus function dataset to "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/propheticus-dataset-function-20211008025615.data.txt" successfully (including the info and header files).
+[2021-10-11 22:49:40] [INFO] [build_propheticus_dataset_from_raw_dataset.py:80] <module>: Finished running.
