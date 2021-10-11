@@ -35,18 +35,31 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 	dataset = pd.read_csv(output_csv_path, dtype=str)
 	dataset['multiclass_label'] = pd.to_numeric(dataset['multiclass_label'])
 
+	# Balance the number of neutral samples by removing a given percentage.
+	label_ratio = dataset['multiclass_label'].value_counts(normalize=True).to_dict()
+	log.info(f'The multiclass label ratio is: {label_ratio}')
+
+	is_neutral = dataset['multiclass_label'] == 0
+	neutral_dataset = dataset[is_neutral]
+	neutral_samples_to_remove = neutral_dataset.sample(frac=GLOBAL_CONFIG['dataset_neutral_sample_removal_ratio'])
+	dataset = dataset.drop(neutral_samples_to_remove.index)
+
+	# Group vulnerable categories under a certain threshold.
 	dataset['grouped_multiclass_label'] = dataset['multiclass_label']
-	label_threshold = GLOBAL_CONFIG['dataset_label_threshold']
+	label_threshold = GLOBAL_CONFIG['dataset_vulnerable_label_threshold']
 	grouped_class_label = len(GLOBAL_CONFIG['vulnerability_categories']) + 2
-	
-	label_count = dataset['multiclass_label'].value_counts()
-	label_ratio = dataset['multiclass_label'].value_counts(normalize=True)
-	log.info(f'The multiclass label count is: {label_count.to_dict()}')
-	log.info(f'The multiclass label ratio is: {label_ratio.to_dict()}')
 
-	for label, ratio in label_ratio.items():
+	is_vulnerable = dataset['multiclass_label'] >= 1
+	vulnerable_dataset = dataset[is_vulnerable]
 
-		# The non-vulnerable and vulnerable (no category) should not be grouped.
+	vulnerable_label_count = vulnerable_dataset['multiclass_label'].value_counts()
+	vulnerable_label_ratio = vulnerable_dataset['multiclass_label'].value_counts(normalize=True)
+	log.info(f'The vulnerable multiclass label count is: {vulnerable_label_count.to_dict()}')
+	log.info(f'The vulnerable multiclass label ratio is: {vulnerable_label_ratio.to_dict()}')
+
+	for label, ratio in vulnerable_label_ratio.items():
+
+		# The vulnerable (no category) label should not be grouped.
 		if label <= 1:
 			continue
 
