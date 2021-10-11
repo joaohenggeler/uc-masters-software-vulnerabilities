@@ -61,8 +61,8 @@
 		"Flawfinder": true
 	},
 
-	"dataset_neutral_sample_removal_ratio": 0.80,
-	"dataset_vulnerable_label_threshold": 0.05,
+	"dataset_neutral_sample_removal_ratio": 0.83,
+	"dataset_vulnerable_label_threshold": 0.10,
 	"dataset_filter_samples_ineligible_for_alerts": true,
 	"dataset_filter_commits_without_alerts": true,
 
