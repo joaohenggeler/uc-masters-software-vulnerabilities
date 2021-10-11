@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-	This script converts any previously generated and merged raw datasets to a specific version that can be parsed by the Propheticus tool.
+	This script converts any previously merged raw datasets to a specific version that can be parsed by the Propheticus tool.
 	For each processed dataset, three files are created: *.info.txt, *.headers.txt, and *.data.txt.
 
 	Before running this script, the raw datasets must be merged using "merge_raw_datasets.py".

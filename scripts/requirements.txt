@@ -22,4 +22,4 @@ statsmodels>=0.12.2
 tensorflow>=2.6.0
 types-requests>=2.25.6
 xgboost>=1.4.2
-xlrd>=2.0.1
+xlrd==1.2.0
