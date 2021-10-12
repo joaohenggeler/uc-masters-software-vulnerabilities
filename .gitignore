@@ -32,3 +32,6 @@ scripts/propheticus/instances_artifacts/vulnerability_prediction_final/*
 
 !scripts/propheticus/instances_artifacts/vulnerability_prediction_final/data
 !scripts/propheticus/instances_artifacts/vulnerability_prediction_final/generated
+
+scripts/propheticus/instances_artifacts/vulnerability_prediction_final/data/*.txt
+scripts/propheticus/instances_artifacts/vulnerability_prediction_final/generated/**/*.txt.zip
