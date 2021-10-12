@@ -1,0 +1,19 @@
+[2021-09-05 23:19:57] [INFO] [common.py:74] <module>: Initializing the common module.
+[2021-09-05 23:19:57] [INFO] [common.py:134] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-09-05 23:19:57] [INFO] [database.py:34] __init__: Connecting to the database with the following configurations: {'host': '127.0.0.1', 'port': '3306', 'user': 'admin', 'password': '', 'database': 'software', 'sql_mode': 'ONLY_FULL_GROUP_BY,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'}
+[2021-09-05 23:19:57] [INFO] [database.py:42] __init__: Autocommit is False.
+[2021-09-05 23:19:57] [INFO] [alter_vulnerabilities_in_database.py:22] alter_vulnerabilities_in_database: Adding the CWE column to the VULNERABILITIES table.
+[2021-09-05 23:19:57] [INFO] [alter_vulnerabilities_in_database.py:35] alter_vulnerabilities_in_database: Adding the repository ID column to the VULNERABILITIES table.
+[2021-09-05 23:19:58] [INFO] [alter_vulnerabilities_in_database.py:48] alter_vulnerabilities_in_database: Setting the repository ID values based on the vulnerability IDs in the VULNERABILITIES table.
+[2021-09-05 23:19:58] [INFO] [alter_vulnerabilities_in_database.py:67] alter_vulnerabilities_in_database: Adding the repository ID foreign key to the VULNERABILITIES table.
+[2021-09-05 23:19:58] [INFO] [alter_vulnerabilities_in_database.py:81] alter_vulnerabilities_in_database: Changing the primary key in the VULNERABILITIES table.
+[2021-09-05 23:19:58] [WARNING] [database.py:75] execute_query: Failed to execute the query "
+												ALTER TABLE VULNERABILITIES
+												DROP PRIMARY KEY,
+												ADD PRIMARY KEY (V_ID),
+												MODIFY COLUMN V_ID INTEGER NOT NULL AUTO_INCREMENT,
+												MODIFY COLUMN V_ID_LEGACY VARCHAR(30) NULL,
+												MODIFY COLUMN VULNERABILITY_URL VARCHAR(3000);
+												" with the error: DatabaseError(1553, "1553 (HY000): Cannot drop index 'PRIMARY': needed in a foreign key constraint", 'HY000')
+[2021-09-05 23:19:58] [ERROR] [alter_vulnerabilities_in_database.py:103] alter_vulnerabilities_in_database: Failed to change the primary key with the error code 1553.
+[2021-09-05 23:19:58] [INFO] [alter_vulnerabilities_in_database.py:148] <module>: Finished running.

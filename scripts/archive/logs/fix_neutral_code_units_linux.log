@@ -1,0 +1,13 @@
+[2021-06-29 18:22:49] [INFO] [common.py:73] <module>: Initializing the common module.
+[2021-06-29 18:22:49] [INFO] [common.py:133] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-06-29 18:22:49] [INFO] [project.py:33] <module>: Loading libclang from "/usr/lib/x86_64-linux-gnu/libclang-10.so.1".
+[2021-06-29 18:22:49] [INFO] [project.py:42] <module>: Loaded libclang successfully.
+[2021-06-29 18:22:49] [INFO] [project.py:116] get_project_list_from_config: Ignoring the project "glibc".
+[2021-06-29 18:22:49] [INFO] [project.py:116] get_project_list_from_config: Ignoring the project "apache".
+[2021-06-29 18:22:49] [INFO] [project.py:116] get_project_list_from_config: Ignoring the project "xen".
+[2021-06-29 18:22:49] [INFO] [project.py:123] get_project_list_from_config: Loading the project "kernel" with the following configurations: {'short_name': 'kernel', 'database_id': 2, 'database_name': 'kernel', 'vendor_id': 33, 'product_id': 47, 'url_pattern': 'linux|kernel|redhat', 'master_branch': 'master', 'language': 'c', 'include_directory_path': 'include', 'repository_path': '/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/linux', 'output_directory_path': 'output/final', 'scrape_all_branches': False}
+[2021-06-29 18:22:49] [INFO] [project.py:85] __init__: Loaded the project "Linux Kernel" located in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/linux".
+[2021-06-29 18:22:49] [INFO] [project.py:116] get_project_list_from_config: Ignoring the project "mozilla".
+[2021-06-29 18:22:49] [INFO] [fix_neutral_code_unit_status_in_affected_files_and_file_timeline.py:39] <module>: Fixing the neutral code unit status for the project "Linux Kernel" using the information in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/kernel/affected-files-2-kernel-master-branch-20210327184447.csv".
+[2021-06-29 18:22:52] [INFO] [fix_neutral_code_unit_status_in_affected_files_and_file_timeline.py:60] <module>: Fixing the neutral code unit status for the project "Linux Kernel" using the information in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/kernel/file-timeline-2-kernel-master-branch-20210327184447.csv".
+[2021-06-29 18:23:26] [INFO] [fix_neutral_code_unit_status_in_affected_files_and_file_timeline.py:82] <module>: Finished running. Updated 52121 rows including 6217 functions and 360 classes.

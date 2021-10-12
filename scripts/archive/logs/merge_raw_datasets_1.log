@@ -1,0 +1,20 @@
+[2021-10-08 19:49:01] [INFO] [common.py:75] <module>: Initializing the common module.
+[2021-10-08 19:49:01] [INFO] [common.py:135] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-10-08 19:49:01] [INFO] [merge_raw_datasets.py:18] <module>: Skipping the file raw dataset at the user's request.
+[2021-10-08 19:49:01] [INFO] [merge_raw_datasets.py:32] <module>: Merging the raw function datasets using the information in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/raw-dataset-function-20211008025615.csv".
+[2021-10-08 19:49:28] [INFO] [merge_raw_datasets.py:32] <module>: Merging the raw function datasets using the information in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/raw-dataset-function-20211008135327.csv".
+[2021-10-08 19:49:33] [INFO] [merge_raw_datasets.py:32] <module>: Merging the raw function datasets using the information in "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/raw-dataset-function-20211008183207.csv".
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:44] <module>: The multiclass label count is: {0: 479784, 1: 1855, 2: 1435, 3: 386, 4: 289, 5: 267, 6: 85, 7: 34, 9: 1}
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:45] <module>: The multiclass label ratio is: {0: 0.9910107903564288, 1: 0.003831567989160071, 2: 0.002964043161425715, 3: 0.0007972966273939554, 4: 0.0005969397028934019, 5: 0.0005514979262025546, 6: 0.00017557050085100054, 7: 7.022820034040021e-05, 9: 2.0655353041294183e-06}
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:56] <module>: Grouped the label 2 since its ratio 0.002964043161425715 falls under the threshold 0.005.
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:56] <module>: Grouped the label 3 since its ratio 0.0007972966273939554 falls under the threshold 0.005.
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:56] <module>: Grouped the label 4 since its ratio 0.0005969397028934019 falls under the threshold 0.005.
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:56] <module>: Grouped the label 5 since its ratio 0.0005514979262025546 falls under the threshold 0.005.
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:56] <module>: Grouped the label 6 since its ratio 0.00017557050085100054 falls under the threshold 0.005.
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:56] <module>: Grouped the label 7 since its ratio 7.022820034040021e-05 falls under the threshold 0.005.
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:56] <module>: Grouped the label 9 since its ratio 2.0655353041294183e-06 falls under the threshold 0.005.
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:60] <module>: The grouped multiclass label count is: {0: 479784, 14: 2497, 1: 1855}
+[2021-10-08 19:49:52] [INFO] [merge_raw_datasets.py:61] <module>: The grouped multiclass label ratio is: {0: 0.9910107903564288, 14: 0.005157641654411157, 1: 0.003831567989160071}
+[2021-10-08 19:50:11] [INFO] [merge_raw_datasets.py:64] <module>: Merged the raw datasets to "/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/scripts/output/final/raw-dataset-merged-function-20211008025615.csv" successfully.
+[2021-10-08 19:50:11] [INFO] [merge_raw_datasets.py:18] <module>: Skipping the class raw dataset at the user's request.
+[2021-10-08 19:50:11] [INFO] [merge_raw_datasets.py:68] <module>: Finished running.

@@ -5,21 +5,33 @@
 *.udb
 *.und
 
-# Log files.
-*.log
-!scripts/scraping/archives/*
-
 # Windows shortcuts.
 *.lnk
-
-# The database configuration file.
-scripts/database.config
-
-# The symlink to the dataset.
-scripts/dataset
 
 # The five C/C++ project repositories.
 repositories
 
-# For the scraping scripts.
-scripts/scraping/dynamic_config.json
+# Log files.
+scripts/modules/logs
+
+# Dynamic configuration files.
+**/dynamic_config.json
+
+# The Propheticus tool, except our own scripts and datasets.
+!scripts/propheticus
+scripts/propheticus/*
+!scripts/propheticus/instances
+scripts/propheticus/instances/*
+
+!scripts/propheticus/instances/vulnerability_prediction_final
+
+!scripts/propheticus/instances_artifacts
+scripts/propheticus/instances_artifacts/*
+!scripts/propheticus/instances_artifacts/vulnerability_prediction_final
+scripts/propheticus/instances_artifacts/vulnerability_prediction_final/*
+
+!scripts/propheticus/instances_artifacts/vulnerability_prediction_final/data
+!scripts/propheticus/instances_artifacts/vulnerability_prediction_final/generated
+
+scripts/propheticus/instances_artifacts/vulnerability_prediction_final/data/*.txt
+scripts/propheticus/instances_artifacts/vulnerability_prediction_final/generated/**/*.txt.zip
