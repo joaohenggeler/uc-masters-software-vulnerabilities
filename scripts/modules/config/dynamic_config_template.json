@@ -71,20 +71,53 @@
 
 	"propheticus":
 	{
-		"max_thread_count": 4,
+		"max_thread_count": 6,
 		"labels": ["binary_label", "grouped_multiclass_label"],
 
-		"seed_count": 30,
+		"seed_count": 5,
 		"data_split": {"n_splits": 5},
 
-		"dimensionality_reduction": [["variance"], ["correlation"]],
-		"data_balancing": [[], ["RandomUnderSampler"], ["RandomOverSampler"]],
+		"dimensionality_reduction": [["variance"], ["variance", "correlation"]],
+		"data_balancing": [[], ["RandomUnderSampler"], ["RandomOverSampler"], ["RandomUnderSampler", "RandomOverSampler"]],
 		
 		"classification_algorithms":
 		{
-			"random_forests": [null],
-			"bagging": [null],
-			"xgboost": [null]
+			"random_forests":
+			[
+				null,
+				{
+					"n_estimators": [100],
+					"criterion": ["gini"],
+					"min_samples_split": [2],
+					"min_samples_leaf": [1],
+					"max_features": [null],
+					"bootstrap": [true]
+				}
+			],
+			
+			"bagging":
+			[
+				null,
+				{
+					"n_estimators": [100],
+					"max_features": [0.1, 0.55, 1.0],
+					"bootstrap": [true]
+				}
+			],
+			
+			"xgboost":
+			[
+				null,
+				{
+					"n_estimators": [100, 300, 500],
+					"learning_rate": [0.1, 0.3],
+					"gamma": [0],
+					"subsample": [1],
+					"max_depth": [null, 10, 30],
+					"min_samples_split": [2, 5],
+					"min_samples_leaf": [1, 4]
+				}
+			]
 		}
 	},
 
