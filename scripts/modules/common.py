@@ -6,6 +6,7 @@
 """
 
 import glob
+import itertools
 import json
 import locale
 import logging
@@ -291,6 +292,12 @@ def get_list_index_or_default(my_list: list, value: Any, default: Any = None) ->
 def remove_list_duplicates(my_list: list) -> list:
 	""" Removes any duplicated values from a list. """
 	return list(dict.fromkeys(my_list))
+
+def dict_list_cartesian_product(**kwargs) -> list:
+	""" Given a dictionary whose values are lists, creates a list with every possible dictionary combination and regular unpacked values.
+	Adapted from the Propheticus function in propheticus.shared.Utils.cartesianProductDictionaryLists. """
+	keys, values = zip(*kwargs.items())
+	return [dict(zip(keys, prod)) for prod in itertools.product(*values)]
 
 ####################################################################################################
 

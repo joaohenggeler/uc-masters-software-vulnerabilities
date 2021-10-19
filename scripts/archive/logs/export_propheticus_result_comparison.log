@@ -1,0 +1,40 @@
+[2021-10-19 17:08:58] [INFO] [common.py:76] <module>: Initializing the common module.
+[2021-10-19 17:08:58] [DEBUG] [common.py:132] <module>: Debug mode is enabled with the following options: {'enabled': True, 'min_hub_pages': 6, 'hub_page_step': 5, 'max_cves_per_hub_page': 5, 'use_random_sampling': True, 'verify_different_unit_names': True, 'different_unit_names_ratio_limit': 90}
+[2021-10-19 17:08:58] [INFO] [common.py:136] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-10-19 17:08:58] [INFO] [export_propheticus_result_comparison.py:24] <module>: Exporting results from "C:\Work\GitHub\estagio-software-vulnerabilities-2020-2021\scripts\propheticus\instances_artifacts\vulnerability_prediction_final\generated\8-comparison\6d4db256f05cd28422ea82da788eda5b.Log.xlsx" to "C:\Work\GitHub\estagio-software-vulnerabilities-2020-2021\scripts\propheticus\instances_artifacts\vulnerability_prediction_final\generated\8-comparison\6d4db256f05cd28422ea82da788eda5b.Log.csv".
+[2021-10-19 17:09:00] [INFO] [export_propheticus_result_comparison.py:77] <module>: Found 1 best Precision results for "grouped_multiclass_label":
+########################################################################################################################
+                           Experiment       Algorithm       proc_balance_data proc_classification_algorithms_parameters proc_reduce_dimensionality Weighted Avg - Precision Weighted Avg - Recall Weighted Avg - F-Score
+675  f2476b6b0f5dc18dc408ae3b7c368d86  random_forests  ["RandomUnderSampler"]                                        {}               ["variance"]                   0.9362                0.5906                 0.7095
+########################################################################################################################
+[2021-10-19 17:09:00] [INFO] [export_propheticus_result_comparison.py:77] <module>: Found 3 best Recall results for "grouped_multiclass_label":
+########################################################################################################################
+                           Experiment Algorithm proc_balance_data                                    proc_classification_algorithms_parameters proc_reduce_dimensionality Weighted Avg - Precision Weighted Avg - Recall Weighted Avg - F-Score
+719  278482c6734b1ff818d3ede9c806242f   bagging                []  {"bagging": {"bootstrap": true, "max_features": 0.55, "n_estimators": 100}}               ["variance"]                   0.9342                0.9505                 0.9367
+750  6d164338306e93a645f3e60919e1f40c   bagging                []  {"bagging": {"bootstrap": true, "max_features": 0.55, "n_estimators": 200}}               ["variance"]                   0.9341                0.9505                 0.9367
+758  76c271ab1beb6cb61a5dc42e762cdeb8   bagging                []  {"bagging": {"bootstrap": true, "max_features": 0.55, "n_estimators": 100}}               ["variance"]                   0.9342                0.9505                 0.9367
+########################################################################################################################
+[2021-10-19 17:09:00] [INFO] [export_propheticus_result_comparison.py:77] <module>: Found 2 best F-Score results for "grouped_multiclass_label":
+########################################################################################################################
+                           Experiment       Algorithm proc_balance_data                                                                                                               proc_classification_algorithms_parameters proc_reduce_dimensionality Weighted Avg - Precision Weighted Avg - Recall Weighted Avg - F-Score
+605  774bfb38ba9ca3cc4ee757bb7b6a30ff  random_forests                []  {"random_forests": {"bootstrap": true, "criterion": "gini", "max_features": null, "min_samples_leaf": 1, "min_samples_split": 2, "n_estimators": 200}}               ["variance"]                   0.9344                0.9500                 0.9379
+708  190964ee3f387266b7146b36ff5e91ca         bagging                []                                                                              {"bagging": {"bootstrap": true, "max_features": 1.0, "n_estimators": 200}}               ["variance"]                   0.9344                0.9500                 0.9379
+########################################################################################################################
+[2021-10-19 17:09:00] [INFO] [export_propheticus_result_comparison.py:77] <module>: Found 1 best Precision results for "binary_label":
+########################################################################################################################
+                           Experiment       Algorithm       proc_balance_data proc_classification_algorithms_parameters proc_reduce_dimensionality Weighted Avg - Precision Weighted Avg - Recall Weighted Avg - F-Score
+583  58c9380f8cff89395b90f55dfe811036  random_forests  ["RandomUnderSampler"]                                        {}               ["variance"]                   0.9373                0.6935                 0.7796
+########################################################################################################################
+[2021-10-19 17:09:00] [INFO] [export_propheticus_result_comparison.py:77] <module>: Found 1 best Recall results for "binary_label":
+########################################################################################################################
+                           Experiment Algorithm proc_balance_data                                    proc_classification_algorithms_parameters proc_reduce_dimensionality Weighted Avg - Precision Weighted Avg - Recall Weighted Avg - F-Score
+791  b6e38f103dddbe46b8e26fc30811a5c3   bagging                []  {"bagging": {"bootstrap": true, "max_features": 0.55, "n_estimators": 200}}               ["variance"]                   0.9369                0.9511                 0.9383
+########################################################################################################################
+[2021-10-19 17:09:00] [INFO] [export_propheticus_result_comparison.py:77] <module>: Found 3 best F-Score results for "binary_label":
+########################################################################################################################
+                           Experiment Algorithm proc_balance_data                                   proc_classification_algorithms_parameters proc_reduce_dimensionality Weighted Avg - Precision Weighted Avg - Recall Weighted Avg - F-Score
+694  07f6c4e1accf06497f7b37bfeed8501a   bagging                []  {"bagging": {"bootstrap": true, "max_features": 1.0, "n_estimators": 100}}               ["variance"]                   0.9366                0.9503                 0.9394
+759  77707a557cff412bd6c9115d1594af41   bagging                []  {"bagging": {"bootstrap": true, "max_features": 1.0, "n_estimators": 100}}               ["variance"]                   0.9366                0.9503                 0.9394
+795  bd05e4dde0da8f00dc404199e69453d2   bagging                []                                                                          {}               ["variance"]                   0.9366                0.9503                 0.9394
+########################################################################################################################
+[2021-10-19 17:09:00] [INFO] [export_propheticus_result_comparison.py:91] <module>: Finished running.

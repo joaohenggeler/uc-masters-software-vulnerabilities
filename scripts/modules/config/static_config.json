@@ -110,6 +110,8 @@
 		"Database Security": 			[]
 	},
 
+	"target_labels": ["binary_label", "grouped_multiclass_label"],
+
 	"http_headers":
 	{
 		"Chrome":
