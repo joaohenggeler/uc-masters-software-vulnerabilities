@@ -151,6 +151,13 @@ def find_output_csv_files(prefix: str) -> list:
 	csv_file_list = sorted(csv_file_list)
 	return csv_file_list
 
+def create_output_subdirectory(subdirectory: str) -> str:
+	""" Creates a subdirectory in the output directory. """
+	path = os.path.join(GLOBAL_CONFIG['output_directory_path'], subdirectory)
+	path = os.path.abspath(path)
+	os.makedirs(path, exist_ok=True)
+	return path
+
 def format_unix_timestamp(timestamp: str) -> Optional[str]:
 	""" Formats a Unix timestamp using the format "YYYY-MM-DD hh:mm:ss". """
 
