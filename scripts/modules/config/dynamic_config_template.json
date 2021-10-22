@@ -123,7 +123,8 @@
 
 	"temporal_window":
 	{
-		"begin_year_for_data_split": 2012,
+		"num_runs": 30,
+		"data_split": {"begin_test_year": 2013, "window_size": [null, 5, 10]},
 
 		"default_algorithm_parameters":
 		{
