@@ -138,8 +138,10 @@ if GLOBAL_CONFIG['recursion_limit'] is not None:
 
 ####################################################################################################
 
-def get_path_in_output_directory(short_file_path: str) -> str:
+def get_path_in_output_directory(short_file_path: str, subdirectory: Optional[str] = None) -> str:
 	""" Gets the absolute path of a file inside the output directory relative to the working directory. """
+	if subdirectory:
+		short_file_path = os.path.join(subdirectory, short_file_path)
 	path = os.path.join(GLOBAL_CONFIG['output_directory_path'], short_file_path) 
 	return os.path.abspath(path)
 

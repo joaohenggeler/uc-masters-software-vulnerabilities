@@ -29,7 +29,6 @@
 	"scrape_all_branches": false,
 
 	"affected_files_csv_write_frequency": 10,
-	"neutral_files_csv_write_frequency": 50,
 	"neutral_after_author_date": "<YYYY-MM-DD>",
 	"neutral_before_author_date": "<YYYY-MM-DD>",
 
@@ -44,8 +43,6 @@
 
 	"extra_time_tables_to_import": ["files", "functions", "class"],
 
-	"github_token": "<Replace with valid token>",
-	"github_data_repository": "<Replace with path>",
 	"data_repository_path": "<Replace with path>",
 
 	"allowed_code_units":
