@@ -1,0 +1,17 @@
+[2021-11-09 18:53:01] [INFO] [common.py:76] <module>: Initializing the common module.
+[2021-11-09 18:53:01] [INFO] [common.py:136] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-11-09 18:57:31] [INFO] [merge_raw_datasets.py:46] <module>: The multiclass label ratio is: {0: 0.9882739197337803, 4: 0.006317712112492806, 2: 0.0022960348537543473, 1: 0.0013886456326469337, 3: 0.0011075543573448095, 5: 0.0004144043836164836, 6: 7.388908349388246e-05, 7: 7.310718843045512e-05, 8: 4.769559886906698e-05, 9: 7.037055570845948e-06}
+[2021-11-09 19:01:48] [INFO] [merge_raw_datasets.py:60] <module>: The vulnerable multiclass label count is: {4: 16160, 2: 5873, 1: 3552, 3: 2833, 5: 1060, 6: 189, 7: 187, 8: 122, 9: 18}
+[2021-11-09 19:01:48] [INFO] [merge_raw_datasets.py:61] <module>: The vulnerable multiclass label ratio is: {4: 0.5387744215509769, 2: 0.1958058278322331, 1: 0.1184236847369474, 3: 0.09445222377808896, 5: 0.03534040141361606, 6: 0.00630126025205041, 7: 0.00623458024938321, 8: 0.004067480162699207, 9: 0.000600120024004801}
+[2021-11-09 19:01:48] [INFO] [merge_raw_datasets.py:72] <module>: Grouped the label 3 since its ratio 0.09445222377808896 falls under the threshold 0.1.
+[2021-11-09 19:01:48] [INFO] [merge_raw_datasets.py:72] <module>: Grouped the label 5 since its ratio 0.03534040141361606 falls under the threshold 0.1.
+[2021-11-09 19:01:49] [INFO] [merge_raw_datasets.py:72] <module>: Grouped the label 6 since its ratio 0.00630126025205041 falls under the threshold 0.1.
+[2021-11-09 19:01:49] [INFO] [merge_raw_datasets.py:72] <module>: Grouped the label 7 since its ratio 0.00623458024938321 falls under the threshold 0.1.
+[2021-11-09 19:01:49] [INFO] [merge_raw_datasets.py:72] <module>: Grouped the label 8 since its ratio 0.004067480162699207 falls under the threshold 0.1.
+[2021-11-09 19:01:49] [INFO] [merge_raw_datasets.py:72] <module>: Grouped the label 9 since its ratio 0.000600120024004801 falls under the threshold 0.1.
+[2021-11-09 19:01:49] [INFO] [merge_raw_datasets.py:76] <module>: The grouped multiclass label count is: {0: 581416, 4: 16160, 2: 5873, 14: 4409, 1: 3552}
+[2021-11-09 19:01:49] [INFO] [merge_raw_datasets.py:77] <module>: The grouped multiclass label ratio is: {0: 0.9509429024713367, 4: 0.0264307093439754, 2: 0.009605665592646506, 14: 0.007211200340197249, 1: 0.005809522251844098}
+[2021-11-09 19:03:15] [INFO] [merge_raw_datasets.py:80] <module>: Merged the raw datasets to "/home/admin/estagio-2020-2021/uc-masters-software-vulnerabilities/scripts/output/final/raw-dataset-merged-file-20211020220742.csv" successfully.
+[2021-11-09 19:03:15] [INFO] [merge_raw_datasets.py:20] <module>: Skipping the function raw dataset at the user's request.
+[2021-11-09 19:03:15] [INFO] [merge_raw_datasets.py:20] <module>: Skipping the class raw dataset at the user's request.
+[2021-11-09 19:03:15] [INFO] [merge_raw_datasets.py:84] <module>: Finished running.

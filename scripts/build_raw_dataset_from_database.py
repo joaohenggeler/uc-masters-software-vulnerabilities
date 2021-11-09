@@ -29,9 +29,18 @@
 	shell > service mysql restart
 
 	5. Change the permissions of the output directory so that the user "mysql" is allowed to write to that location. For example:
-	shell > chmod -R 777 "/path/to/file/directory"
-	ou
-	shell > chown -R mysql:mysql "/path/to/file/directory"
+	
+	- Single directory:
+	shell > chmod 777 "/path/to/file/directory"
+	or
+	shell > chown mysql:mysql "/path/to/file/directory"
+
+	OR
+
+	- Subdirectories too:
+	shell > chmod 777 $(find "/path/to/file/directory" -type d)
+	or
+	shell > chown mysql:mysql $(find "/path/to/file/directory" -type d)
 
 	6. Add an exception for the MySQL Daemon in AppArmor by changing the configuration file "/etc/apparmor.d/usr.sbin.mysqld":
 	>> /usr/sbin/mysqld {

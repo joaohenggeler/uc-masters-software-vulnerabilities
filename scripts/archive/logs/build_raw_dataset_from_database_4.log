@@ -1,0 +1,21 @@
+[2021-10-20 04:34:57] [INFO] [common.py:76] <module>: Initializing the common module.
+[2021-10-20 04:34:57] [INFO] [common.py:136] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-10-20 04:34:58] [INFO] [project.py:33] <module>: Loading libclang from "/usr/lib/x86_64-linux-gnu/libclang-10.so.1".
+[2021-10-20 04:34:58] [INFO] [project.py:42] <module>: Loaded libclang successfully.
+[2021-10-20 04:34:58] [INFO] [database.py:34] __init__: Connecting to the database with the following configurations: {'host': '127.0.0.1', 'port': '3306', 'user': 'admin', 'password': '', 'database': 'software', 'sql_mode': 'ONLY_FULL_GROUP_BY,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'}
+[2021-10-20 04:34:58] [INFO] [database.py:42] __init__: Autocommit is False.
+[2021-10-20 04:34:59] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Glibc" (glibc).
+[2021-10-20 04:34:59] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Apache HTTP Server" (apache).
+[2021-10-20 04:34:59] [INFO] [project.py:126] get_project_list_from_config: Loading the project "Xen" (xen) with the following configurations: {'short_name': 'xen', 'database_id': 3, 'database_name': 'xen', 'github_data_name': 'xen', 'vendor_id': 6276, 'product_id': None, 'url_pattern': 'xen', 'master_branch': 'master', 'language': 'c', 'include_directory_path': 'xen/include', 'repository_path': '/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/xen', 'output_directory_path': 'output/final', 'scrape_all_branches': False}
+[2021-10-20 04:34:59] [ERROR] [project.py:90] __init__: Failed to get the repository for the project "Xen"" with the error: NoSuchPathError('/home/admin/estagio-2020-2021/estagio-software-vulnerabilities-2020-2021/repositories/xen')
+[2021-10-20 04:34:59] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Linux Kernel" (kernel).
+[2021-10-20 04:34:59] [INFO] [project.py:119] get_project_list_from_config: Ignoring the project "Mozilla" (mozilla).
+[2021-10-20 04:34:59] [INFO] [sats.py:105] get_sat_info_from_config: Ignoring the SAT "Cppcheck".
+[2021-10-20 04:34:59] [INFO] [build_raw_dataset_from_database.py:88] build_raw_dataset_from_database: Building the file dataset.
+[2021-10-20 08:26:42] [INFO] [build_raw_dataset_from_database.py:112] build_raw_dataset_from_database: Changing the raw dataset's file permissions and owner to "admin".
+[2021-10-20 08:26:53] [INFO] [build_raw_dataset_from_database.py:145] build_raw_dataset_from_database: Built the raw dataset to "/home/admin/estagio-2020-2021/uc-masters-software-vulnerabilities/scripts/output/final/raw-dataset-file-20211103043457.csv" successfully.
+[2021-10-20 08:26:53] [INFO] [build_raw_dataset_from_database.py:85] build_raw_dataset_from_database: Skipping the function metrics at the user's request
+[2021-10-20 08:26:53] [INFO] [build_raw_dataset_from_database.py:88] build_raw_dataset_from_database: Building the class dataset.
+[2021-10-20 11:04:22] [INFO] [build_raw_dataset_from_database.py:112] build_raw_dataset_from_database: Changing the raw dataset's file permissions and owner to "admin".
+[2021-10-20 11:04:29] [INFO] [build_raw_dataset_from_database.py:145] build_raw_dataset_from_database: Built the raw dataset to "/home/admin/estagio-2020-2021/uc-masters-software-vulnerabilities/scripts/output/final/raw-dataset-class-20211103043457.csv" successfully.
+[2021-10-20 11:04:29] [INFO] [build_raw_dataset_from_database.py:154] <module>: Finished running.

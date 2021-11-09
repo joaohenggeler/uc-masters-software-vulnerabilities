@@ -6,6 +6,7 @@
 """
 
 import glob
+import itertools
 import json
 import locale
 import logging
@@ -137,8 +138,10 @@ if GLOBAL_CONFIG['recursion_limit'] is not None:
 
 ####################################################################################################
 
-def get_path_in_output_directory(short_file_path: str) -> str:
+def get_path_in_output_directory(short_file_path: str, subdirectory: Optional[str] = None) -> str:
 	""" Gets the absolute path of a file inside the output directory relative to the working directory. """
+	if subdirectory:
+		short_file_path = os.path.join(subdirectory, short_file_path)
 	path = os.path.join(GLOBAL_CONFIG['output_directory_path'], short_file_path) 
 	return os.path.abspath(path)
 
@@ -149,6 +152,13 @@ def find_output_csv_files(prefix: str) -> list:
 	csv_file_list = glob.glob(csv_path)
 	csv_file_list = sorted(csv_file_list)
 	return csv_file_list
+
+def create_output_subdirectory(subdirectory: str) -> str:
+	""" Creates a subdirectory in the output directory. """
+	path = os.path.join(GLOBAL_CONFIG['output_directory_path'], subdirectory)
+	path = os.path.abspath(path)
+	os.makedirs(path, exist_ok=True)
+	return path
 
 def format_unix_timestamp(timestamp: str) -> Optional[str]:
 	""" Formats a Unix timestamp using the format "YYYY-MM-DD hh:mm:ss". """
@@ -291,6 +301,12 @@ def get_list_index_or_default(my_list: list, value: Any, default: Any = None) ->
 def remove_list_duplicates(my_list: list) -> list:
 	""" Removes any duplicated values from a list. """
 	return list(dict.fromkeys(my_list))
+
+def dict_list_cartesian_product(**kwargs) -> list:
+	""" Given a dictionary whose values are lists, creates a list with every possible dictionary combination and regular unpacked values.
+	Adapted from the Propheticus function in propheticus.shared.Utils.cartesianProductDictionaryLists. """
+	keys, values = zip(*kwargs.items())
+	return [dict(zip(keys, prod)) for prod in itertools.product(*values)]
 
 ####################################################################################################
 

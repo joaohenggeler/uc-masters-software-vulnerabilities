@@ -29,7 +29,6 @@
 	"scrape_all_branches": false,
 
 	"affected_files_csv_write_frequency": 10,
-	"neutral_files_csv_write_frequency": 50,
 	"neutral_after_author_date": "<YYYY-MM-DD>",
 	"neutral_before_author_date": "<YYYY-MM-DD>",
 
@@ -44,8 +43,6 @@
 
 	"extra_time_tables_to_import": ["files", "functions", "class"],
 
-	"github_token": "<Replace with valid token>",
-	"github_data_repository": "<Replace with path>",
 	"data_repository_path": "<Replace with path>",
 
 	"allowed_code_units":
@@ -71,21 +68,123 @@
 
 	"propheticus":
 	{
-		"max_thread_count": 4,
+		"max_thread_count": 6,
 		"labels": ["binary_label", "grouped_multiclass_label"],
 
-		"seed_count": 30,
+		"seed_count": 5,
 		"data_split": {"n_splits": 5},
 
-		"dimensionality_reduction": [["variance"], ["correlation"]],
-		"data_balancing": [[], ["RandomUnderSampler"], ["RandomOverSampler"]],
+		"dimensionality_reduction": [["variance"], ["variance", "correlation"]],
+		"data_balancing": [[], ["RandomUnderSampler"], ["RandomOverSampler"], ["RandomUnderSampler", "RandomOverSampler"]],
 		
 		"classification_algorithms":
 		{
-			"random_forests": [null],
-			"bagging": [null],
-			"xgboost": [null]
+			"random_forests":
+			[
+				null,
+				{
+					"n_estimators": [100, 200],
+					"criterion": ["gini"],
+					"min_samples_split": [0.001, 2],
+					"min_samples_leaf": [0.001, 1],
+					"max_features": [null],
+					"bootstrap": [true]
+				}
+			],
+			
+			"bagging":
+			[
+				null,
+				{
+					"n_estimators": [100, 200],
+					"max_features": [0.1, 0.55, 1.0],
+					"bootstrap": [true]
+				}
+			],
+			
+			"xgboost":
+			[
+				null,
+				{
+					"n_estimators": [100, 300],
+					"learning_rate": [0.1, 0.3],
+					"gamma": [0],
+					"subsample": [1],
+					"max_depth": [10, 30],
+					"min_samples_split": [2, 5],
+					"min_samples_leaf": [1, 4]
+				}
+			]
 		}
+	},
+
+	"temporal_window":
+	{
+		"num_runs": 30,
+		"data_split": {"begin_test_year": 2013, "window_size": [null, 5, 10]},
+
+		"default_algorithm_parameters":
+		{
+			"random_forests": {"n_jobs": -1},
+			"bagging": {"n_jobs": -1}
+		},
+
+		"configurations":
+		[
+			{
+				"name": "Best Precision (Binary) - Default", "target_label": "binary_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": ["RandomUnderSampler"],
+				"classification_algorithm": "random_forests", "algorithm_parameters": {"bootstrap": true, "criterion": "gini", "max_features": "auto", "min_samples_leaf": 1, "min_samples_split": 2, "n_estimators": 100}
+			},
+					
+			{
+				"name": "Best Recall (Binary)", "target_label": "binary_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": [], 
+				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 0.55, "n_estimators": 200}
+			},
+			
+			{
+				"name": "Best F-score (Binary) 1 of 2", "target_label": "binary_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": [], 
+				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 1.0, "n_estimators": 100}
+			},
+
+			{
+				"name": "Best F-score (Binary) 2 of 2 - Default", "target_label": "binary_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": [], 
+				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 1.0, "n_estimators": 10}
+			},
+
+			{
+				"name": "Best Precision (Multiclass) - Default", "target_label": "grouped_multiclass_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": ["RandomUnderSampler"], 
+				"classification_algorithm": "random_forests", "algorithm_parameters": {"bootstrap": true, "criterion": "gini", "max_features": "auto", "min_samples_leaf": 1, "min_samples_split": 2, "n_estimators": 100}
+			},
+			
+			{
+				"name": "Best Recall (Multiclass) 1 of 2", "target_label": "grouped_multiclass_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": [],
+				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 0.55, "n_estimators": 100}
+			},
+
+			{
+				"name": "Best Recall (Multiclass) 2 of 2", "target_label": "grouped_multiclass_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": [],
+				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 0.55, "n_estimators": 200}
+			},
+			
+			{
+				"name": "Best F-score (Multiclass) 1 of 2", "target_label": "grouped_multiclass_label",
+				"dimensionality_reduction": ["variance"],"data_balancing": [],
+				"classification_algorithm": "random_forests", "algorithm_parameters": {"bootstrap": true, "criterion": "gini", "max_features": null, "min_samples_leaf": 1, "min_samples_split": 2, "n_estimators": 200}
+			},
+
+			{
+				"name": "Best F-score (Multiclass) 2 of 2", "target_label": "grouped_multiclass_label",
+				"dimensionality_reduction": ["variance"],"data_balancing": [],
+				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 1.0, "n_estimators": 200}
+			}
+		]
 	},
 
 	"projects":
