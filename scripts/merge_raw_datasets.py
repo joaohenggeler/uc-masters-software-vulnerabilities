@@ -26,7 +26,7 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 		log.warning(f'Could not find any {code_unit} datasets.')
 		continue
 
-	output_csv_path = replace_in_filename(dataset_file_list[0], 'raw-dataset', 'raw-dataset-merged')
+	output_csv_path = replace_in_filename(dataset_file_list[0], 'raw-dataset', 'raw-dataset-merged', remove_extra_extensions=True)
 	
 	# So we don't accidentally merge the same datasets twice.
 	if not os.path.isfile(output_csv_path):
