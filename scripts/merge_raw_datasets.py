@@ -21,15 +21,15 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 		continue
 
 	dataset_file_list = find_output_csv_files(f'raw-dataset-{code_unit}')
-
-	if not dataset_file_list:
-		log.warning(f'Could not find any {code_unit} datasets.')
-		continue
-
 	output_csv_path = replace_in_filename(dataset_file_list[0], 'raw-dataset', 'raw-dataset-merged', remove_extra_extensions=True)
 	
 	# So we don't accidentally merge the same datasets twice.
 	if not os.path.isfile(output_csv_path):
+		
+		if not dataset_file_list:
+			log.warning(f'Could not find any {code_unit} datasets to merge.')
+			continue
+
 		for i, input_csv_path in enumerate(dataset_file_list):
 			log.info(f'Merging the raw {code_unit} datasets using the information in "{input_csv_path}".')
 			append_file_to_csv(input_csv_path, output_csv_path)
