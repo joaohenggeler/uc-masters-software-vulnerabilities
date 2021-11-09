@@ -22,7 +22,9 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 
 	dataset_file_list = find_output_csv_files(f'raw-dataset-{code_unit}')
 	output_csv_path = replace_in_filename(dataset_file_list[0], 'raw-dataset', 'raw-dataset-merged', remove_extra_extensions=True)
-	
+	_, output_csv_path = output_csv_path.rsplit('.', 1)
+	output_csv_path += '.csv'
+
 	# So we don't accidentally merge the same datasets twice.
 	if not os.path.isfile(output_csv_path):
 		
