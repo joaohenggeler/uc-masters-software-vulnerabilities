@@ -48,7 +48,7 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 	is_neutral = dataset['multiclass_label'] == 0
 	neutral_dataset = dataset[is_neutral]
 	neutral_samples_to_remove = neutral_dataset.sample(frac=GLOBAL_CONFIG['dataset_neutral_sample_removal_ratio'])
-	dataset = dataset.drop(neutral_samples_to_remove.index)
+	dataset.drop(neutral_samples_to_remove.index, inplace=True)
 
 	# Group vulnerable categories under a certain threshold.
 	dataset['grouped_multiclass_label'] = dataset['multiclass_label']
