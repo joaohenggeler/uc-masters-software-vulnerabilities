@@ -6,6 +6,8 @@
 	Before running this script, the raw datasets must be created using "build_raw_dataset_from_database.py".
 """
 
+import os
+
 import pandas as pd # type: ignore
 
 from modules.common import log, GLOBAL_CONFIG, append_file_to_csv, delete_file, find_output_csv_files, replace_in_filename
@@ -25,12 +27,12 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 		continue
 
 	output_csv_path = replace_in_filename(dataset_file_list[0], 'raw-dataset', 'raw-dataset-merged')
+	
 	# So we don't accidentally merge the same datasets twice.
-	delete_file(output_csv_path)
-
-	for i, input_csv_path in enumerate(dataset_file_list):
-		log.info(f'Merging the raw {code_unit} datasets using the information in "{input_csv_path}".')
-		append_file_to_csv(input_csv_path, output_csv_path)
+	if not os.path.isfile(output_csv_path):
+		for i, input_csv_path in enumerate(dataset_file_list):
+			log.info(f'Merging the raw {code_unit} datasets using the information in "{input_csv_path}".')
+			append_file_to_csv(input_csv_path, output_csv_path)
 		
 	dataset = pd.read_csv(output_csv_path, dtype=str)
 	dataset['multiclass_label'] = pd.to_numeric(dataset['multiclass_label'])
