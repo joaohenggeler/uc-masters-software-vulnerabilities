@@ -1,0 +1,19 @@
+[2021-11-08 06:35:44] [INFO] [common.py:76] <module>: Initializing the common module.
+[2021-11-08 06:35:44] [INFO] [common.py:136] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2021-11-08 06:35:44] [INFO] [merge_raw_datasets.py:18] <module>: Skipping the file raw dataset at the user's request.
+[2021-11-08 06:35:44] [INFO] [merge_raw_datasets.py:18] <module>: Skipping the function raw dataset at the user's request.
+[2021-11-08 06:35:44] [INFO] [merge_raw_datasets.py:32] <module>: Merging the raw class datasets using the information in "/home/admin/estagio-2020-2021/uc-masters-software-vulnerabilities/scripts/output/final/raw-dataset-class-1-mozilla-20211021162840.csv".
+[2021-11-08 06:35:53] [INFO] [merge_raw_datasets.py:32] <module>: Merging the raw class datasets using the information in "/home/admin/estagio-2020-2021/uc-masters-software-vulnerabilities/scripts/output/final/raw-dataset-class-2-kernel-20211022013122.csv".
+[2021-11-08 06:35:54] [INFO] [merge_raw_datasets.py:32] <module>: Merging the raw class datasets using the information in "/home/admin/estagio-2020-2021/uc-masters-software-vulnerabilities/scripts/output/final/raw-dataset-class-3-xen-20211020043457.csv".
+[2021-11-08 06:35:59] [INFO] [merge_raw_datasets.py:40] <module>: The multiclass label ratio is: {0: 0.9771108115914123, 1: 0.01160103976124001, 2: 0.006402233561182247, 3: 0.0021421007028015787, 5: 0.001660729758351786, 4: 0.0006498507750072206, 6: 0.0003369596611148551, 7: 9.62741888899586e-05}
+[2021-11-08 06:36:00] [INFO] [merge_raw_datasets.py:57] <module>: The vulnerable multiclass label count is: {1: 482, 2: 266, 3: 89, 5: 69, 4: 27, 6: 14, 7: 4}
+[2021-11-08 06:36:00] [INFO] [merge_raw_datasets.py:58] <module>: The vulnerable multiclass label ratio is: {1: 0.5068349106203995, 2: 0.2797055730809674, 3: 0.0935856992639327, 5: 0.07255520504731862, 4: 0.028391167192429023, 6: 0.014721345951629864, 7: 0.004206098843322818}
+[2021-11-08 06:36:00] [INFO] [merge_raw_datasets.py:69] <module>: Grouped the label 3 since its ratio 0.0935856992639327 falls under the threshold 0.1.
+[2021-11-08 06:36:00] [INFO] [merge_raw_datasets.py:69] <module>: Grouped the label 5 since its ratio 0.07255520504731862 falls under the threshold 0.1.
+[2021-11-08 06:36:00] [INFO] [merge_raw_datasets.py:69] <module>: Grouped the label 4 since its ratio 0.028391167192429023 falls under the threshold 0.1.
+[2021-11-08 06:36:00] [INFO] [merge_raw_datasets.py:69] <module>: Grouped the label 6 since its ratio 0.014721345951629864 falls under the threshold 0.1.
+[2021-11-08 06:36:00] [INFO] [merge_raw_datasets.py:69] <module>: Grouped the label 7 since its ratio 0.004206098843322818 falls under the threshold 0.1.
+[2021-11-08 06:36:00] [INFO] [merge_raw_datasets.py:73] <module>: The grouped multiclass label count is: {0: 18269, 1: 482, 2: 266, 14: 203}
+[2021-11-08 06:36:00] [INFO] [merge_raw_datasets.py:74] <module>: The grouped multiclass label ratio is: {0: 0.9505202913631634, 1: 0.025078043704474504, 2: 0.013839750260145682, 14: 0.010561914672216441}
+[2021-11-08 06:36:03] [INFO] [merge_raw_datasets.py:77] <module>: Merged the raw datasets to "/home/admin/estagio-2020-2021/uc-masters-software-vulnerabilities/scripts/output/final/raw-dataset-merged-class-1-mozilla-20211021162840.csv" successfully.
+[2021-11-08 06:36:03] [INFO] [merge_raw_datasets.py:81] <module>: Finished running.
