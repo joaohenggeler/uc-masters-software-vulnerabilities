@@ -25,6 +25,8 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 	_, output_csv_path = output_csv_path.rsplit('.', 1)
 	output_csv_path += '.csv'
 
+	print(output_csv_path)
+
 	# So we don't accidentally merge the same datasets twice.
 	if not os.path.isfile(output_csv_path):
 		
