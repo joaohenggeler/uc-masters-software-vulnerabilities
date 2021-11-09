@@ -46,8 +46,7 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 	log.info(f'The multiclass label ratio is: {label_ratio}')
 
 	is_neutral = dataset['multiclass_label'] == 0
-	neutral_dataset = dataset[is_neutral]
-	neutral_samples_to_remove = neutral_dataset.sample(frac=GLOBAL_CONFIG['dataset_neutral_sample_removal_ratio'])
+	neutral_samples_to_remove = dataset[is_neutral].sample(frac=GLOBAL_CONFIG['dataset_neutral_sample_removal_ratio'])
 	dataset.drop(neutral_samples_to_remove.index, inplace=True)
 
 	# Group vulnerable categories under a certain threshold.
@@ -56,10 +55,8 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 	grouped_class_label = len(GLOBAL_CONFIG['vulnerability_categories']) + 2
 
 	is_vulnerable = dataset['multiclass_label'] >= 1
-	vulnerable_dataset = dataset[is_vulnerable]
-
-	vulnerable_label_count = vulnerable_dataset['multiclass_label'].value_counts()
-	vulnerable_label_ratio = vulnerable_dataset['multiclass_label'].value_counts(normalize=True)
+	vulnerable_label_count = dataset[is_vulnerable]['multiclass_label'].value_counts()
+	vulnerable_label_ratio = dataset[is_vulnerable]['multiclass_label'].value_counts(normalize=True)
 	log.info(f'The vulnerable multiclass label count is: {vulnerable_label_count.to_dict()}')
 	log.info(f'The vulnerable multiclass label ratio is: {vulnerable_label_ratio.to_dict()}')
 
