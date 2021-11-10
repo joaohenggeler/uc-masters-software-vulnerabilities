@@ -11,7 +11,7 @@ Software vulnerabilities can have serious consequences when exploited, such as u
 * Implement an automated mechanism capable of collecting vulnerability metadata from the CVE Details website, generating software metrics and security alerts for each affected file, and building datasets capable of being fed to machine learning algorithms.
 * Build datasets of three vulnerable C/C++ code unit types: files, functions, and classes.
 * Validate the function dataset by exploring various machine learning configurations and investigating whether it is possible to detect vulnerable function code using static data from previous years.
-* 
+
 ## Authors
 
 * João Henggeler Antunes - Student
