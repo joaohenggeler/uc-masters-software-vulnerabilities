@@ -94,67 +94,67 @@ def build_raw_dataset_from_database() -> None:
 				log.info(f'Skipping the {unit_info.Kind} metrics at the user\'s request')
 				continue
 
-			log.info(f'Building the {unit_info.Kind} dataset.')
+			for project in project_list:
 
-			query_list = [f'SELECT * FROM {unit_info.MetricsTablePrefix}{project.database_id}' for project in project_list]
-			unit_metrics_table = '(' + ' UNION ALL '.join(query_list) + ')'
-			
-			output_csv_path = get_path_in_output_directory('raw-dataset-' + unit_info.Kind + f'-{CURRENT_TIMESTAMP}.csv')
-			escaped_output_csv_path = output_csv_path.replace('\\', '\\\\')
-			
-			filter_ineligible_samples = GLOBAL_CONFIG['dataset_filter_samples_ineligible_for_alerts']
-			filter_commits_without_alerts = GLOBAL_CONFIG['dataset_filter_commits_without_alerts']
-			allowed_sat_name_list = ','.join([sat.database_name for sat in sat_list])
-
-			success, _ = db.call_procedure(	unit_info.ProcedureName,
-											unit_metrics_table, escaped_output_csv_path,
-											filter_ineligible_samples, filter_commits_without_alerts,
-											allowed_sat_name_list)
-
-			if success:
-
-				# @Hack: Change the resulting CSV file's permissions and owner since it would
-				# otherwise be associated with the user running the MySQL Daemon process (mysqld).
-				if sys.platform != 'win32':
-					username = GLOBAL_CONFIG['account_username']
-					password = GLOBAL_CONFIG['account_password']
-					log.info(f'Changing the raw dataset\'s file permissions and owner to "{username}".')
-					os.system(f'echo "{password}" | sudo -S chmod 0664 "{output_csv_path}"')
-					os.system(f'echo "{password}" | sudo -S chown "{username}:{username}" "{output_csv_path}"')
-
-				# Add some class label columns to the dataset. These include:
-				# 1. Binary - neutral (0) or vulnerable (1). In this case, vulnerable samples belong to any category.
-				# 2. Multiclass - neutral (0), vulnerable without a category (1), or vulnerability with a specific category (2 to N).
-				# 3. Grouped Multiclass - same as the multiclass label, but any vulnerability category (2 to N) is set to a new
-				# label if the number of samples in each category falls below a given threshold.
+				unit_metrics_table = f'{unit_info.MetricsTablePrefix}{project.database_id}'
+				log.info(f'Building the {project} {unit_info.Kind} dataset using the table {unit_metrics_table}.')
 				
-				vulnerability_categories = list(GLOBAL_CONFIG['vulnerability_categories'].keys())
+				output_csv_path = get_path_in_output_directory(f'raw-dataset-{unit_info.Kind}-{project.database_id}-{project.short_name}-{CURRENT_TIMESTAMP}.csv')
+				escaped_output_csv_path = output_csv_path.replace('\\', '\\\\')
+				
+				filter_ineligible_samples = GLOBAL_CONFIG['dataset_filter_samples_ineligible_for_alerts']
+				filter_commits_without_alerts = GLOBAL_CONFIG['dataset_filter_commits_without_alerts']
+				allowed_sat_name_list = ','.join([sat.database_name for sat in sat_list])
 
-				def assign_label(row: pd.Series) -> int:
-					""" Assigns each sample a label given the rules above. """
-					label = int(row['Affected'])
+				success, _ = db.call_procedure(	unit_info.ProcedureName,
+												unit_metrics_table, escaped_output_csv_path,
+												filter_ineligible_samples, filter_commits_without_alerts,
+												allowed_sat_name_list)
 
-					if label == 1:
-						category_index = get_list_index_or_default(vulnerability_categories, row['VULNERABILITY_CATEGORY'])
-						if category_index is not None:
-							label = category_index + 2
+				if success:
 
-					return label
+					# @Hack: Change the resulting CSV file's permissions and owner since it would
+					# otherwise be associated with the user running the MySQL Daemon process (mysqld).
+					if sys.platform != 'win32':
+						username = GLOBAL_CONFIG['account_username']
+						password = GLOBAL_CONFIG['account_password']
+						log.info(f'Changing the raw dataset\'s file permissions and owner to "{username}".')
+						os.system(f'echo "{password}" | sudo -S chmod 0664 "{output_csv_path}"')
+						os.system(f'echo "{password}" | sudo -S chown "{username}:{username}" "{output_csv_path}"')
 
-				dataset = pd.read_csv(output_csv_path, dtype=str)
+					# Add some class label columns to the dataset. These include:
+					# 1. Binary - neutral (0) or vulnerable (1). In this case, vulnerable samples belong to any category.
+					# 2. Multiclass - neutral (0), vulnerable without a category (1), or vulnerability with a specific category (2 to N).
+					# 3. Grouped Multiclass - same as the multiclass label, but any vulnerability category (2 to N) is set to a new
+					# label if the number of samples in each category falls below a given threshold.
+					
+					vulnerability_categories = list(GLOBAL_CONFIG['vulnerability_categories'].keys())
 
-				dataset['multiclass_label'] = dataset.apply(assign_label, axis=1)
+					def assign_label(row: pd.Series) -> int:
+						""" Assigns each sample a label given the rules above. """
+						label = int(row['Affected'])
 
-				dataset['binary_label'] = dataset['multiclass_label']
-				is_category = dataset['multiclass_label'] > 1
-				dataset.loc[is_category, 'binary_label'] = 1
+						if label == 1:
+							category_index = get_list_index_or_default(vulnerability_categories, row['VULNERABILITY_CATEGORY'])
+							if category_index is not None:
+								label = category_index + 2
 
-				# Overwrite the dataset on disk.
-				dataset.to_csv(output_csv_path, index=False)
-				log.info(f'Built the raw dataset to "{output_csv_path}" successfully.')
+						return label
 
-			else:
-				log.error(f'Failed to build the raw dataset to "{output_csv_path}".')
+					dataset = pd.read_csv(output_csv_path, dtype=str)
+
+					dataset['multiclass_label'] = dataset.apply(assign_label, axis=1)
+
+					dataset['binary_label'] = dataset['multiclass_label']
+					is_category = dataset['multiclass_label'] > 1
+					dataset.loc[is_category, 'binary_label'] = 1
+
+					# Overwrite the dataset on disk.
+					dataset.to_csv(output_csv_path, index=False)
+					log.info(f'Built the raw dataset to "{output_csv_path}" successfully.')
+
+				else:
+					log.error(f'Failed to build the raw dataset to "{output_csv_path}".')
 
 ##################################################
 
