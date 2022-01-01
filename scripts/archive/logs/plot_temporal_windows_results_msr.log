@@ -1,0 +1,14 @@
+[2022-01-01 17:41:17] [INFO] [common.py:76] <module>: Initializing the common module.
+[2022-01-01 17:41:17] [DEBUG] [common.py:132] <module>: Debug mode is enabled with the following options: {'enabled': True, 'min_hub_pages': 6, 'hub_page_step': 5, 'max_cves_per_hub_page': 5, 'use_random_sampling': True, 'verify_different_unit_names': True, 'different_unit_names_ratio_limit': 90}
+[2022-01-01 17:41:17] [INFO] [common.py:136] <module>: Changing the recursion limit from 1000 to 1000000 at the user's request.
+[2022-01-01 17:41:17] [INFO] [plot_temporal_windows_results.py:24] <module>: Plotting figures using the results in "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\temporal-validation-function-20211008025615.csv".
+[2022-01-01 17:41:17] [INFO] [plot_temporal_windows_results.py:113] <module>: Saved the plot for configuration 1 to "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\validation\c1-tw.png".
+[2022-01-01 17:41:18] [INFO] [plot_temporal_windows_results.py:113] <module>: Saved the plot for configuration 2 to "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\validation\c2-tw.png".
+[2022-01-01 17:41:18] [INFO] [plot_temporal_windows_results.py:113] <module>: Saved the plot for configuration 3 to "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\validation\c3-tw.png".
+[2022-01-01 17:41:18] [INFO] [plot_temporal_windows_results.py:113] <module>: Saved the plot for configuration 4 to "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\validation\c4-tw.png".
+[2022-01-01 17:41:18] [INFO] [plot_temporal_windows_results.py:113] <module>: Saved the plot for configuration 5 to "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\validation\c5-tw.png".
+[2022-01-01 17:41:18] [INFO] [plot_temporal_windows_results.py:113] <module>: Saved the plot for configuration 6 to "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\validation\c6-tw.png".
+[2022-01-01 17:41:18] [INFO] [plot_temporal_windows_results.py:113] <module>: Saved the plot for configuration 7 to "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\validation\c7-tw.png".
+[2022-01-01 17:41:19] [INFO] [plot_temporal_windows_results.py:113] <module>: Saved the plot for configuration 8 to "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\validation\c8-tw.png".
+[2022-01-01 17:41:19] [INFO] [plot_temporal_windows_results.py:113] <module>: Saved the plot for configuration 9 to "C:\Work\GitHub\uc-masters-software-vulnerabilities\scripts\output\final\validation\c9-tw.png".
+[2022-01-01 17:41:19] [INFO] [plot_temporal_windows_results.py:115] <module>: Finished running.

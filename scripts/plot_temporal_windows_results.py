@@ -24,7 +24,7 @@ for input_csv_path in find_output_csv_files('temporal-validation'):
 	log.info(f'Plotting figures using the results in "{input_csv_path}".')
 
 	results = pd.read_csv(input_csv_path)
-	results = results.sort_values(['Index', 'Window Size', 'Testing Year'])
+	results.sort_values(['Index', 'Window Size', 'Testing Year'], inplace=True)
 
 	grouped_configs = results.groupby(by=['Index'])
 	for index, config_df in grouped_configs:

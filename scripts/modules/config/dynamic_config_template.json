@@ -121,7 +121,7 @@
 	"temporal_window":
 	{
 		"num_runs": 30,
-		"data_split": {"begin_test_year": 2013, "window_size": [null, 5, 10]},
+		"data_split": {"begin_test_year": 2013, "window_size": [null, 5, 10], "variable_window_test_ratio": 0.2},
 
 		"default_algorithm_parameters":
 		{
