@@ -6,9 +6,9 @@
 	For example: (2008-2012, 2013), (2009-2013, 2014), ..., (2014-2018, 2019) for a window size of 5.
 
 	Only the following machine learning techniques are supported:
-	- Classification Algorithms: Random Forests, Bagging.
+	- Classification Algorithms: Random Forests, Bagging, Extreme Gradient Boosting (XGBoost).
 	- Dimensionality Reduction: Variance.
-	- Data Balancing: RandomUnderSampler.
+	- Data Balancing: RandomUnderSampler, RandomOverSampler.
 
 	Before running this script, the raw datasets must be merged using "merge_raw_datasets.py" and the best classifier
 	parameter configurations must be determined using Propheticus.
@@ -23,9 +23,11 @@ import matplotlib.pyplot as plt # type: ignore
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 from imblearn.under_sampling import RandomUnderSampler # type: ignore
+from imblearn.over_sampling import RandomOverSampler # type: ignore
 from sklearn import __version__ as sklearn_version, metrics # type: ignore
 from sklearn.ensemble import BaggingClassifier, RandomForestClassifier # type: ignore
 from sklearn.feature_selection import VarianceThreshold # type: ignore
+from xgboost import XGBClassifier
 
 from modules.common import log, GLOBAL_CONFIG, create_output_subdirectory, find_output_csv_files, replace_in_filename, serialize_json_container
 
@@ -87,11 +89,13 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 
 		year_list = sorted(dataset['VULNERABILITY_YEAR'].unique().tolist())
 		
+		average_metric_list = [f'{metric.title()} ({average.title()})' for metric in ['precision', 'recall', 'f1-score'] for average in ['micro avg', 'macro avg', 'weighted avg']]
+
 		results = pd.DataFrame(columns=['Experiment', 'Window Size', 'Training Years', 'Testing Year',
 										'Training Samples', 'Training Percentage', 'Testing Samples', 'Testing Percentage',
 										'Index', 'Name', 'Runs', 'Algorithm', 'Target Label',
 										'Data Balancing', 'Algorithm Parameters', 'Dimensionality Reduction',
-										'Weighted Avg - Precision', 'Weighted Avg - Recall', 'Weighted Avg - F-Score'])
+										'Confusion Matrix', 'Accuracy'] + average_metric_list)
 
 		for window_size in ML_PARAMS['data_split']['window_size']:
 
@@ -155,7 +159,9 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 					algorithm_parameters = configuration['algorithm_parameters']
 
 					default_parameters = default_algorithm_parameters.get(classification_algorithm, {})
-					algorithm_parameters.update(default_parameters)
+					for key, value in default_parameters.items():
+						if key not in algorithm_parameters:
+							algorithm_parameters[key] = value
 
 					# This identifier should include the test ratio since the same window ranges can use different train/test splits.
 					experiment_params = (dataset_hash, train_years, test_year, num_test, f'{test_ratio:.4f}', target_label, dimensionality_reduction, data_balancing, classification_algorithm, algorithm_parameters)
@@ -174,14 +180,9 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 
 					real_label_values = sorted(dataset[target_label].unique().tolist())
 					real_label_names = [label_names[label] for label in real_label_values]
-
 					excluded_column_list = ['Description', 'COMMIT_DATE', 'VULNERABILITY_YEAR'] + GLOBAL_CONFIG['target_labels']
-					X_train = dataset.loc[is_train, :].drop(columns=excluded_column_list)
-					y_train = dataset.loc[is_train, target_label]
 					
-					X_test = dataset.loc[is_test, :].drop(columns=excluded_column_list)
 					y_test = dataset.loc[is_test, target_label]
-
 					total_y_pred = np.empty(shape=(0, 0), dtype=y_test.dtype)
 					total_y_test = np.empty(shape=(0, 0), dtype=y_test.dtype)
 
@@ -191,6 +192,10 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 
 						log.info(f'Executing run {r+1} of {num_runs} for configuration {c+1}.')
 						print(f'-> Run {r+1} of {num_runs}...')
+
+						X_train = dataset.loc[is_train, :].drop(columns=excluded_column_list)
+						X_test = dataset.loc[is_test, :].drop(columns=excluded_column_list)
+						y_train = dataset.loc[is_train, target_label]
 
 						for method in dimensionality_reduction:
 
@@ -220,11 +225,13 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 						if critical_error:
 							break
 
-						train_label_count = y_train.value_counts().to_dict()
-
 						for method in data_balancing:
 
+							train_label_count = y_train.value_counts().to_dict()
+
 							if method == 'RandomUnderSampler':
+
+								log.info(f'Label count before undersampling: {train_label_count}')
 
 								majority_label = max(train_label_count, key=lambda x: train_label_count[x])
 								second_majority_label = max(train_label_count, key=lambda x: train_label_count[x] if x != majority_label else -1)
@@ -232,9 +239,7 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 
 								# Specified in "propheticus/configs/Sampling.py".
 								UNDERSAMPLING_MAJORITY_TO_MINORITY_RATIO = 1.0
-
-								log.info(f'Label count before undersampling: {train_label_count}')
-
+								# See buildDataBalancingTransformers() in "propheticus/core/DatasetReduction.py".
 								desired_label_count = {}
 								for label, count in train_label_count.items():
 									desired_label_count[label] = int(second_majority_count * UNDERSAMPLING_MAJORITY_TO_MINORITY_RATIO) if label == majority_label else count
@@ -242,6 +247,24 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 								log.info(f'Label count after undersampling: {desired_label_count}')
 								
 								sampler = RandomUnderSampler(sampling_strategy=desired_label_count)
+
+							elif method == 'RandomOverSampler':
+
+								log.info(f'Label count before oversampling: {train_label_count}')
+
+								majority_label = max(train_label_count, key=lambda x: train_label_count[x])
+
+								# Specified in "propheticus/configs/Sampling.py".
+								OVERSAMPLING_RATIO = 3.0
+								# See buildDataBalancingTransformers() in "propheticus/core/DatasetReduction.py".
+								desired_label_count = {}
+								for label, count in train_label_count.items():
+									desired_label_count[label] = int(count * OVERSAMPLING_RATIO) if label != majority_label else count
+
+								log.info(f'Label count after oversampling: {desired_label_count}')
+
+								sampler = RandomOverSampler(sampling_strategy=desired_label_count)
+
 							else:
 								log.critical(f'Skipping configuration due to the unsupported "{method}" sampling technique.')
 								critical_error = True
@@ -252,10 +275,13 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 						if critical_error:
 							break
 
+						# See "propheticus/configs/Classification.py".
 						if classification_algorithm == 'random_forests':
 							classifier = RandomForestClassifier(**algorithm_parameters)
 						elif classification_algorithm == 'bagging':
 							classifier = BaggingClassifier(**algorithm_parameters)
+						elif classification_algorithm == 'xgboost':
+							classifier = XGBClassifier(**algorithm_parameters)
 						else:
 							log.critical(f'Skipping configuration due to the unsupported "{classification_algorithm}" classification algorithm.')
 							break
@@ -271,7 +297,7 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 					if critical_error:
 						continue
 
-					confusion_matrix = metrics.confusion_matrix(total_y_test, total_y_pred)
+					confusion_matrix = metrics.confusion_matrix(total_y_test, total_y_pred, labels=real_label_values)
 					confusion_matrix_display = metrics.ConfusionMatrixDisplay(confusion_matrix, display_labels=real_label_names)
 					confusion_matrix_display.plot()
 					
@@ -283,7 +309,16 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 					
 					figure.savefig(confusion_matrix_file_path)
 
-					report = metrics.classification_report(total_y_test, total_y_pred, output_dict=True)
+					confusion_matrix_dict: dict = {}
+					for i, row_values in enumerate(confusion_matrix):
+						true_label = real_label_names[i]
+						confusion_matrix_dict[true_label] = {}
+						for j, value in enumerate(row_values):
+							pred_label = real_label_names[j]
+							confusion_matrix_dict[true_label][pred_label] = int(value)
+
+					report = metrics.classification_report(total_y_test, total_y_pred, target_names=real_label_names, output_dict=True)
+					accuracy = report['accuracy']
 
 					row = {
 						'Experiment': experiment_hash,
@@ -302,10 +337,15 @@ for code_unit, allowed in GLOBAL_CONFIG['allowed_code_units'].items():
 						'Data Balancing': data_balancing,
 						'Algorithm Parameters': algorithm_parameters,
 						'Dimensionality Reduction': dimensionality_reduction,
-						'Weighted Avg - Precision': report['weighted avg']['precision'],
-						'Weighted Avg - Recall': report['weighted avg']['recall'],
-						'Weighted Avg - F-Score': report['weighted avg']['f1-score'],
+						'Confusion Matrix': serialize_json_container(confusion_matrix_dict),
+						'Accuracy': f'{accuracy:.4f}',
 					}
+
+					for average in ['micro avg', 'macro avg', 'weighted avg']:
+						for metric in ['precision', 'recall', 'f1-score']:
+							column_name = f'{metric.title()} ({average.title()})'
+							average_metric = report.get(average, {}).get(metric)
+							row[column_name] = f'{average_metric:.4f}' if average_metric is not None else average_metric
 
 					results = results.append(row, ignore_index=True)
 					results.to_csv(output_csv_path, index=False)

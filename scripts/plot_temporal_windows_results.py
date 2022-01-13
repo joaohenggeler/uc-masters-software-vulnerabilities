@@ -30,7 +30,6 @@ for input_csv_path in find_output_csv_files('temporal-validation'):
 	for index, config_df in grouped_configs:
 
 		figure, axis = plt.subplots()
-
 		colors = itertools.cycle(['firebrick', 'green', 'mediumblue', 'darkorange', 'aquamarine', 'blueviolet', 'gold', 'teal', 'hotpink'])
 
 		grouped_windows = config_df.groupby(by=['Window Size'])
@@ -38,9 +37,9 @@ for input_csv_path in find_output_csv_files('temporal-validation'):
 
 			window_size_label = f'{window_size} Years' if window_size != 'Variable' else window_size
 
-			for metric_column in ['Weighted Avg - Precision', 'Weighted Avg - Recall', 'Weighted Avg - F-Score']:
+			for metric_column in ['Precision (Macro Avg)', 'Recall (Macro Avg)', 'F1-Score (Macro Avg)']:
 
-				_, metric_name = metric_column.rsplit(maxsplit=1)
+				metric_name, _ = metric_column.split(maxsplit=1)
 				x_data = window_df['Testing Year'].tolist()
 				y_data = window_df[metric_column].tolist()
 
@@ -58,8 +57,6 @@ for input_csv_path in find_output_csv_files('temporal-validation'):
 
 		output_plot_path = get_path_in_output_directory(f'c{index}-tw.png', 'validation')
 		figure.savefig(output_plot_path)
-
-		table_text = ''
 
 		"""
 		\begin{table}[ht]
@@ -92,19 +89,21 @@ for input_csv_path in find_output_csv_files('temporal-validation'):
 		\end{table}
 		"""
 
+		table_text = ''
 		for _, row in config_df.iterrows():
 
 			window_size = row['Window Size']
 			training_years = deserialize_json_container(row['Training Years'])
 			testing_year = row['Testing Year']
+			training_samples = row['Training Samples']
 			training_percentage = round(row['Training Percentage'] * 100)
-			precision = row['Weighted Avg - Precision']
-			recall = row['Weighted Avg - Recall']
-			f_score = row['Weighted Avg - F-Score']
+			precision = row['Precision (Macro Avg)']
+			recall = row['Recall (Macro Avg)']
+			f_score = row['F1-Score (Macro Avg)']
 
 			training_years = str(training_years[0]) + '-' + str(training_years[-1])
 
-			table_text += f'{window_size} & {training_years} & {testing_year} & {training_percentage}\\% & {precision:.4f} & {recall:.4f} & {f_score:.4f} \\\\\n'
+			table_text += f'{window_size} & {training_years} & {testing_year} & {training_samples} & {training_percentage}\\% & {precision:.4f} & {recall:.4f} & {f_score:.4f} \\\\\n'
 
 		output_table_path = get_path_in_output_directory(f'c{index}-tw.txt', 'validation')
 		with open(output_table_path, 'w', encoding='utf-8') as file:

@@ -121,68 +121,51 @@
 	"temporal_window":
 	{
 		"num_runs": 30,
-		"data_split": {"begin_test_year": 2013, "window_size": [null, 5, 10], "variable_window_test_ratio": 0.2},
+		"data_split": {"begin_test_year": 2013, "window_size": [5, 10, null], "variable_window_test_ratio": 0.2},
 
 		"default_algorithm_parameters":
 		{
 			"random_forests": {"n_jobs": -1},
-			"bagging": {"n_jobs": -1}
+			"bagging": {"n_jobs": -1},
+			"xgboost": {"n_jobs": -1, "use_label_encoder": true}
 		},
 
 		"configurations":
 		[
 			{
-				"name": "Best Precision (Binary) - Default", "target_label": "binary_label",
-				"dimensionality_reduction": ["variance"], "data_balancing": ["RandomUnderSampler"],
-				"classification_algorithm": "random_forests", "algorithm_parameters": {"bootstrap": true, "criterion": "gini", "max_features": "auto", "min_samples_leaf": 1, "min_samples_split": 2, "n_estimators": 100}
-			},
-					
-			{
-				"name": "Best Recall (Binary)", "target_label": "binary_label",
-				"dimensionality_reduction": ["variance"], "data_balancing": [], 
-				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 0.55, "n_estimators": 200}
+				"name": "Best Precision (Binary)", "target_label": "binary_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": [],
+				"classification_algorithm": "random_forests", "algorithm_parameters": {"bootstrap": true, "criterion": "gini", "max_features": null, "min_samples_leaf": 1, "min_samples_split": 0.001, "n_estimators": 200}
 			},
 			
 			{
-				"name": "Best F-score (Binary) 1 of 2", "target_label": "binary_label",
-				"dimensionality_reduction": ["variance"], "data_balancing": [], 
-				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 1.0, "n_estimators": 100}
-			},
-
-			{
-				"name": "Best F-score (Binary) 2 of 2 - Default", "target_label": "binary_label",
-				"dimensionality_reduction": ["variance"], "data_balancing": [], 
-				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 1.0, "n_estimators": 10}
-			},
-
-			{
-				"name": "Best Precision (Multiclass) - Default", "target_label": "grouped_multiclass_label",
+				"name": "Best Recall (Binary) - Default", "target_label": "binary_label",
 				"dimensionality_reduction": ["variance"], "data_balancing": ["RandomUnderSampler"], 
 				"classification_algorithm": "random_forests", "algorithm_parameters": {"bootstrap": true, "criterion": "gini", "max_features": "auto", "min_samples_leaf": 1, "min_samples_split": 2, "n_estimators": 100}
 			},
-			
+
 			{
-				"name": "Best Recall (Multiclass) 1 of 2", "target_label": "grouped_multiclass_label",
-				"dimensionality_reduction": ["variance"], "data_balancing": [],
-				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 0.55, "n_estimators": 100}
+				"name": "Best F-Score (Binary)", "target_label": "binary_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": ["RandomOverSampler"], 
+				"classification_algorithm": "random_forests", "algorithm_parameters": {"bootstrap": true, "criterion": "gini", "max_features": null, "min_samples_leaf": 1, "min_samples_split": 2, "n_estimators": 100}
 			},
 
 			{
-				"name": "Best Recall (Multiclass) 2 of 2", "target_label": "grouped_multiclass_label",
+				"name": "Best Precision (Multiclass)", "target_label": "grouped_multiclass_label",
 				"dimensionality_reduction": ["variance"], "data_balancing": [],
-				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 0.55, "n_estimators": 200}
+				"classification_algorithm": "xgboost", "algorithm_parameters": {"gamma": 0, "learning_rate": 0.1, "max_depth": 10, "min_samples_leaf": 4, "min_samples_split": 5, "n_estimators": 100, "subsample": 1}
 			},
 			
 			{
-				"name": "Best F-score (Multiclass) 1 of 2", "target_label": "grouped_multiclass_label",
-				"dimensionality_reduction": ["variance"],"data_balancing": [],
-				"classification_algorithm": "random_forests", "algorithm_parameters": {"bootstrap": true, "criterion": "gini", "max_features": null, "min_samples_leaf": 1, "min_samples_split": 2, "n_estimators": 200}
+				"name": "Best Recall (Multiclass) - Default", "target_label": "grouped_multiclass_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": ["RandomUnderSampler"], 
+				"classification_algorithm": "random_forests", "algorithm_parameters": {"bootstrap": true, "criterion": "gini", "max_features": "auto", "min_samples_leaf": 1, "min_samples_split": 2, "n_estimators": 100}
 			},
 
 			{
-				"name": "Best F-score (Multiclass) 2 of 2", "target_label": "grouped_multiclass_label",
-				"dimensionality_reduction": ["variance"],"data_balancing": [],
-				"classification_algorithm": "bagging", "algorithm_parameters": {"bootstrap": true, "max_features": 1.0, "n_estimators": 200}
+				"name": "Best F-Score (Multiclass)", "target_label": "grouped_multiclass_label",
+				"dimensionality_reduction": ["variance"], "data_balancing": ["RandomOverSampler"], 
+				"classification_algorithm": "xgboost", "algorithm_parameters": {"gamma": 0, "learning_rate": 0.3, "max_depth": 30, "min_samples_leaf": 4, "min_samples_split": 5, "n_estimators": 300, "subsample": 1}
 			}
 		]
 	},

@@ -23,47 +23,12 @@ args = parser.parse_args()
 output_csv_path = replace_in_filename(args.input_excel_path, '.xlsx', '.csv')
 log.info(f'Exporting results from "{args.input_excel_path}" to "{output_csv_path}".')
 
-results = pd.read_excel(args.input_excel_path, sheet_name='Report', usecols='B:C,H:L', skiprows=5, dtype=str)
+results = pd.read_excel(args.input_excel_path, sheet_name='Report', usecols='B:C,H:K,N,U:V', skiprows=5)
 
-"""
-              precision    recall  f1-score   support
-
-           0     0.4528    0.0856    0.1439      7175
-           1     0.9554    0.9946    0.9746    407815
-           2     0.5764    0.1383    0.2231      9275
-           3     0.4422    0.1175    0.1857      5310
-
-   micro avg     0.9501    0.9501    0.9501    429575
-   macro avg     0.6067    0.3340    0.3818    429575
-weighted avg     0.9324    0.9501    0.9347    429575
- samples avg     0.9501    0.9501    0.9501    429575
-"""
-
-aggregation_list = ['Micro Avg', 'Macro Avg', 'Weighted Avg', 'Samples Avg']
-metric_list = ['Precision', 'Recall', 'F-Score']
-
-for aggregation in aggregation_list:
-	for metric in metric_list:
-		results.insert(len(results.columns), f'{aggregation} - {metric}', None)
-
-for row in results.itertuples():
-
-	# The "Classification Report" column.
-	report = row[7]
-	for line in report.splitlines():
-
-		word_list = line.rsplit(maxsplit=4)
-		if word_list:
-
-			aggregation = word_list[0].strip().title()
-			if aggregation in aggregation_list:
-
-				for i, metric in enumerate(metric_list):
-					results.at[row.Index, f'{aggregation} - {metric}'] = word_list[i+1]
-
-best_output_aggregation = 'Weighted Avg'
-best_output_columns = [	'Experiment', 'Algorithm', 'proc_balance_data', 'proc_classification_algorithms_parameters',
-						'proc_reduce_dimensionality'] + [f'Weighted Avg - {metric}' for metric in metric_list]
+metric_list = ['Precision', 'Recall', 'F1-Score']
+best_output_columns = [	'Experiment', 'Algorithm', 'proc_balance_data',
+						'proc_classification_algorithms_parameters',
+						'proc_reduce_dimensionality'] + metric_list
 
 separator = '########################################################################################################################'
 
@@ -71,21 +36,20 @@ for label in results['pre_target'].unique():
 	for metric in metric_list:
 	
 		is_label = (results['pre_target'] == label)
-		label_results_for_metric = results.loc[is_label, f'{best_output_aggregation} - {metric}']
+		label_results_for_metric = results.loc[is_label, metric]
 		is_best_for_label = (label_results_for_metric == label_results_for_metric.max())
 		best_results = results[is_label].loc[is_best_for_label, best_output_columns]
 		
-		log.info(f'Found {is_best_for_label.sum()} best {metric} ({best_output_aggregation}) results for {label}:\n{separator}\n{best_results.to_string()}\n{separator}')
+		log.info(f'Found {is_best_for_label.sum()} best {metric} results for {label}:\n{separator}\n{best_results.to_string()}\n{separator}')
 
 results.rename(	columns={
 							'pre_target': 'Target Label',
 							'proc_balance_data': 'Data Balancing',
 							'proc_classification_algorithms_parameters': 'Algorithm Parameters',
 							'proc_reduce_dimensionality': 'Dimensionality Reduction',
+							'F1-Score': 'F-Score',
 						},
 				inplace=True)
-
-results.drop(columns='Classification Report', inplace=True)
 
 results.to_csv(output_csv_path, index=False)
 
