@@ -10,12 +10,13 @@
 """
 
 import itertools
+from typing import cast, Union
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # type: ignore
 import pandas as pd # type: ignore
-from matplotlib.ticker import AutoMinorLocator, MultipleLocator
+from matplotlib.ticker import AutoMinorLocator, MultipleLocator # type: ignore
 
-from modules.common import log, deserialize_json_container ,find_output_csv_files, get_path_in_output_directory
+from modules.common import log, deserialize_json_container, find_output_csv_files, get_path_in_output_directory
 
 ####################################################################################################
 
@@ -26,24 +27,49 @@ for input_csv_path in find_output_csv_files('temporal-validation'):
 	results = pd.read_csv(input_csv_path)
 	results.sort_values(['Index', 'Window Size', 'Testing Year'], inplace=True)
 
+	results.insert(0, 'Precision', None)
+	results.insert(0, 'Recall', None)
+	results.insert(0, 'F1-Score', None)
+
+	for index, row in results.iterrows():
+
+		if row['Target Label'] == 'binary_label':
+
+			confusion_matrix = cast(dict, deserialize_json_container(row['Confusion Matrix']))
+
+			# True Label / Predicted Label
+			tn = confusion_matrix['N']['N']
+			tp = confusion_matrix['V(NC)']['V(NC)']
+			fp = confusion_matrix['N']['V(NC)']
+			fn = confusion_matrix['V(NC)']['N']
+
+			precision = tp / (tp + fp)
+			recall = tp / (tp + fn)
+
+			results.at[index, 'Precision'] = precision
+			results.at[index, 'Recall'] = recall
+			results.at[index, 'F1-Score'] = 2 * (precision * recall) / (precision + recall)
+
 	grouped_configs = results.groupby(by=['Index'])
 	for index, config_df in grouped_configs:
 
 		figure, axis = plt.subplots()
 		colors = itertools.cycle(['firebrick', 'green', 'mediumblue', 'darkorange', 'aquamarine', 'blueviolet', 'gold', 'teal', 'hotpink'])
 
-		grouped_windows = config_df.groupby(by=['Window Size'])
-		for window_size, window_df in grouped_windows:
+		grouped_windows = config_df.groupby(by=['Window Size', 'Target Label'])
+		for (window_size, target_label), window_df in grouped_windows:
 
 			window_size_label = f'{window_size} Years' if window_size != 'Variable' else window_size
+			METRIC_COLUMNS = ['Precision', 'Recall', 'F1-Score'] if target_label == 'binary_label' else ['Precision (Weighted Avg)', 'Recall (Weighted Avg)', 'F1-Score (Weighted Avg)']
+			
+			for column_name in METRIC_COLUMNS:
 
-			for metric_column in ['Precision (Macro Avg)', 'Recall (Macro Avg)', 'F1-Score (Macro Avg)']:
-
-				metric_name, _ = metric_column.split(maxsplit=1)
+				split_name = column_name.split(maxsplit=1)
+				metric_label = split_name[0] if split_name else column_name
 				x_data = window_df['Testing Year'].tolist()
-				y_data = window_df[metric_column].tolist()
+				y_data = window_df[column_name].tolist()
 
-				axis.plot(x_data, y_data, label=f'{metric_name} ({window_size_label})', color=next(colors))
+				axis.plot(x_data, y_data, label=f'{metric_label} ({window_size_label})', color=next(colors))
 		
 		axis.set(xlabel=f'Testing Year', ylabel='Performance Metric', title=f'Configuration {index} Results Per Window Size')
 		axis.legend(ncol=3, fontsize=8)
@@ -55,8 +81,11 @@ for input_csv_path in find_output_csv_files('temporal-validation'):
 
 		figure.tight_layout()
 
-		output_plot_path = get_path_in_output_directory(f'c{index}-tw.png', 'validation')
-		figure.savefig(output_plot_path)
+		output_png_path = get_path_in_output_directory(f'c{index}-tw.png', 'validation')
+		figure.savefig(output_png_path)
+
+		output_pdf_path = get_path_in_output_directory(f'c{index}-tw.pdf', 'validation')
+		figure.savefig(output_pdf_path)
 
 		"""
 		\begin{table}[ht]
@@ -89,17 +118,23 @@ for input_csv_path in find_output_csv_files('temporal-validation'):
 		\end{table}
 		"""
 
-		table_text = ''
+		table_text = 'Window Size,Training Years,Testing Year,Training Samples,Training Percentage,Precision,Recall,F1-Score\n'
 		for _, row in config_df.iterrows():
 
 			window_size = row['Window Size']
-			training_years = deserialize_json_container(row['Training Years'])
+			training_years = cast(Union[list, str], deserialize_json_container(row['Training Years']))
 			testing_year = row['Testing Year']
 			training_samples = row['Training Samples']
 			training_percentage = round(row['Training Percentage'] * 100)
-			precision = row['Precision (Macro Avg)']
-			recall = row['Recall (Macro Avg)']
-			f_score = row['F1-Score (Macro Avg)']
+			
+			if row['Target Label'] == 'binary_label':
+				precision = row['Precision']
+				recall = row['Recall']
+				f_score = row['F1-Score']
+			else:
+				precision = row['Precision (Weighted Avg)']
+				recall = row['Recall (Weighted Avg)']
+				f_score = row['F1-Score (Weighted Avg)']
 
 			training_years = str(training_years[0]) + '-' + str(training_years[-1])
 
@@ -109,7 +144,7 @@ for input_csv_path in find_output_csv_files('temporal-validation'):
 		with open(output_table_path, 'w', encoding='utf-8') as file:
 			file.write(table_text)
 
-		log.info(f'Saved the plot for configuration {index} to "{output_plot_path}".')
+		log.info(f'Saved the plot for configuration {index} to "{output_png_path}" and "{output_pdf_path}".')
 
 log.info('Finished running.')
 print('Finished running.')
