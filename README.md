@@ -4,7 +4,7 @@ This repository contains any code and documents developed for the master thesis 
 
 ## Background
 
-Software vulnerabilities can have serious consequences when exploited, such as unauthorized authentication, data losses, and financial losses. Although there exist techniques for detecting these vulnerabilities by analyzing the source code or executing the software, these suffer from both false positives (misidentified vulnerabilities) and false negatives (undetected vulnerabilities). One other way of identifying vulnerabilities is to combine certain source code properties (software metrics) with machine learning techniques. A previous study has shown this to be feasible, although the data that was collected is now out of date. In a similar fashion, security alerts (i.e. potential vulnerabilities) may be found directly by using static analysis tools (SATs), though these also present a high number of false positives.
+Software vulnerabilities can have serious consequences when exploited, such as unauthorized authentication, data losses, and financial losses. Although there exist techniques for detecting these vulnerabilities by analyzing the source code or executing the software, these suffer from both false positives (misidentified vulnerabilities) and false negatives (undetected vulnerabilities). One other way of identifying vulnerabilities is to combine certain source code properties (software metrics) with machine learning techniques. A previous study has shown this to be feasible, although the data that was collected is now out of date. In a similar fashion, security alerts (i.e. potential vulnerabilities) may be found directly by using Static Analysis Tools (SATs), though these also present a high number of false positives.
 
 ## Contributions
 
