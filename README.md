@@ -8,7 +8,7 @@ Software vulnerabilities can have serious consequences when exploited, such as u
 
 ## Contributions
 
-* Implemented an automated process capable of collecting vulnerability metadata from the [CVE Details website](https://www.cvedetails.com/), retrieving any affected code units (files, functions, classes) from a project's version control system, generating software metrics and security alerts for each one, and building robust datasets capable of being fed to machine learning algorithms.
+* Implemented an automated process capable of collecting vulnerability metadata from the [CVE Details website](https://www.cvedetails.com/), retrieving any affected code units (files, functions, classes) from a project's version control system, generating software metrics and security alerts for each one, storing the collected information in a MySQL database, and building robust datasets capable of being fed to machine learning algorithms.
 
 * Built datasets of vulnerable code units for five large open-source C/C++ projects: [Mozilla](https://github.com/mozilla/gecko-dev), [Linux Kernel](https://github.com/torvalds/linux), [Xen Hypervisor](https://xenbits.xen.org/gitweb/?p=xen.git;a=summary), [Apache HTTP Server](https://github.com/apache/httpd), and [GNU C Library (Glibc)](https://sourceware.org/git/glibc.git).
 
@@ -16,7 +16,7 @@ Software vulnerabilities can have serious consequences when exploited, such as u
 
 ## Publications
 
-* José D'Abruzzo Pereira, João Henggeler Antunes, and Marco Vieira. On Building a Vulnerability Dataset with Static Information from the Source Code. In Safety, Security, and Privacy in Complex Artificial Intelligence based Systems (SAFELIFE 2021), 2021.
+* [José D'Abruzzo Pereira, João Henggeler Antunes, and Marco Vieira. On Building a Vulnerability Dataset with Static Information from the Source Code. In Safety, Security, and Privacy in Complex Artificial Intelligence based Systems (SAFELIFE 2021), 2021.](https://ieeexplore.ieee.org/abstract/document/9672589)
 
 ## Authors
 
