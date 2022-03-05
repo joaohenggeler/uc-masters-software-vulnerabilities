@@ -16,7 +16,7 @@ Software vulnerabilities can have serious consequences when exploited, such as u
 
 ## Publications
 
-* [José D'Abruzzo Pereira, João Henggeler Antunes, and Marco Vieira. On Building a Vulnerability Dataset with Static Information from the Source Code. In Safety, Security, and Privacy in Complex Artificial Intelligence based Systems (SAFELIFE 2021), 2021.](https://ieeexplore.ieee.org/abstract/document/9672589)
+* [José D'Abruzzo Pereira, João Henggeler Antunes, and Marco Vieira. On Building a Vulnerability Dataset with Static Information from the Source Code. 2021 10th Latin-American Symposium on Dependable Computing (LADC), 2021, pp. 1-2, doi: 10.1109/LADC53747.2021.9672589.](https://ieeexplore.ieee.org/abstract/document/9672589)
 
 ## Authors
 
